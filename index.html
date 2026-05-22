@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Identity Verification</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    /* ============================================================
+       HARDCODED ENVIRONMENT VARIABLES
+       Change these values for your deployment environment.
+       ============================================================ */
+    window.API_BASE_URL = 'https://your-api.com/verify';
+    window.AUTH_TOKEN = 'your-bearer-token';
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    /* ============================================================
+       GLOBAL RESET & BASE
+       ============================================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    html, body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #f5f7fa;
+      color: #1a1a2e;
+      width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* ============================================================
+       LAYOUT UTILITIES
+       ============================================================ */
+    .container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .step {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    .step.active {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ============================================================
+       STEP INDICATOR (Steps 2-5)
+       ============================================================ */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 0 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #888;
+      flex-wrap: wrap;
+    }
+    
+    .step-indicator .step-label {
+      padding: 4px 8px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    
+    .step-indicator .step-label.active {
+      color: #e50914;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    
+    .step-indicator .step-label.completed {
+      color: #2ecc71;
+    }
+    
+    .step-indicator .step-separator {
+      color: #ccc;
+      font-size: 10px;
+    }
+    
+    /* ============================================================
+       TYPOGRAPHY
+       ============================================================ */
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 6px;
+      color: #1a1a2e;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .step-heading {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 6px;
+      color: #1a1a2e;
+    }
+    
+    .step-subheading {
+      font-size: 14px;
+      text-align: center;
+      color: #666;
+      margin-bottom: 16px;
+    }
+    
+    /* ============================================================
+       BUTTONS
+       ============================================================ */
+    .btn {
+      background: #e50914;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 14px 28px;
+      min-height: 48px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
+    
+    .btn:active {
+      transform: scale(0.97);
+      background: #c40711;
+    }
+    
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+    }
+    
+    .btn-secondary:active {
+      background: #5a6268;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    
+    .btn-group .btn {
+      flex: 1;
+    }
+    
+    /* ============================================================
+       GUIDELINE CARDS (Step 1) - Single column, horizontal layout
+       Matches mockup: icon left, title + description right
+       ============================================================ */
+    .guidelines-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+    
+    .guideline-card {
+      background: white;
+      border-radius: 16px;
+      padding: 18px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    
+    .guideline-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      color: #e50914;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .guideline-icon svg {
+      width: 28px;
+      height: 28px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .guideline-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .guideline-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+    
+    .guideline-desc {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.5;
+    }
+    
+    .camera-note {
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 12px;
+    }
+    
+    /* ============================================================
+       DOCUMENT TYPE CARDS (Step 2) - Single column, horizontal layout
+       ============================================================ */
+    .doc-type-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+    
+    .doc-type-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 16px;
+      padding: 18px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 16px;
+      touch-action: manipulation;
+    }
+    
+    .doc-type-card:active {
+      transform: scale(0.98);
+    }
+    
+    .doc-type-card.selected {
+      border-color: #e50914;
+      box-shadow: 0 0 0 3px rgba(229,9,20,0.1);
+    }
+    
+    .doc-type-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      color: #e50914;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .doc-type-icon svg {
+      width: 32px;
+      height: 32px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .doc-type-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .doc-type-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+    
+    .doc-type-desc {
+      font-size: 13px;
+      color: #888;
+      line-height: 1.5;
+    }
+    
+    /* ============================================================
+       CAMERA SECTION (Steps 3 & 4)
+       ============================================================ */
+    .camera-section {
+      position: relative;
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #1a1a2e;
+      margin-bottom: 12px;
+    }
+    
+    .camera-video {
+      width: 100%;
+      display: block;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+    }
+    
+    .camera-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    
+    .feedback-bar {
+      background: rgba(0,0,0,0.75);
+      color: white;
+      text-align: center;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 12px;
+      margin: 0 0 12px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    
+    .feedback-bar.success {
+      background: rgba(46, 204, 113, 0.85);
+    }
+    
+    .feedback-bar.error {
+      background: rgba(231, 76, 60, 0.85);
+    }
+    
+    .feedback-bar.warning {
+      background: rgba(243, 156, 18, 0.85);
+    }
+    
+    /* ============================================================
+       LOADING & ERROR STATES
+       ============================================================ */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      gap: 12px;
+      z-index: 10;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #e50914;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error-message {
+      background: rgba(231, 76, 60, 0.15);
+      color: #c0392b;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    
+    /* ============================================================
+       RESULTS (Step 5)
+       ============================================================ */
+    .results-container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    
+    .badge-pass {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .badge-fail {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .badge-review {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+    
+    .score-label {
+      color: #666;
+    }
+    
+    .score-value {
+      font-weight: 700;
+    }
+    
+    .extracted-section {
+      margin-top: 16px;
+    }
+    
+    .extracted-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #1a1a2e;
+    }
+    
+    .field-row {
+      margin-bottom: 10px;
+    }
+    
+    .field-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    
+    .field-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      background: #fafafa;
+      transition: border-color 0.2s;
+      min-height: 40px;
+    }
+    
+    .field-input:focus {
+      outline: none;
+      border-color: #e50914;
+      background: white;
+    }
+    
+    .field-input:disabled {
+      background: #eee;
+      color: #999;
+    }
+    
+    .failure-list {
+      margin-top: 12px;
+    }
+    
+    .failure-item {
+      font-size: 13px;
+      color: #e74c3c;
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+    
+    .failure-item::before {
+      content: "\2022";
+      position: absolute;
+      left: 4px;
+    }
+    
+    /* ============================================================
+       HIDDEN DEBUG PANEL
+       ============================================================ */
+    .debug-panel {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.92);
+      color: #0f0;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      z-index: 1000;
+      border-radius: 16px 16px 0 0;
+      max-height: 45vh;
+      overflow-y: auto;
+    }
+    
+    .debug-panel.visible {
+      display: block;
+    }
+    
+    .debug-title {
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    
+    .debug-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+    
+    .debug-label {
+      color: #aaa;
+    }
+    
+    .debug-value {
+      font-weight: 700;
+    }
+    
+    /* ============================================================
+       RESPONSIVE TWEAKS
+       ============================================================ */
+    @media (min-width: 400px) {
+      .container {
+        padding: 20px;
+      }
+      .title {
+        font-size: 32px;
+      }
+      .guidelines-list {
+        gap: 14px;
+      }
+      .guideline-card {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- STEP INDICATOR (visible from Step 2 onward) -->
+    <div class="step-indicator" id="stepIndicator" style="display:none;">
+      <span class="step-label" data-step="1">Start</span>
+      <span class="step-separator">&rsaquo;</span>
+      <span class="step-label" data-step="2">Select Type</span>
+      <span class="step-separator">&rsaquo;</span>
+      <span class="step-label" data-step="3">ID Photo</span>
+      <span class="step-separator">&rsaquo;</span>
+      <span class="step-label" data-step="4">Selfie</span>
+      <span class="step-separator">&rsaquo;</span>
+      <span class="step-label" data-step="5">Results</span>
+    </div>
+
+    <!-- ==========================================================
+         STEP 1: START / LANDING PAGE
+         ========================================================== -->
+    <div class="step active" id="step1">
+      <h1 class="title">Identity Verification</h1>
+      <p class="subtitle">Securely verify your identity document with guided camera capture</p>
+      
+      <div class="guidelines-list">
+        <!-- Good Lighting -->
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </div>
+          <div class="guideline-content">
+            <div class="guideline-title">Good Lighting</div>
+            <div class="guideline-desc">Use natural or bright indoor light. Avoid harsh shadows or glare on the ID.</div>
+          </div>
+        </div>
+        <!-- Flat ID Placement -->
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M8 6l2-2h4l2 2"/></svg>
+          </div>
+          <div class="guideline-content">
+            <div class="guideline-title">Flat ID Placement</div>
+            <div class="guideline-desc">Place your ID on a flat, dark surface. Hold it steady with all corners visible.</div>
+          </div>
+        </div>
+        <!-- Clear Selfie -->
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg>
+          </div>
+          <div class="guideline-content">
+            <div class="guideline-title">Clear Selfie</div>
+            <div class="guideline-desc">Face the camera directly. Remove glasses, hats, or masks. Neutral expression.</div>
+          </div>
+        </div>
+        <!-- Proper Distance -->
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <svg viewBox="0 0 24 24"><path d="M8 3L3 8l5 5M16 3l5 5-5 5M3 16l5 5 5-5M21 16l-5 5-5-5"/></svg>
+          </div>
+          <div class="guideline-content">
+            <div class="guideline-title">Proper Distance</div>
+            <div class="guideline-desc">Hold the phone 20-30 cm from the ID. For selfie, arm's length is ideal.</div>
+          </div>
+        </div>
+        <!-- Stay Steady -->
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="guideline-content">
+            <div class="guideline-title">Stay Steady</div>
+            <div class="guideline-desc">Keep both hands steady while capturing. The app will guide you in real time.</div>
+          </div>
+        </div>
+        <!-- Avoid -->
+        <div class="guideline-card">
+          <div class="guideline-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+          </div>
+          <div class="guideline-content">
+            <div class="guideline-title">Avoid</div>
+            <div class="guideline-desc">No blurry images, cut-off documents, dark rooms, or reflective surfaces.</div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn" id="btnStart" onclick="showStep(2)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Start Verification
+      </button>
+      <p class="camera-note">Camera access required. HTTPS or localhost needed.</p>
+    </div>
+
+    <!-- ==========================================================
+         STEP 2: SELECT DOCUMENT TYPE
+         ========================================================== -->
+    <div class="step" id="step2">
+      <h2 class="step-heading">Select your document type</h2>
+      
+      <div class="doc-type-grid">
+        <!-- National ID Card -->
+        <div class="doc-type-card" id="cardTypeCard" onclick="selectDocType('card')">
+          <div class="doc-type-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9.5" cy="11" r="1.5"/><path d="M13 10h3M13 12h3"/></svg>
+          </div>
+          <div class="doc-type-content">
+            <div class="doc-type-title">National ID Card</div>
+            <div class="doc-type-desc">Landscape orientation. Plastic card format.</div>
+          </div>
+        </div>
+        <!-- ID Book or Passport -->
+        <div class="doc-type-card" id="cardTypeBook" onclick="selectDocType('book')">
+          <div class="doc-type-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div class="doc-type-content">
+            <div class="doc-type-title">ID Book or Passport</div>
+            <div class="doc-type-desc">Portrait orientation. Booklet format.</div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn" id="btnContinue" disabled onclick="showStep(3)">
+        Continue to Capture
+      </button>
+    </div>
+
+    <!-- ==========================================================
+         STEP 3: ID PHOTO CAPTURE
+         ========================================================== -->
+    <div class="step" id="step3">
+      <h2 class="step-heading">ID Document</h2>
+      <p class="step-subheading">Capture the front of your ID card or book</p>
+      
+      <div class="camera-section" id="idCameraSection">
+        <video class="camera-video" id="idVideo" autoplay playsinline muted></video>
+        <canvas class="camera-overlay" id="idOverlay"></canvas>
+        <div class="loading-overlay" id="idLoading" style="display:none;">
+          <div class="spinner"></div>
+          <span>Starting camera...</span>
+        </div>
+      </div>
+      
+      <div class="error-message" id="idError" style="display:none;"></div>
+      
+      <div class="feedback-bar" id="idFeedback">Initializing camera...</div>
+      
+      <button class="btn" id="btnCaptureID" disabled onclick="captureID()">
+        Capture ID Document
+      </button>
+      <button class="btn btn-secondary" id="btnRetryID" style="display:none; margin-top:10px;" onclick="retryIDCamera()">
+        Retry Camera
+      </button>
+    </div>
+
+    <!-- ==========================================================
+         STEP 4: SELFIE CAPTURE
+         ========================================================== -->
+    <div class="step" id="step4">
+      <h2 class="step-heading">Selfie Verification</h2>
+      <p class="step-subheading">Position your face within the oval</p>
+      
+      <div class="camera-section" id="selfieCameraSection">
+        <video class="camera-video" id="selfieVideo" autoplay playsinline muted></video>
+        <canvas class="camera-overlay" id="selfieOverlay"></canvas>
+        <div class="loading-overlay" id="selfieLoading" style="display:none;">
+          <div class="spinner"></div>
+          <span>Starting camera...</span>
+        </div>
+        <div class="loading-overlay" id="faceApiLoading">
+          <div class="spinner"></div>
+          <span>Loading face detection...</span>
+        </div>
+      </div>
+      
+      <div class="error-message" id="selfieError" style="display:none;"></div>
+      
+      <div class="feedback-bar" id="selfieFeedback">Initializing...</div>
+      
+      <button class="btn" id="btnCaptureSelfie" disabled onclick="captureSelfie()">
+        Capture Selfie
+      </button>
+      <button class="btn btn-secondary" id="btnRetrySelfie" style="display:none; margin-top:10px;" onclick="retrySelfieCamera()">
+        Retry Camera
+      </button>
+    </div>
+
+    <!-- ==========================================================
+         STEP 5: RESULTS
+         ========================================================== -->
+    <div class="step" id="step5">
+      <h2 class="step-heading">Verification Results</h2>
+      
+      <div class="loading-overlay" id="resultsLoading" style="position:relative; background:transparent; color:#1a1a2e; margin-bottom:16px;">
+        <div class="spinner" style="border-top-color:#e50914;"></div>
+        <span>Verifying your documents...</span>
+      </div>
+      
+      <div class="error-message" id="resultsError" style="display:none;"></div>
+      
+      <div class="results-container" id="resultsContainer" style="display:none;">
+        <div class="badge" id="resultBadge">PASS</div>
+        
+        <div class="score-row">
+          <span class="score-label">Authenticity score</span>
+          <span class="score-value" id="scoreAuth">--</span>
+        </div>
+        <div class="score-row">
+          <span class="score-label">Face match score</span>
+          <span class="score-value" id="scoreFace">--</span>
+        </div>
+        <div class="score-row">
+          <span class="score-label">Confidence</span>
+          <span class="score-value" id="scoreConfidence">--</span>
+        </div>
+        <div class="score-row">
+          <span class="score-label">ID number valid</span>
+          <span class="score-value" id="scoreIdValid">--</span>
+        </div>
+        
+        <div class="extracted-section">
+          <div class="extracted-title">Extracted ID data (editable):</div>
+          
+          <div class="field-row">
+            <div class="field-label">Surname</div>
+            <input type="text" class="field-input" id="fieldSurname" placeholder="Not extracted">
+          </div>
+          <div class="field-row">
+            <div class="field-label">First names</div>
+            <input type="text" class="field-input" id="fieldFirstNames" placeholder="Not extracted">
+          </div>
+          <div class="field-row">
+            <div class="field-label">ID number</div>
+            <input type="text" class="field-input" id="fieldIdNumber" placeholder="Not extracted">
+          </div>
+          <div class="field-row">
+            <div class="field-label">Date of birth</div>
+            <input type="text" class="field-input" id="fieldDob" placeholder="Not extracted">
+          </div>
+          <div class="field-row">
+            <div class="field-label">Gender</div>
+            <input type="text" class="field-input" id="fieldGender" placeholder="Not extracted">
+          </div>
+          <div class="field-row">
+            <div class="field-label">Nationality</div>
+            <input type="text" class="field-input" id="fieldNationality" placeholder="Not extracted">
+          </div>
+          <div class="field-row">
+            <div class="field-label">Age</div>
+            <input type="text" class="field-input" id="fieldAge" placeholder="Not extracted">
+          </div>
+        </div>
+        
+        <div class="failure-list" id="failureList" style="display:none;">
+          <div class="extracted-title">Failure reasons:</div>
+          <div id="failureItems"></div>
+        </div>
+      </div>
+      
+      <div class="btn-group" id="resultsActions" style="display:none;">
+        <button class="btn" onclick="confirmResults()">Confirm & Continue</button>
+        <button class="btn btn-secondary" onclick="restart()">Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DEBUG PANEL (5-tap activation)
+       ============================================================ -->
+  <div class="debug-panel" id="debugPanel">
+    <div class="debug-title">Debug Panel (tap 5x anywhere to toggle)</div>
+    <div class="debug-row"><span class="debug-label">Edge Density:</span><span class="debug-value" id="dbgEdge">--</span></div>
+    <div class="debug-row"><span class="debug-label">Coverage:</span><span class="debug-value" id="dbgCoverage">--</span></div>
+    <div class="debug-row"><span class="debug-label">Centering:</span><span class="debug-value" id="dbgCenter">--</span></div>
+    <div class="debug-row"><span class="debug-label">Sharpness:</span><span class="debug-value" id="dbgSharp">--</span></div>
+    <div class="debug-row"><span class="debug-label">Brightness:</span><span class="debug-value" id="dbgBright">--</span></div>
+    <div class="debug-row"><span class="debug-label">Feedback:</span><span class="debug-value" id="dbgFeedback">--</span></div>
+    <div class="debug-row"><span class="debug-label">Doc Type:</span><span class="debug-value" id="dbgDocType">--</span></div>
+    <div class="debug-row"><span class="debug-label">Face Detected:</span><span class="debug-value" id="dbgFace">--</span></div>
+    <div class="debug-row"><span class="debug-label">Face Size:</span><span class="debug-value" id="dbgFaceSize">--</span></div>
+  </div>
+
+  <script>
+  /* =============================================================
+     IDENTITY VERIFICATION APP
+     Single-file implementation with 5-step wizard:
+     1. Start (landing page with guidelines)
+     2. Select Document Type (card landscape / book portrait)
+     3. ID Photo (rear camera + guide frame + real-time analysis)
+     4. Selfie (front camera + face-api.js + oval overlay)
+     5. Results (API call + editable fields + scores)
+     
+     THRESHOLDS EXPLANATION:
+     - edgeDensity >= 0.05: Ensures sufficient edge content to 
+       distinguish a real document from blank backgrounds or 
+       random objects (prevents non-ID objects triggering "ready").
+     - coverage 0.50-0.95: Total fill ratio of ALL dilated Sobel edge
+       pixels / ROI area.  A dense ID has edges spread across the whole
+       card; dilation blankets 60-90 % of the ROI.  Random objects and
+       blank walls fail (edgeDensity catches walls first).
+     - centeringOffset <= 0.10: Keeps the document centered so all
+       corners and data are captured equally.
+     - sharpness >= 30: Laplacian variance threshold ensures text
+       is legible; blurry images fail this check.
+     - brightness >= 80 (0-255): Ensures adequate lighting for
+       OCR and visual inspection; dark rooms fail this check.
+     ============================================================= */
+
+  /* ============================================================
+     GLOBAL STATE
+     ============================================================ */
+  window.documentType = null;       // 'card' | 'book' | null
+  window.capturedIDBlob = null;     // Blob of captured ID JPEG
+  window.capturedSelfieBlob = null; // Blob of captured selfie JPEG
+  let currentStep = 1;
+  let currentIdStream = null;
+  let tesseractWorker = null;
+  let currentSelfieStream = null;
+  let idAnalysisId = null;
+  let selfieAnalysisId = null;
+  let faceModelsLoaded = false;
+  
+  // ID analysis state
+  let lastRoiData = null;
+  let isIdCapturing = false;
+  
+  // Debug panel tap counter
+  let debugTapCount = 0;
+  let debugTapTimer = null;
+
+  /* ============================================================
+     STEP NAVIGATION
+     ============================================================ */
+  function showStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    // Show target step
+    const target = document.getElementById('step' + step);
+    if (target) target.classList.add('active');
+    
+    currentStep = step;
+    updateStepIndicator(step);
+    
+    // Show step indicator from step 2 onward
+    const ind = document.getElementById('stepIndicator');
+    ind.style.display = (step >= 2) ? 'flex' : 'none';
+    
+    // Step-specific initialisation
+    if (step === 3) {
+      isIdCapturing = false;
+      startIdCamera();
+      startIdAnalysis();
+    } else if (step === 4) {
+      startSelfieCamera();
+      startSelfieAnalysis();
+    } else if (step === 5) {
+      performVerification();
+    }
+    
+    // Stop cameras when leaving camera steps
+    if (step !== 3) {
+      stopIdCamera();
+      if (idAnalysisId) cancelAnimationFrame(idAnalysisId);
+    }
+    if (step !== 4) {
+      stopSelfieCamera();
+      if (selfieAnalysisId) cancelAnimationFrame(selfieAnalysisId);
+    }
+  }
+  
+  function updateStepIndicator(activeStep) {
+    document.querySelectorAll('.step-label').forEach(label => {
+      const s = parseInt(label.dataset.step);
+      label.classList.remove('active', 'completed');
+      if (s === activeStep) label.classList.add('active');
+      else if (s < activeStep) label.classList.add('completed');
+    });
+  }
+
+  /* ============================================================
+     STEP 2: DOCUMENT TYPE SELECTION
+     ============================================================ */
+  function selectDocType(type) {
+    window.documentType = type;
+    
+    document.querySelectorAll('.doc-type-card').forEach(c => c.classList.remove('selected'));
+    if (type === 'card') document.getElementById('cardTypeCard').classList.add('selected');
+    else document.getElementById('cardTypeBook').classList.add('selected');
+    
+    document.getElementById('btnContinue').disabled = false;
+  }
+
+  /* ============================================================
+     STEP 3: ID CAMERA & REAL-TIME ANALYSIS
+     ============================================================ */
+  
+  async function startIdCamera() {
+    const video = document.getElementById('idVideo');
+    const loading = document.getElementById('idLoading');
+    const error = document.getElementById('idError');
+    const retryBtn = document.getElementById('btnRetryID');
+    
+    error.style.display = 'none';
+    retryBtn.style.display = 'none';
+    loading.style.display = 'flex';
+    setFeedback('idFeedback', 'Initializing camera...');
+    
+    try {
+      const constraints = {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 960 }
+        },
+        audio: false
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      currentIdStream = stream;
+      video.srcObject = stream;
+      
+      await video.play();
+      
+      loading.style.display = 'none';
+      setFeedback('idFeedback', 'Position your ID within the frame');
+      
+      // Initialize overlay canvas
+      resizeIdOverlay();
+      
+    } catch (err) {
+      loading.style.display = 'none';
+      console.error('ID camera error:', err);
+      error.textContent = 'Camera access denied or unavailable. Please allow camera permissions and try again.';
+      error.style.display = 'block';
+      retryBtn.style.display = 'inline-flex';
+      setFeedback('idFeedback', 'Camera error', true);
+    }
+  }
+  
+  function stopIdCamera() {
+    if (currentIdStream) {
+      currentIdStream.getTracks().forEach(track => track.stop());
+      currentIdStream = null;
+    }
+    const video = document.getElementById('idVideo');
+    video.srcObject = null;
+  }
+  
+  function retryIDCamera() {
+    document.getElementById('idError').style.display = 'none';
+    document.getElementById('btnRetryID').style.display = 'none';
+    startIdCamera();
+  }
+  
+  /* GUIDE FRAME OVERLAY
+     A <canvas> is positioned absolutely over the <video> element.
+     On each animation frame (and on resize/orientationchange):
+     - Clear the canvas
+     - Draw a dashed white rectangle (landscape for card, portrait for book)
+     - Dimensions are relative to video clientWidth for responsiveness
+     
+     This ensures the guide frame changes orientation based on the
+     selected document type (window.documentType). */
+  function resizeIdOverlay() {
+    const video = document.getElementById('idVideo');
+    const canvas = document.getElementById('idOverlay');
+    if (!video || !canvas) return;
+    
+    const rect = video.getBoundingClientRect();
+    const section = document.getElementById('idCameraSection');
+    const sectionRect = section.getBoundingClientRect();
+    
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    
+    drawGuideFrame();
+  }
+  
+  function drawGuideFrame() {
+    const canvas = document.getElementById('idOverlay');
+    const ctx = canvas.getContext('2d');
+    const video = document.getElementById('idVideo');
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (!window.documentType) return;
+    
+    const cw = canvas.width;
+    const ch = canvas.height;
+    
+    // Guide frame dimensions based on document type
+    let w, h;
+    if (window.documentType === 'card') {
+      w = cw * 0.70;
+      h = cw * 0.50; // landscape
+    } else {
+      w = cw * 0.50;
+      h = cw * 0.70; // portrait
+    }
+    
+    const x = (cw - w) / 2;
+    const y = (ch - h) / 2;
+    
+    // Draw dashed white rectangle
+    ctx.setLineDash([10, 10]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+    
+    // Draw semi-transparent dark area outside guide
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.rect(0, 0, cw, ch);
+    ctx.rect(x, y, w, h);
+    ctx.fill('evenodd');
+    
+    // Store ROI info for analysis
+    const videoEl = document.getElementById('idVideo');
+    if (videoEl && videoEl.videoWidth) {
+      const scaleX = videoEl.videoWidth / cw;
+      const scaleY = videoEl.videoHeight / ch;
+      lastRoiData = {
+        canvasX: x, canvasY: y, canvasW: w, canvasH: h,
+        roiX: Math.round(x * scaleX),
+        roiY: Math.round(y * scaleY),
+        roiW: Math.round(w * scaleX),
+        roiH: Math.round(h * scaleY)
+      };
+    }
+  }
+  
+  /* REAL-TIME ID ANALYSIS (~10fps, throttled)
+     For each video frame, extract the ROI and compute five metrics:
+     1. edgeDensity: Sobel edge detection; count edge pixels / total ROI pixels
+     2. coverage: total fill ratio of ALL dilated Sobel edge pixels /
+        ROI area (dilation with 5x5 kernel spreads text edges across
+        the whole document; blank walls fail at edgeDensity first).
+     3. centeringOffset: distance between centroid of all dilated-edge
+        pixels and ROI centre
+     4. sharpness: Laplacian variance of ROI
+     5. brightness: mean grayscale value of ROI (0-255)
+     
+     Decision order (first failing condition determines feedback):
+     1. edgeDensity < 0.05 -> "No document detected" (prevents random objects)
+     2. coverage < 0.50 -> "Move closer - ID too small"
+     3. coverage > 0.95 -> "Move away - ID cropped"
+     4. centeringOffset > 0.10 -> "Center the ID"
+     5. sharpness < 30 -> "Blurry - steady your phone"
+     6. brightness < 80 -> "Too dark - improve lighting"
+     7. All pass -> "Good - ready to capture" -> enable button
+  */
+  function startIdAnalysis() {
+    const video = document.getElementById('idVideo');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    let lastFrameTime = 0;
+    const FPS = 10;
+    const frameInterval = 1000 / FPS;
+    
+    function analyze(timestamp) {
+      idAnalysisId = requestAnimationFrame(analyze);
+      
+      if (timestamp - lastFrameTime < frameInterval) return;
+      lastFrameTime = timestamp;
+      
+      if (!video.videoWidth || video.readyState < 2 || isIdCapturing) return;
+      
+      drawGuideFrame();
+      
+      if (!lastRoiData) return;
+      
+      const { roiX, roiY, roiW, roiH } = lastRoiData;
+      
+      // Ensure ROI is within video bounds
+      const sx = Math.max(0, roiX);
+      const sy = Math.max(0, roiY);
+      const sw = Math.min(roiW, video.videoWidth - sx);
+      const sh = Math.min(roiH, video.videoHeight - sy);
+      
+      if (sw < 10 || sh < 10) return;
+      
+      canvas.width = sw;
+      canvas.height = sh;
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
+      
+      const imgData = ctx.getImageData(0, 0, sw, sh);
+      const gray = toGrayscale(imgData);
+      
+      // Compute metrics
+      const edgeDensity = computeEdgeDensity(gray, sw, sh);
+      const { coverage, cx, cy } = computeCoverageAndCenter(gray, sw, sh);
+      const centeringOffset = computeCenteringOffset(cx, cy, sw, sh);
+      const sharpness = computeSharpness(gray, sw, sh);
+      const brightness = computeBrightness(gray);
+      
+      // Decision logic (first failing condition wins)
+      let feedback, isGood = false, fbClass = '';
+      
+      if (edgeDensity < 0.05) {
+        feedback = 'No document detected';
+        fbClass = 'error';
+      } else if (coverage < 0.50) {
+        feedback = 'Move closer \u2013 ID too small';
+        fbClass = 'warning';
+      } else if (coverage > 0.95) {
+        feedback = 'Move away \u2013 ID cropped';
+        fbClass = 'warning';
+      } else if (centeringOffset > 0.10) {
+        feedback = 'Center the ID';
+        fbClass = 'warning';
+      } else if (sharpness < 30) {
+        feedback = 'Blurry \u2013 steady your phone';
+        fbClass = 'warning';
+      } else if (brightness < 80) {
+        feedback = 'Too dark \u2013 improve lighting';
+        fbClass = 'warning';
+      } else {
+        feedback = 'Good \u2013 ready to capture';
+        isGood = true;
+        fbClass = 'success';
+      }
+      
+      setFeedback('idFeedback', feedback, !isGood, fbClass);
+      document.getElementById('btnCaptureID').disabled = false;
+      
+      // Update debug panel
+      updateDebug('dbgEdge', edgeDensity.toFixed(3));
+      updateDebug('dbgCoverage', coverage.toFixed(3));
+      updateDebug('dbgCenter', centeringOffset.toFixed(3));
+      updateDebug('dbgSharp', sharpness.toFixed(1));
+      updateDebug('dbgBright', brightness.toFixed(1));
+      updateDebug('dbgFeedback', feedback);
+      updateDebug('dbgDocType', window.documentType || 'none');
+    }
+    
+    idAnalysisId = requestAnimationFrame(analyze);
+  }
+  
+  /* IMAGE PROCESSING UTILITIES */
+  function toGrayscale(imgData) {
+    const data = imgData.data;
+    const len = data.length / 4;
+    const gray = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      const idx = i * 4;
+      gray[i] = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+    }
+    return gray;
+  }
+  
+  function computeEdgeDensity(gray, w, h) {
+    // Sobel edge detection - counts all edge pixels in ROI
+    let edgeCount = 0;
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const tl = gray[(y - 1) * w + (x - 1)], t = gray[(y - 1) * w + x], tr = gray[(y - 1) * w + (x + 1)];
+        const l = gray[y * w + (x - 1)], r = gray[y * w + (x + 1)];
+        const bl = gray[(y + 1) * w + (x - 1)], b = gray[(y + 1) * w + x], br = gray[(y + 1) * w + (x + 1)];
+        const gx = -tl - 2 * l - bl + tr + 2 * r + br;
+        const gy = -tl - 2 * t - tr + bl + 2 * b + br;
+        if (Math.sqrt(gx * gx + gy * gy) > 30) edgeCount++;
+      }
+    }
+    return edgeCount / (w * h);
+  }
+  
+  /* COVERAGE & CENTER via total dilated-edge fill
+     
+     PROBLEM WITH "LARGEST CONNECTED COMPONENT" APPROACHES:
+     Text on IDs produces thousands of tiny edge fragments.
+     Even after 5x5 dilation, large blank zones on the card
+     (photo area, gaps between text blocks) prevent the dilated
+     edges from forming a SINGLE connected component covering
+     >= 50 % of the ROI.  The biggest blob is typically < 40 %.
+     
+     SOLUTION — total dilated-edge fill ratio:
+     1. Compute Sobel edge map.
+     2. Morphologically dilate with a 5x5 kernel.
+     3. Coverage = (count of ALL dilated-edge pixels) / ROI area.
+     4. Centering  = centroid of all dilated-edge pixels.
+     
+     WHY THIS WORKS:
+     - Dense ID text → edges spread across the whole card →
+       dilation blankets 60-90 % of ROI → passes.
+     - Random object / hand → few scattered edges → dilation
+       covers < 40 % → fails coverage → rejected.
+     - Blank wall → edge density < 0.05 → caught FIRST.
+     
+     NEGATIVE TEST PREVENTION:
+     - edgeDensity >= 0.05 runs FIRST, rejecting edge-less scenes.
+     - coverage >= 0.50 rejects objects too small or sparse.
+     - coverage <= 0.95 rejects cropped/overfilled frames. */
+  function dilateEdges(edges, w, h, radius) {
+    const dilated = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        if (edges[i]) {
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const nx = x + dx, ny = y + dy;
+              if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                dilated[ny * w + nx] = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+    return dilated;
+  }
+  
+  function computeCoverageAndCenter(gray, w, h) {
+    // 1. Sobel edge map
+    const edgeMap = new Uint8Array(w * h);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const tl = gray[(y - 1) * w + (x - 1)], t = gray[(y - 1) * w + x], tr = gray[(y - 1) * w + (x + 1)];
+        const l = gray[y * w + (x - 1)], r = gray[y * w + (x + 1)];
+        const bl = gray[(y + 1) * w + (x - 1)], b = gray[(y + 1) * w + x], br = gray[(y + 1) * w + (x + 1)];
+        const gx = -tl - 2 * l - bl + tr + 2 * r + br;
+        const gy = -tl - 2 * t - tr + bl + 2 * b + br;
+        edgeMap[i] = Math.sqrt(gx * gx + gy * gy) > 30 ? 1 : 0;
+      }
+    }
+    
+    // 2. Dilate with 5x5 kernel (radius 2)
+    const dilated = dilateEdges(edgeMap, w, h, 2);
+    
+    // 3. Total dilated-edge fill + centroid of ALL dilated pixels
+    let dilatedCount = 0, sumX = 0, sumY = 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (dilated[y * w + x]) {
+          dilatedCount++;
+          sumX += x;
+          sumY += y;
+        }
+      }
+    }
+    
+    const coverage = dilatedCount / (w * h);
+    const cx = dilatedCount > 0 ? (sumX / dilatedCount) / w : 0.5;
+    const cy = dilatedCount > 0 ? (sumY / dilatedCount) / h : 0.5;
+    
+    return { coverage, cx, cy };
+  }
+  
+  function computeCenteringOffset(cx, cy, w, h) {
+    const dx = Math.abs(cx - 0.5);
+    const dy = Math.abs(cy - 0.5);
+    return Math.max(dx, dy);
+  }
+  
+  function computeSharpness(gray, w, h) {
+    // Laplacian variance
+    let sum = 0, sumSq = 0, count = 0;
+    
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const laplacian = 4 * gray[i] - gray[i - 1] - gray[i + 1] - gray[i - w] - gray[i + w];
+        sum += laplacian;
+        sumSq += laplacian * laplacian;
+        count++;
+      }
+    }
+    
+    if (count === 0) return 0;
+    const mean = sum / count;
+    return (sumSq / count) - (mean * mean);
+  }
+  
+  function computeBrightness(gray) {
+    let sum = 0;
+    for (let i = 0; i < gray.length; i++) sum += gray[i];
+    return sum / gray.length;
+  }
+  
+  /* ID CAPTURE */
+ async function captureID() {
+  if (isIdCapturing) return;
+  isIdCapturing = true;
+
+  const video = document.getElementById('idVideo');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+
+  // Preprocess for better OCR accuracy
+  preprocessCanvas(canvas);
+
+  setFeedback('idFeedback', 'Processing – reading ID data...');
+
+  try {
+    const { data: { text } } = await tesseractWorker.recognize(canvas);
+    const extracted = parseIDText(text);
+
+    if (extracted.idNumber) {
+      window.extractedIDData = extracted;
+
+      // Compress to <= 1.5MB
+      let quality = 0.85;
+      let blob;
+      while (quality >= 0.4) {
+        blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
+        if (blob.size <= 1.5 * 1024 * 1024) break;
+        quality -= 0.05;
+      }
+      window.capturedIDBlob = blob;
+
+      setFeedback('idFeedback', 'ID successfully read', false, 'success');
+      setTimeout(() => showStep(4), 1000);
+    } else {
+      setFeedback('idFeedback', 'Could not read ID – adjust lighting and try again', true, 'error');
+      isIdCapturing = false;
+    }
+  } catch (err) {
+    console.error('OCR error:', err);
+    setFeedback('idFeedback', 'OCR failed – please try again', true, 'error');
+    isIdCapturing = false;
+  }
+}
+
+function preprocessCanvas(canvas) {
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imgData.data;
+
+  // Grayscale + contrast stretch + binary threshold
+  let min = 255, max = 0;
+  const gray = new Uint8Array(data.length / 4);
+
+  for (let i = 0; i < gray.length; i++) {
+    const idx = i * 4;
+    gray[i] = Math.round(0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2]);
+    if (gray[i] < min) min = gray[i];
+    if (gray[i] > max) max = gray[i];
+  }
+
+  const range = max - min || 1;
+  for (let i = 0; i < gray.length; i++) {
+    const stretched = Math.round((gray[i] - min) / range * 255);
+    const binary = stretched > 128 ? 255 : 0;
+    const idx = i * 4;
+    data[idx] = data[idx+1] = data[idx+2] = binary;
+    data[idx+3] = 255;
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function parseIDText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const result = {};
+
+  // ID number: 13-digit sequence, validate with Luhn
+  const idMatch = text.replace(/[\s\-]/g, '').match(/\d{13}/);
+  if (idMatch && luhn(idMatch[0])) {
+    result.idNumber = idMatch[0];
+
+    // Gender from digits 7-10
+    const genderDigits = parseInt(result.idNumber.substring(6, 10));
+    result.gender = genderDigits < 5000 ? 'F' : 'M';
+
+    // DOB from first 6 digits (YYMMDD)
+    const yy = result.idNumber.substring(0, 2);
+    const mm = result.idNumber.substring(2, 4);
+    const dd = result.idNumber.substring(4, 6);
+    const currentYY = new Date().getFullYear() % 100;
+    const year = parseInt(yy) <= currentYY ? '20' + yy : '19' + yy;
+    result.dateOfBirth = `${year}-${mm}-${dd}`;
+
+    // Age
+    const dob = new Date(result.dateOfBirth);
+    const today = new Date();
+    result.age = today.getFullYear() - dob.getFullYear() -
+      (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
+  }
+
+  // Surname: first all-caps line (letters only, 3+ chars)
+  const capsLine = lines.find(l => /^[A-Z]{3,}(\s[A-Z]+)*$/.test(l));
+  if (capsLine) result.surname = capsLine;
+
+  // First names: line after surname
+  if (result.surname) {
+    const surnameIdx = lines.indexOf(result.surname);
+    if (surnameIdx >= 0 && lines[surnameIdx + 1]) {
+      result.firstNames = lines[surnameIdx + 1];
+    }
+  }
+
+  // Nationality
+  if (/RSA|SOUTH AFRICA|CITIZEN/i.test(text)) result.nationality = 'RSA';
+
+  return result;
+}
+
+function luhn(n) {
+  let sum = 0;
+  for (let i = 0; i < n.length; i++) {
+    let d = parseInt(n[n.length - 1 - i]);
+    if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+  /* ============================================================
+     STEP 4: SELFIE CAMERA & FACE DETECTION
+     ============================================================ */
+  
+  async function startSelfieCamera() {
+    const video = document.getElementById('selfieVideo');
+    const loading = document.getElementById('selfieLoading');
+    const error = document.getElementById('selfieError');
+    const retryBtn = document.getElementById('btnRetrySelfie');
+    
+    error.style.display = 'none';
+    retryBtn.style.display = 'none';
+    loading.style.display = 'flex';
+    setFeedback('selfieFeedback', 'Initializing camera...');
+    
+    try {
+      const constraints = {
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 960 }
+        },
+        audio: false
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      currentSelfieStream = stream;
+      video.srcObject = stream;
+      
+      await video.play();
+      
+      loading.style.display = 'none';
+      
+      // Load face-api models if not already loaded
+      await loadFaceApiModels();
+      
+      resizeSelfieOverlay();
+      
+    } catch (err) {
+      loading.style.display = 'none';
+      console.error('Selfie camera error:', err);
+      error.textContent = 'Camera access denied or unavailable. Please allow camera permissions.';
+      error.style.display = 'block';
+      retryBtn.style.display = 'inline-flex';
+      setFeedback('selfieFeedback', 'Camera error', true);
+    }
+  }
+  
+  function stopSelfieCamera() {
+    if (currentSelfieStream) {
+      currentSelfieStream.getTracks().forEach(track => track.stop());
+      currentSelfieStream = null;
+    }
+    const video = document.getElementById('selfieVideo');
+    video.srcObject = null;
+  }
+  
+  function retrySelfieCamera() {
+    document.getElementById('selfieError').style.display = 'none';
+    document.getElementById('btnRetrySelfie').style.display = 'none';
+    startSelfieCamera();
+  }
+  
+  async function initTesseract() {
+  setFeedback('idFeedback', 'Loading OCR engine...');
+  tesseractWorker = await Tesseract.createWorker('eng');
+}
+
+  async function loadFaceApiModels() {
+    if (faceModelsLoaded) return;
+    
+    // const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+    const MODEL_URL = './models'; 
+    
+    try {
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      faceModelsLoaded = true;
+      document.getElementById('faceApiLoading').style.display = 'none';
+    } catch (err) {
+      console.error('Face-api model load error:', err);
+      setFeedback('selfieFeedback', 'Face detection failed to load', true);
+    }
+  }
+  
+  function resizeSelfieOverlay() {
+    const video = document.getElementById('selfieVideo');
+    const canvas = document.getElementById('selfieOverlay');
+    if (!video || !canvas) return;
+    
+    const rect = video.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  }
+  
+  /* SELFIE FACE DETECTION & FEEDBACK
+     Uses face-api.js TinyFaceDetector for real-time face detection.
+     Feedback logic:
+     - No face detected: "No face detected" (disabled)
+     - Face width < 25% of video: "Face too small - move closer" (disabled)
+     - Face width > 55% of video: "Face too large - move away" (disabled)
+     - Face centre offset > 10%: "Center your face" (disabled)
+     - All passed: "Good - ready to capture" (enabled)
+     
+     Also draws a semi-transparent oval around the detected face. */
+  function startSelfieAnalysis() {
+    const video = document.getElementById('selfieVideo');
+    const canvas = document.getElementById('selfieOverlay');
+    const ctx = canvas.getContext('2d');
+    
+    let lastFrameTime = 0;
+    const FPS = 8;
+    const frameInterval = 1000 / FPS;
+    let isCapturing = false;
+    
+    async function analyze(timestamp) {
+      selfieAnalysisId = requestAnimationFrame(analyze);
+      
+      if (timestamp - lastFrameTime < frameInterval) return;
+      lastFrameTime = timestamp;
+      
+      if (!video.videoWidth || video.readyState < 2 || isCapturing || !faceModelsLoaded) return;
+      
+      try {
+        const detection = await faceapi.detectSingleFace(
+          video,
+          new faceapi.TinyFaceDetectorOptions()
+        );
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        let feedback, isGood = false, fbClass = '';
+        
+        if (!detection) {
+          feedback = 'No face detected';
+          fbClass = 'error';
+          updateDebug('dbgFace', 'false');
+          updateDebug('dbgFaceSize', '--');
+        } else {
+          const box = detection.box;
+          const faceWidth = box.width / video.videoWidth;
+          const faceCenterX = (box.x + box.width / 2) / video.videoWidth;
+          const faceCenterY = (box.y + box.height / 2) / video.videoHeight;
+          const offsetX = Math.abs(faceCenterX - 0.5);
+          const offsetY = Math.abs(faceCenterY - 0.5);
+          const centerOffset = Math.max(offsetX, offsetY);
+          
+          updateDebug('dbgFace', 'true');
+          updateDebug('dbgFaceSize', (faceWidth * 100).toFixed(1) + '%');
+          
+          // Scale box to canvas coordinates
+          const scaleX = canvas.width / video.videoWidth;
+          const scaleY = canvas.height / video.videoHeight;
+          const sx = box.x * scaleX;
+          const sy = box.y * scaleY;
+          const sw = box.width * scaleX;
+          const sh = box.height * scaleY;
+          
+          // Draw semi-transparent oval around face
+          ctx.fillStyle = 'rgba(46, 204, 113, 0.15)';
+          ctx.strokeStyle = 'rgba(46, 204, 113, 0.7)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(sx + sw / 2, sy + sh / 2, sw / 2, sh / 2, 0, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.stroke();
+          
+          if (faceWidth < 0.25) {
+            feedback = 'Face too small \u2013 move closer';
+            fbClass = 'warning';
+          } else if (faceWidth > 0.55) {
+            feedback = 'Face too large \u2013 move away';
+            fbClass = 'warning';
+          } else if (centerOffset > 0.10) {
+            feedback = 'Center your face';
+            fbClass = 'warning';
+          } else {
+            feedback = 'Good \u2013 ready to capture';
+            isGood = true;
+            fbClass = 'success';
+          }
+        }
+        
+        setFeedback('selfieFeedback', feedback, !isGood, fbClass);
+        document.getElementById('btnCaptureSelfie').disabled = !isGood;
+        
+      } catch (err) {
+        // Silently skip frames with detection errors
+      }
+    }
+    
+    selfieAnalysisId = requestAnimationFrame(analyze);
+  }
+  
+  async function captureSelfie() {
+    const video = document.getElementById('selfieVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Compress JPEG to <= 1.5MB
+    let quality = 0.85;
+    let blob;
+    
+    while (quality >= 0.4) {
+      blob = await new Promise(resolve => {
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      });
+      if (blob.size <= 1.5 * 1024 * 1024) break;
+      quality -= 0.05;
+    }
+    
+    window.capturedSelfieBlob = blob;
+    stopSelfieCamera();
+    showStep(5);
+  }
+
+  /* ============================================================
+     STEP 5: VERIFICATION API & RESULTS
+     ============================================================ */
+  
+  async function performVerification() {
+    const loading = document.getElementById('resultsLoading');
+    const error = document.getElementById('resultsError');
+    const container = document.getElementById('resultsContainer');
+    const actions = document.getElementById('resultsActions');
+    
+    loading.style.display = 'flex';
+    error.style.display = 'none';
+    container.style.display = 'none';
+    actions.style.display = 'none';
+    
+    try {
+      const formData = new FormData();
+      formData.append('id_image', window.capturedIDBlob, 'id.jpg');
+      formData.append('selfie_image', window.capturedSelfieBlob, 'selfie.jpg');
+      
+      const response = await fetch(window.API_BASE_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + window.AUTH_TOKEN
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+      }
+      
+      const data = await response.json();
+      displayResults(data);
+      
+    } catch (err) {
+      loading.style.display = 'none';
+      console.error('Verification API error:', err);
+      error.textContent = 'Verification failed: ' + err.message + '. You can restart and try again.';
+      error.style.display = 'block';
+      actions.style.display = 'flex';
+    }
+  }
+  
+  function displayResults(data) {
+    document.getElementById('resultsLoading').style.display = 'none';
+    document.getElementById('resultsContainer').style.display = 'block';
+    document.getElementById('resultsActions').style.display = 'flex';
+    
+    // Badge
+    const badge = document.getElementById('resultBadge');
+    const status = (data.status || 'REVIEW').toUpperCase();
+    badge.textContent = status;
+    badge.className = 'badge';
+    if (status === 'PASS') badge.classList.add('badge-pass');
+    else if (status === 'FAIL') badge.classList.add('badge-fail');
+    else badge.classList.add('badge-review');
+    
+    // Scores
+    document.getElementById('scoreAuth').textContent = 
+      data.authenticity_score != null ? data.authenticity_score.toFixed(2) : '--';
+    document.getElementById('scoreFace').textContent = 
+      data.face_match_score != null ? data.face_match_score.toFixed(2) : '--';
+    document.getElementById('scoreConfidence').textContent = 
+      data.confidence != null ? data.confidence.toFixed(1) + '%' : '--';
+    document.getElementById('scoreIdValid').textContent = 
+      data.id_number_valid ? '\u2705 Yes' : (data.id_number_valid === false ? '\u274C No' : '--');
+    
+    // Extracted fields (all editable)
+    const fields = data.extracted_data || {};
+    document.getElementById('fieldSurname').value = fields.surname || '';
+    document.getElementById('fieldFirstNames').value = fields.first_names || '';
+    document.getElementById('fieldIdNumber').value = fields.id_number || '';
+    document.getElementById('fieldDob').value = fields.date_of_birth || '';
+    document.getElementById('fieldGender').value = fields.gender || '';
+    document.getElementById('fieldNationality').value = fields.nationality || '';
+    document.getElementById('fieldAge').value = fields.age != null ? String(fields.age) : '';
+    
+    // Failure reasons
+    const failureList = document.getElementById('failureList');
+    const failureItems = document.getElementById('failureItems');
+    const failures = data.failure_reasons || [];
+    
+    if (failures.length > 0) {
+      failureList.style.display = 'block';
+      failureItems.innerHTML = failures.map(f => '<div class="failure-item">' + escapeHtml(f) + '</div>').join('');
+    } else {
+      failureList.style.display = 'none';
+    }
+  }
+  
+  function confirmResults() {
+    alert('Corrections saved locally');
+  }
+  
+  function restart() {
+    // Clear captured blobs
+    window.capturedIDBlob = null;
+    window.capturedSelfieBlob = null;
+    window.documentType = null;
+    
+    // Stop any active cameras
+    stopIdCamera();
+    stopSelfieCamera();
+    
+    // Reset UI
+    document.querySelectorAll('.doc-type-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('btnContinue').disabled = true;
+    document.getElementById('btnCaptureID').disabled = true;
+    document.getElementById('btnCaptureSelfie').disabled = true;
+    
+    // Clear extracted fields
+    document.querySelectorAll('.field-input').forEach(input => input.value = '');
+    
+    // Reset to Step 2 (not Step 1 per spec)
+    showStep(2);
+    updateStepIndicator(2);
+  }
+
+  /* ============================================================
+     UTILITY FUNCTIONS
+     ============================================================ */
+  
+  function setFeedback(elementId, message, isError, cssClass) {
+    const el = document.getElementById(elementId);
+    el.textContent = message;
+    el.classList.remove('success', 'error', 'warning');
+    if (cssClass) el.classList.add(cssClass);
+    else if (isError) el.classList.add('error');
+  }
+  
+  function updateDebug(elementId, value) {
+    const el = document.getElementById(elementId);
+    if (el) el.textContent = value;
+  }
+  
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /* ============================================================
+     DEBUG PANEL: 5-TAP ACTIVATION
+     Tap anywhere on screen 5 times within 2 seconds to toggle.
+     ============================================================ */
+  document.addEventListener('touchstart', handleDebugTap, { passive: true });
+  document.addEventListener('click', handleDebugTap);
+  
+  function handleDebugTap() {
+    debugTapCount++;
+    
+    if (debugTapCount >= 5) {
+      document.getElementById('debugPanel').classList.toggle('visible');
+      debugTapCount = 0;
+      if (debugTapTimer) clearTimeout(debugTapTimer);
+      return;
+    }
+    
+    if (debugTapTimer) clearTimeout(debugTapTimer);
+    debugTapTimer = setTimeout(() => {
+      debugTapCount = 0;
+    }, 2000);
+  }
+
+  /* ============================================================
+     ORIENTATION & RESIZE HANDLING
+     Recalculate guide frame and overlays when orientation changes.
+     ============================================================ */
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      if (currentStep === 3) {
+        resizeIdOverlay();
+      } else if (currentStep === 4) {
+        resizeSelfieOverlay();
+      }
+    }, 300);
+  });
+  
+  window.addEventListener('resize', () => {
+    if (currentStep === 3) resizeIdOverlay();
+    else if (currentStep === 4) resizeSelfieOverlay();
+  });
+
+  /* ============================================================
+     INITIALISATION
+     ============================================================ */
+  document.addEventListener('DOMContentLoaded', () => {
+     initTesseract().catch(console.error);
+  loadFaceApiModels().catch(() => {});
+  });
+  </script>
+</body>
+</html>
