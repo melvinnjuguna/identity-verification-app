@@ -6,39 +6,39 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Identity Verification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-
-    <!-- Tesseract.js v5 — explicit CDN paths required for single-file HTML (no bundler) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-    <!-- face-api.js 0.22.2 — weights loaded from same CDN /weights path -->
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-
     <script>
-      /* Hardcoded environment config — no UI for editing these */
       window.API_BASE_URL = "https://your-api.com/verify";
       window.AUTH_TOKEN = "your-bearer-token";
     </script>
-
     <style>
+      /* ── Design tokens ── */
       :root {
         --red: #e50914;
-        --red-dark: #c0070f;
-        --bg: #f0f2f5;
-        --surface: #ffffff;
-        --ink: #111827;
-        --muted: #6b7280;
-        --border: #e5e7eb;
-        --green: #16a34a;
-        --amber: #d97706;
-        --radius: 14px;
-        --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        --red-dark: #b8070f;
+        --ink: #0d0d0d;
+        --ink-mid: #444;
+        --ink-light: #888;
+        --surface: #f7f6f4;
+        --white: #ffffff;
+        --border: #e2e0db;
+        --green: #1a8a4a;
+        --amber: #c27c00;
+        --radius-lg: 20px;
+        --radius-md: 12px;
+        --radius-sm: 8px;
+        --font: "DM Sans", sans-serif;
+        --mono: "DM Mono", monospace;
+        --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
       }
 
       *,
@@ -49,40 +49,84 @@
         box-sizing: border-box;
         -webkit-tap-highlight-color: transparent;
       }
-
       html,
       body {
-        font-family: "DM Sans", sans-serif;
-        background: var(--bg);
+        font-family: var(--font);
+        background: var(--surface);
         color: var(--ink);
+        width: 100%;
         min-height: 100vh;
+        overflow-x: hidden;
         -webkit-font-smoothing: antialiased;
       }
 
-      .container {
+      /* ── App shell ── */
+      .app {
         width: 100%;
         max-width: 480px;
         margin: 0 auto;
-        padding: 16px;
+        padding: 0 16px 32px;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
       }
+      @media (min-width: 400px) {
+        .app {
+          padding: 0 20px 32px;
+        }
+        .hero-title {
+          font-size: 38px;
+        }
+      }
 
-      /* ── STEP SHELL ── */
+      /* ── Step progress bar ── */
+      .step-bar {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 16px 0 12px;
+        flex-wrap: wrap;
+      }
+      .step-bar.visible {
+        display: flex;
+      }
+      .step-pip {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: var(--ink-light);
+        padding: 4px 10px;
+        border-radius: 20px;
+        transition: all 0.25s;
+      }
+      .step-pip.active {
+        color: var(--red);
+        font-weight: 700;
+        background: rgba(229, 9, 20, 0.08);
+      }
+      .step-pip.done {
+        color: var(--green);
+      }
+      .step-sep {
+        color: var(--border);
+        font-size: 10px;
+      }
+
+      /* ── Step panels ── */
       .step {
         display: none;
         flex-direction: column;
         flex: 1;
-        animation: fadeUp 0.25s ease;
       }
       .step.active {
         display: flex;
+        animation: stepIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
-      @keyframes fadeUp {
+      @keyframes stepIn {
         from {
           opacity: 0;
-          transform: translateY(10px);
+          transform: translateY(12px);
         }
         to {
           opacity: 1;
@@ -90,77 +134,153 @@
         }
       }
 
-      /* ── STEP INDICATOR ── */
-      .step-indicator {
+      /* ── Typography ── */
+      .hero-title {
+        font-size: clamp(30px, 8vw, 42px);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+      .hero-sub {
+        font-size: 14px;
+        font-weight: 300;
+        color: var(--ink-mid);
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+      .section-title {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 4px;
+      }
+      .section-sub {
+        font-size: 13px;
+        color: var(--ink-mid);
+        margin-bottom: 16px;
+      }
+
+      /* ── Banners ── */
+      .init-banner {
+        background: #fffbeb;
+        border: 1px solid #f5d76e;
+        border-radius: var(--radius-md);
+        padding: 10px 14px;
+        font-size: 12px;
+        color: #7a5f00;
+        text-align: center;
+        margin-bottom: 16px;
+        transition: opacity 0.4s;
+      }
+
+      /* ── Guide cards (step 1) ── */
+      .guide-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex: 1;
+      }
+      .guide-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+      }
+      .guide-icon {
+        width: 38px;
+        height: 38px;
+        background: rgba(229, 9, 20, 0.08);
+        border-radius: 10px;
+        flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-        padding: 10px 0 18px;
-        flex-wrap: wrap;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--muted);
-        letter-spacing: 0.03em;
-      }
-      .step-label {
-        padding: 3px 7px;
-        border-radius: 10px;
-        transition: color 0.2s;
-      }
-      .step-label.active {
         color: var(--red);
-        text-decoration: underline;
-        text-underline-offset: 3px;
       }
-      .step-label.completed {
-        color: var(--green);
+      .guide-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
-      .step-sep {
-        color: #d1d5db;
-        font-size: 9px;
-      }
-
-      /* ── TYPOGRAPHY ── */
-      .title {
-        font-size: 26px;
+      .guide-text h4 {
+        font-size: 14px;
         font-weight: 700;
-        text-align: center;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
       }
-      .subtitle {
-        font-size: 13px;
-        color: var(--muted);
-        text-align: center;
-        margin-bottom: 20px;
+      .guide-text p {
+        font-size: 12px;
+        color: var(--ink-mid);
         line-height: 1.5;
       }
-      .step-heading {
-        font-size: 20px;
+
+      /* ── Document type cards (step 2) ── */
+      .doc-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex: 1;
+      }
+      .doc-card {
+        background: var(--white);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px 16px;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        touch-action: manipulation;
+      }
+      .doc-card.selected {
+        border-color: var(--red);
+        box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.1);
+      }
+      .doc-card:active {
+        transform: scale(0.98);
+      }
+      .doc-card-icon {
+        font-size: 32px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .doc-card h3 {
+        font-size: 15px;
         font-weight: 700;
-        text-align: center;
         margin-bottom: 4px;
       }
-      .step-subheading {
+      .doc-card p {
         font-size: 13px;
-        color: var(--muted);
-        text-align: center;
-        margin-bottom: 14px;
+        color: var(--ink-mid);
       }
 
-      /* ── BUTTONS ── */
+      /* ── Buttons ── */
       .btn {
         background: var(--red);
-        color: #fff;
+        color: var(--white);
         border: none;
-        border-radius: 30px;
-        padding: 14px 28px;
-        min-height: 48px;
-        width: 100%;
-        font-family: "DM Sans", sans-serif;
+        border-radius: 40px;
+        padding: 15px 28px;
+        min-height: 52px;
+        font-family: var(--font);
         font-size: 15px;
-        font-weight: 600;
+        font-weight: 700;
+        letter-spacing: 0.01em;
         cursor: pointer;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -176,192 +296,118 @@
         transform: scale(0.97);
       }
       .btn:disabled {
-        background: #d1d5db;
+        background: #ccc;
         cursor: not-allowed;
         transform: none;
       }
-      .btn-secondary {
-        background: #6b7280;
-      }
-      .btn-secondary:active {
-        background: #4b5563;
-      }
-      .btn-group {
-        display: flex;
-        gap: 10px;
-        margin-top: 12px;
-      }
-      .btn-group .btn {
-        flex: 1;
-      }
-
-      /* ── GUIDELINE CARDS ── */
-      .guidelines-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 22px;
-        flex: 1;
-      }
-      .guideline-card {
-        background: var(--surface);
-        border-radius: var(--radius);
-        padding: 16px;
-        box-shadow: var(--shadow);
-        display: flex;
-        align-items: flex-start;
-        gap: 14px;
-      }
-      .guideline-icon {
-        width: 36px;
-        height: 36px;
-        flex-shrink: 0;
-        color: var(--red);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .guideline-icon svg {
-        width: 26px;
-        height: 26px;
-        stroke: currentColor;
-        stroke-width: 2;
-        fill: none;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-      .guideline-title {
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: 2px;
-      }
-      .guideline-desc {
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.45;
-      }
-
-      /* ── DOC TYPE CARDS ── */
-      .doc-type-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-bottom: 22px;
-        flex: 1;
-      }
-      .doc-type-card {
-        background: var(--surface);
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink-mid);
         border: 2px solid var(--border);
-        border-radius: var(--radius);
-        padding: 18px 16px;
-        cursor: pointer;
+      }
+      .btn-ghost:active {
+        background: var(--border);
+      }
+      .btn-row {
         display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        transition:
-          border-color 0.2s,
-          box-shadow 0.2s;
-        touch-action: manipulation;
+        gap: 10px;
+        margin-top: 10px;
       }
-      .doc-type-card:active {
-        transform: scale(0.98);
-      }
-      .doc-type-card.selected {
-        border-color: var(--red);
-        box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.12);
-      }
-      .doc-type-icon {
-        width: 40px;
-        height: 40px;
-        flex-shrink: 0;
-        color: var(--red);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 30px;
-      }
-      .doc-type-title {
-        font-size: 15px;
-        font-weight: 700;
-        margin-bottom: 3px;
-      }
-      .doc-type-desc {
-        font-size: 13px;
-        color: var(--muted);
-        line-height: 1.4;
+      .btn-row .btn {
+        flex: 1;
       }
 
-      /* ── CAMERA SECTION ── */
-      .camera-section {
+      /* ── Camera wrapper ── */
+      .cam-wrap {
         position: relative;
         width: 100%;
-        border-radius: var(--radius);
+        border-radius: var(--radius-lg);
         overflow: hidden;
         background: #111;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
-      .camera-video {
+      .cam-video {
         width: 100%;
         display: block;
-        aspect-ratio: 4/3;
         object-fit: cover;
       }
-      .camera-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
+      .cam-video.portrait {
+        aspect-ratio: 3/4;
       }
-
-      .feedback-bar {
-        background: rgba(17, 24, 39, 0.82);
-        color: #fff;
-        text-align: center;
-        padding: 10px 14px;
-        font-size: 13px;
-        font-weight: 600;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        min-height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(4px);
+      .cam-video.landscape {
+        aspect-ratio: 4/3;
       }
-      .feedback-bar.success {
-        background: rgba(22, 163, 74, 0.85);
-      }
-      .feedback-bar.error {
-        background: rgba(220, 38, 38, 0.85);
-      }
-      .feedback-bar.warning {
-        background: rgba(217, 119, 6, 0.85);
-      }
-
-      /* ── LOADING OVERLAY ── */
-      .loading-overlay {
+      .cam-canvas {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.72);
+        pointer-events: none;
+      }
+      .cam-overlay {
+        position: absolute;
+        inset: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        background: rgba(0, 0, 0, 0.65);
         color: #fff;
-        gap: 10px;
+        gap: 12px;
         z-index: 10;
+      }
+      .cam-overlay.hidden {
+        display: none;
+      }
+
+      /* ── Feedback bar ── */
+      .feedback {
+        background: rgba(13, 13, 13, 0.8);
+        color: #fff;
+        border-radius: var(--radius-md);
+        padding: 10px 16px;
         font-size: 13px;
         font-weight: 500;
+        text-align: center;
+        margin-bottom: 12px;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(6px);
+        transition: background 0.2s;
       }
+      .feedback.ok {
+        background: rgba(26, 138, 74, 0.85);
+      }
+      .feedback.warn {
+        background: rgba(194, 124, 0, 0.85);
+      }
+      .feedback.bad {
+        background: rgba(200, 30, 30, 0.85);
+      }
+
+      /* ── Error box ── */
+      .err-box {
+        background: #fdecea;
+        border: 1px solid #f5c6cb;
+        color: #8b1a1a;
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+
+      /* ── Spinner ── */
       .spinner {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         border: 3px solid rgba(255, 255, 255, 0.25);
         border-top-color: var(--red);
         border-radius: 50%;
-        animation: spin 0.7s linear infinite;
+        animation: spin 0.75s linear infinite;
+      }
+      .spinner.dark {
+        border-color: rgba(13, 13, 13, 0.12);
+        border-top-color: var(--red);
       }
       @keyframes spin {
         to {
@@ -369,91 +415,74 @@
         }
       }
 
-      .inline-loading {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        justify-content: center;
-        color: var(--muted);
-        font-size: 13px;
-        padding: 12px 0;
-      }
-      .inline-loading .spinner {
-        width: 22px;
-        height: 22px;
-        border-top-color: var(--red);
-        border-color: #e5e7eb;
-        border-top-color: var(--red);
-      }
-
-      .error-msg {
-        background: rgba(220, 38, 38, 0.1);
-        color: #b91c1c;
-        padding: 10px 14px;
-        border-radius: 10px;
-        font-size: 13px;
-        text-align: center;
-        margin-bottom: 10px;
-      }
-
-      /* ── RESULTS ── */
-      .results-container {
-        background: var(--surface);
-        border-radius: var(--radius);
+      /* ── Results card ── */
+      .results-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
         padding: 20px;
-        box-shadow: var(--shadow);
-        margin-bottom: 14px;
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 16px;
+        border: 1px solid var(--border);
         flex: 1;
       }
       .badge {
         display: inline-block;
-        padding: 5px 14px;
+        padding: 5px 16px;
         border-radius: 20px;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
         margin-bottom: 14px;
       }
       .badge-pass {
-        background: #dcfce7;
-        color: #15803d;
+        background: #d4edda;
+        color: #155724;
       }
       .badge-fail {
-        background: #fee2e2;
-        color: #b91c1c;
+        background: #f8d7da;
+        color: #721c24;
       }
       .badge-review {
-        background: #fef3c7;
-        color: #92400e;
+        background: #fff3cd;
+        color: #856404;
       }
 
       .score-row {
         display: flex;
         justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid var(--border);
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--surface);
         font-size: 13px;
+      }
+      .score-row:last-of-type {
+        border-bottom: none;
       }
       .score-label {
-        color: var(--muted);
+        color: var(--ink-mid);
       }
-      .score-value {
+      .score-val {
         font-weight: 700;
-        font-family: "DM Mono", monospace;
+        font-family: var(--mono);
+        font-size: 13px;
       }
 
-      .extracted-title {
+      /* ── Extracted fields ── */
+      .fields-title {
         font-size: 13px;
         font-weight: 700;
+        color: var(--ink);
         margin: 16px 0 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
       }
       .field-row {
         margin-bottom: 10px;
       }
       .field-label {
         font-size: 11px;
-        color: var(--muted);
+        color: var(--ink-light);
         margin-bottom: 4px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
@@ -462,110 +491,404 @@
         width: 100%;
         padding: 10px 12px;
         border: 1px solid var(--border);
-        border-radius: 8px;
-        font-family: "DM Sans", sans-serif;
-        font-size: 14px;
-        background: #f9fafb;
+        border-radius: var(--radius-sm);
+        font-family: var(--mono);
+        font-size: 13px;
+        background: var(--surface);
+        color: var(--ink);
         transition: border-color 0.2s;
       }
       .field-input:focus {
         outline: none;
         border-color: var(--red);
-        background: #fff;
+        background: var(--white);
       }
 
-      .failure-list {
-        margin-top: 12px;
+      /* ── Failure list ── */
+      .fail-list {
+        margin-top: 14px;
       }
-      .failure-item {
+      .fail-item {
         font-size: 13px;
-        color: #dc2626;
-        padding: 3px 0 3px 14px;
+        color: #8b1a1a;
+        padding: 4px 0 4px 14px;
         position: relative;
       }
-      .failure-item::before {
+      .fail-item::before {
         content: "•";
         position: absolute;
-        left: 4px;
+        left: 2px;
       }
 
-      /* ── DEBUG PANEL ── */
-      .debug-panel {
+      /* ── Results loading ── */
+      .results-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding: 40px 0;
+        color: var(--ink-mid);
+        font-size: 14px;
+      }
+
+      .cam-note {
+        font-size: 11px;
+        color: var(--ink-light);
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      /* ── Debug panel ── */
+      #debugPanel {
         display: none;
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: rgba(0, 0, 0, 0.93);
+        background: rgba(0, 0, 0, 0.92);
         color: #0f0;
-        padding: 14px 16px;
-        font-family: "DM Mono", monospace;
-        font-size: 11px;
-        z-index: 1000;
-        border-radius: 14px 14px 0 0;
-        max-height: 44vh;
+        padding: 16px;
+        font-family: var(--mono);
+        font-size: 12px;
+        z-index: 9999;
+        border-radius: 16px 16px 0 0;
+        max-height: 45vh;
         overflow-y: auto;
       }
-      .debug-panel.visible {
+      #debugPanel.visible {
         display: block;
       }
-      .debug-title {
+      .dbg-title {
         color: #fff;
         font-weight: 700;
         margin-bottom: 8px;
-        font-size: 12px;
       }
-      .debug-row {
+      .dbg-row {
         display: flex;
         justify-content: space-between;
         padding: 2px 0;
       }
-      .debug-label {
-        color: #9ca3af;
+      .dbg-k {
+        color: #aaa;
       }
 
-      .camera-note {
-        font-size: 11px;
-        color: var(--muted);
+      /* ══════════════════════════════════════════════════
+         ROTATE OVERLAY
+         Shown on Step 3 when phone is portrait.
+         Dismissed automatically when user rotates.
+      ══════════════════════════════════════════════════ */
+      #rotateOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 8000;
+        background: #0d0d0d;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 32px;
         text-align: center;
-        margin-top: 10px;
+      }
+      #rotateOverlay.show {
+        display: flex;
+      }
+      .rotate-icon {
+        width: 96px;
+        height: 96px;
+        animation: rotateHint 1.8s ease-in-out infinite;
+        flex-shrink: 0;
+      }
+      @keyframes rotateHint {
+        0% {
+          transform: rotate(0deg) scale(1);
+        }
+        40% {
+          transform: rotate(-90deg) scale(1.08);
+        }
+        60% {
+          transform: rotate(-90deg) scale(1.08);
+        }
+        100% {
+          transform: rotate(0deg) scale(1);
+        }
+      }
+      .rotate-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.01em;
+      }
+      .rotate-sub {
+        font-size: 14px;
+        font-weight: 300;
+        color: rgba(255, 255, 255, 0.55);
+        line-height: 1.6;
+        max-width: 280px;
+      }
+      .rotate-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(229, 9, 20, 0.15);
+        border: 1px solid rgba(229, 9, 20, 0.4);
+        border-radius: 40px;
+        padding: 8px 18px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #ff6b6b;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
       }
 
-      @media (min-width: 400px) {
-        .container {
-          padding: 20px;
+      /* ══════════════════════════════════════════════════
+         LANDSCAPE CAPTURE MODE
+         Applied to <body> when Step 3 is active + landscape.
+         Full-viewport camera, right-side shutter button.
+      ══════════════════════════════════════════════════ */
+      @media (orientation: landscape) {
+        body.landscape-capture .step#step3 .section-title,
+        body.landscape-capture .step#step3 .section-sub {
+          display: none;
         }
-        .title {
-          font-size: 30px;
+
+        body.landscape-capture .app {
+          padding: 0;
+        }
+
+        body.landscape-capture #step3 {
+          position: fixed;
+          inset: 0;
+          z-index: 100;
+          background: #000;
+          padding: 0;
+        }
+
+        body.landscape-capture #idCamWrap {
+          border-radius: 0;
+          margin: 0;
+          height: 100vh;
+          display: block !important;
+        }
+
+        body.landscape-capture .cam-video {
+          width: 100%;
+          height: 100vh;
+          aspect-ratio: unset;
+          object-fit: cover;
+        }
+
+        /* ── Right-side shutter button ── */
+        body.landscape-capture #btnCaptureID {
+          position: fixed;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 64px;
+          height: 64px;
+          min-width: unset;
+          border-radius: 50%;
+          padding: 0;
+          z-index: 200;
+          /* Show a white ring + red fill — classic shutter look */
+          background: #fff;
+          box-shadow:
+            0 0 0 3px rgba(255, 255, 255, 0.4),
+            0 0 0 5px rgba(0, 0, 0, 0.5);
+          font-size: 0; /* hide text */
+          border: none;
+        }
+        body.landscape-capture #btnCaptureID::after {
+          content: "";
+          display: block;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: var(--red);
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+        body.landscape-capture #btnCaptureID:disabled {
+          opacity: 0.45;
+          background: #fff;
+          cursor: not-allowed;
+        }
+
+        /* ── Feedback bar: centred at top, below step bar ── */
+        body.landscape-capture #idFeedback {
+          position: fixed;
+          top: 48px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: auto;
+          min-width: 240px;
+          max-width: 70vw;
+          z-index: 200;
+          margin: 0;
+          border-radius: 40px;
+        }
+
+        /* ── Retry button: above the shutter ── */
+        body.landscape-capture #btnRetryID {
+          position: fixed;
+          right: 12px;
+          top: calc(50% - 80px);
+          transform: none;
+          width: auto;
+          min-width: unset;
+          width: 64px;
+          height: 40px;
+          border-radius: 20px;
+          font-size: 11px;
+          padding: 0 10px;
+          z-index: 200;
+        }
+
+        /* ── Error box: top-centre ── */
+        body.landscape-capture #idError {
+          position: fixed;
+          top: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: auto;
+          max-width: 80vw;
+          z-index: 200;
+          margin: 0;
+        }
+
+        /* ── Step bar: frosted top strip ── */
+        body.landscape-capture .step-bar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 200;
+          background: rgba(0, 0, 0, 0.55);
+          backdrop-filter: blur(6px);
+          padding: 6px 0;
+        }
+        body.landscape-capture .step-pip {
+          color: rgba(255, 255, 255, 0.6);
+        }
+        body.landscape-capture .step-pip.active {
+          color: var(--red);
+          background: rgba(229, 9, 20, 0.15);
+        }
+        body.landscape-capture .step-pip.done {
+          color: #4cd87e;
+        }
+        body.landscape-capture .step-sep {
+          color: rgba(255, 255, 255, 0.3);
         }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <!-- Step Indicator (step 2+) -->
-      <div class="step-indicator" id="stepIndicator" style="display: none">
-        <span class="step-label" data-step="1">Start</span>
-        <span class="step-sep">›</span>
-        <span class="step-label" data-step="2">Select Type</span>
-        <span class="step-sep">›</span>
-        <span class="step-label" data-step="3">ID Photo</span>
-        <span class="step-sep">›</span>
-        <span class="step-label" data-step="4">Selfie</span>
-        <span class="step-sep">›</span>
-        <span class="step-label" data-step="5">Results</span>
+    <!-- ════ ROTATE OVERLAY ════ -->
+    <div id="rotateOverlay" role="alertdialog" aria-live="assertive">
+      <svg
+        class="rotate-icon"
+        viewBox="0 0 96 96"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect
+          x="28"
+          y="14"
+          width="40"
+          height="68"
+          rx="7"
+          stroke="white"
+          stroke-width="3.5"
+          fill="none"
+        />
+        <rect
+          x="33"
+          y="22"
+          width="30"
+          height="46"
+          rx="3"
+          fill="rgba(255,255,255,0.08)"
+          stroke="rgba(255,255,255,0.25)"
+          stroke-width="1.5"
+        />
+        <rect
+          x="41"
+          y="73"
+          width="14"
+          height="3"
+          rx="1.5"
+          fill="rgba(255,255,255,0.4)"
+        />
+        <path
+          d="M18 30 A34 34 0 0 1 66 18"
+          stroke="#e50914"
+          stroke-width="3.5"
+          stroke-linecap="round"
+          fill="none"
+        />
+        <polyline
+          points="62,12 66,18 60,21"
+          stroke="#e50914"
+          stroke-width="3.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"
+        />
+      </svg>
+      <div class="rotate-title">Rotate your phone</div>
+      <div class="rotate-sub">
+        Turn your phone sideways for the best scan. Landscape mode fills the
+        frame with your document.
       </div>
+      <div class="rotate-badge">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
+          <path
+            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+          />
+        </svg>
+        Landscape required
+      </div>
+    </div>
 
-      <!-- ===== STEP 1: LANDING ===== -->
+    <div class="app">
+      <!-- Step indicator -->
+      <nav class="step-bar" id="stepBar">
+        <span class="step-pip" data-step="1">Start</span>
+        <span class="step-sep">›</span>
+        <span class="step-pip" data-step="2">Select Type</span>
+        <span class="step-sep">›</span>
+        <span class="step-pip" data-step="3">ID Photo</span>
+        <span class="step-sep">›</span>
+        <span class="step-pip" data-step="4">Selfie</span>
+        <span class="step-sep">›</span>
+        <span class="step-pip" data-step="5">Results</span>
+      </nav>
+
+      <!-- ════ STEP 1 — Landing ════ -->
       <div class="step active" id="step1">
-        <h1 class="title">Identity Verification</h1>
-        <p class="subtitle">
-          Securely verify your identity document with guided camera capture
-        </p>
-
-        <div class="guidelines-list">
-          <div class="guideline-card">
-            <div class="guideline-icon">
+        <div style="padding-top: 24px">
+          <h1 class="hero-title">Identity<br />Verification</h1>
+          <p class="hero-sub">
+            Securely verify your identity document with guided camera capture
+          </p>
+        </div>
+        <div class="init-banner" id="initBanner">
+          <span id="initMsg">⏳ Loading OCR &amp; face-detection engines…</span>
+        </div>
+        <div class="guide-list">
+          <div class="guide-card">
+            <div class="guide-icon">
               <svg viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="4" />
                 <path
@@ -573,94 +896,94 @@
                 />
               </svg>
             </div>
-            <div>
-              <div class="guideline-title">Good Lighting</div>
-              <div class="guideline-desc">
-                Natural or bright indoor light. Avoid shadows and glare on the
-                ID.
-              </div>
+            <div class="guide-text">
+              <h4>Good Lighting</h4>
+              <p>
+                Natural or bright indoor light. Avoid harsh shadows or glare on
+                the ID.
+              </p>
             </div>
           </div>
-          <div class="guideline-card">
-            <div class="guideline-icon">
+          <div class="guide-card">
+            <div class="guide-icon">
               <svg viewBox="0 0 24 24">
                 <rect x="3" y="6" width="18" height="12" rx="2" />
-                <circle cx="12" cy="12" r="3" />
+                <path d="M3 10h18" />
               </svg>
             </div>
-            <div>
-              <div class="guideline-title">Flat ID Placement</div>
-              <div class="guideline-desc">
-                Place on a dark flat surface. All four corners must be visible.
-              </div>
+            <div class="guide-text">
+              <h4>Flat Document Placement</h4>
+              <p>
+                Place your document on a flat, dark surface. All corners must be
+                visible.
+              </p>
             </div>
           </div>
-          <div class="guideline-card">
-            <div class="guideline-icon">
+          <div class="guide-card">
+            <div class="guide-icon">
               <svg viewBox="0 0 24 24">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M5 20c0-4 3-6 7-6s7 2 7 6" />
               </svg>
             </div>
-            <div>
-              <div class="guideline-title">Clear Selfie</div>
-              <div class="guideline-desc">
+            <div class="guide-text">
+              <h4>Clear Selfie</h4>
+              <p>
                 Face camera directly. Remove glasses, hats, or masks. Neutral
                 expression.
-              </div>
+              </p>
             </div>
           </div>
-          <div class="guideline-card">
-            <div class="guideline-icon">
-              <svg viewBox="0 0 24 24">
-                <path d="M8 3 3 8l5 5M16 3l5 5-5 5" />
-              </svg>
+          <div class="guide-card">
+            <div class="guide-icon">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </div>
-            <div>
-              <div class="guideline-title">Proper Distance</div>
-              <div class="guideline-desc">
-                Hold phone 20–30 cm from ID. Arm's length for selfie.
-              </div>
+            <div class="guide-text">
+              <h4>Proper Distance</h4>
+              <p>
+                Hold phone 20–30 cm from document. For selfie, arm's length is
+                ideal.
+              </p>
             </div>
           </div>
-          <div class="guideline-card">
-            <div class="guideline-icon">
+          <div class="guide-card">
+            <div class="guide-icon">
               <svg viewBox="0 0 24 24">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
-            <div>
-              <div class="guideline-title">Stay Steady</div>
-              <div class="guideline-desc">
-                Keep both hands steady. The app gives real-time guidance.
-              </div>
+            <div class="guide-text">
+              <h4>Stay Steady</h4>
+              <p>
+                Keep both hands steady while capturing. The app guides you in
+                real time.
+              </p>
             </div>
           </div>
-          <div class="guideline-card">
-            <div class="guideline-icon">
+          <div class="guide-card">
+            <div class="guide-icon">
               <svg viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" />
-                <path d="M15 9 9 15M9 9l6 6" />
+                <path d="M15 9l-6 6M9 9l6 6" />
               </svg>
             </div>
-            <div>
-              <div class="guideline-title">Avoid</div>
-              <div class="guideline-desc">
+            <div class="guide-text">
+              <h4>Avoid</h4>
+              <p>
                 No blurry images, cut-off documents, dark rooms, or reflective
                 surfaces.
-              </div>
+              </p>
             </div>
           </div>
         </div>
-
-        <button class="btn" onclick="showStep(2)">
+        <button class="btn" id="btnStart" onclick="goStep(2)">
           <svg
-            width="16"
-            height="16"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="3"
+            stroke-width="2.5"
             stroke-linecap="round"
             stroke-linejoin="round"
           >
@@ -668,117 +991,127 @@
           </svg>
           Start Verification
         </button>
-        <p class="camera-note">
+        <p class="cam-note">
           Camera access required · HTTPS or localhost needed
         </p>
-
-        <div class="inline-loading" id="ocrInitStatus" style="margin-top: 12px">
-          <div class="spinner"></div>
-          <span id="ocrInitMsg">Loading OCR engine…</span>
-        </div>
       </div>
 
-      <!-- ===== STEP 2: SELECT DOC TYPE ===== -->
+      <!-- ════ STEP 2 — Select Document Type ════ -->
       <div class="step" id="step2">
-        <h2 class="step-heading">Select your document type</h2>
-
-        <div class="doc-type-grid">
-          <div
-            class="doc-type-card"
-            id="cardTypeCard"
-            onclick="selectDocType('card')"
-          >
-            <div class="doc-type-icon">🪪</div>
+        <div style="padding-top: 20px">
+          <h2 class="section-title">Select your document type</h2>
+          <p class="section-sub">Choose the document you want to verify</p>
+        </div>
+        <div class="doc-grid">
+          <div class="doc-card" id="cardTypeCard" onclick="selectDoc('card')">
+            <div class="doc-card-icon">🪪</div>
             <div>
-              <div class="doc-type-title">National ID Card</div>
-              <div class="doc-type-desc">
-                Landscape orientation. Plastic card format.
-              </div>
+              <h3>National ID Card</h3>
+              <p>Landscape capture. Kenyan plastic ID card.</p>
             </div>
           </div>
-          <div
-            class="doc-type-card"
-            id="cardTypeBook"
-            onclick="selectDocType('book')"
-          >
-            <div class="doc-type-icon">📘</div>
+          <div class="doc-card" id="cardTypeBook" onclick="selectDoc('book')">
+            <div class="doc-card-icon">📘</div>
             <div>
-              <div class="doc-type-title">ID Book or Passport</div>
-              <div class="doc-type-desc">
-                Portrait orientation. Booklet format.
-              </div>
+              <h3>Passport / ID Book</h3>
+              <p>Landscape capture. Kenyan passport booklet.</p>
             </div>
           </div>
         </div>
-
-        <button class="btn" id="btnContinue" disabled onclick="showStep(3)">
+        <button class="btn" id="btnContinue" disabled onclick="goStep(3)">
           Continue to Capture
         </button>
       </div>
 
-      <!-- ===== STEP 3: ID PHOTO ===== -->
+      <!-- ════ STEP 3 — ID / Passport Photo Capture ════ -->
       <div class="step" id="step3">
-        <h2 class="step-heading">ID Document</h2>
-        <p class="step-subheading">Capture the front of your ID card or book</p>
-
-        <div class="camera-section" id="idCamSection">
+        <div style="padding-top: 20px">
+          <h2 class="section-title" id="step3Title">ID Document</h2>
+          <p class="section-sub" id="step3Sub">
+            Capture the front of your document
+          </p>
+        </div>
+        <div class="cam-wrap" id="idCamWrap" style="display: none">
           <video
-            class="camera-video"
+            class="cam-video landscape"
             id="idVideo"
             autoplay
             playsinline
             muted
           ></video>
-          <canvas class="camera-overlay" id="idOverlay"></canvas>
-          <div class="loading-overlay" id="idCamLoading">
+          <canvas class="cam-canvas" id="idCanvas"></canvas>
+          <div class="cam-overlay" id="idLoading">
             <div class="spinner"></div>
-            <span>Starting camera…</span>
+            <span style="font-size: 13px">Starting camera…</span>
           </div>
         </div>
-
-        <div class="error-msg" id="idError" style="display: none"></div>
-        <div class="feedback-bar" id="idFeedback">Initializing…</div>
-
-        <button class="btn" id="btnCaptureID" onclick="captureAndOCR()">
-          Capture ID Document
+        <div class="err-box" id="idError" style="display: none"></div>
+        <div class="feedback" id="idFeedback" style="display: none">
+          Initialising…
+        </div>
+        <button class="btn" id="btnOpenCam" onclick="openIdCamera()">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Open Camera
         </button>
         <button
-          class="btn btn-secondary"
+          class="btn"
+          id="btnCaptureID"
+          disabled
+          onclick="captureID()"
+          style="display: none"
+        >
+          Capture Document
+        </button>
+        <button
+          class="btn btn-ghost"
           id="btnRetryID"
+          onclick="retryID()"
           style="display: none; margin-top: 10px"
-          onclick="retryIDCam()"
         >
           Retry Camera
         </button>
       </div>
 
-      <!-- ===== STEP 4: SELFIE ===== -->
+      <!-- ════ STEP 4 — Selfie ════ -->
       <div class="step" id="step4">
-        <h2 class="step-heading">Selfie Photo</h2>
-        <p class="step-subheading">Take a clear photo of your face</p>
-
-        <div class="camera-section" id="selfieCamSection">
+        <div style="padding-top: 20px">
+          <h2 class="section-title">Selfie Verification</h2>
+          <p class="section-sub">Position your face within the oval</p>
+        </div>
+        <div class="cam-wrap" id="selfieCamWrap">
           <video
-            class="camera-video"
+            class="cam-video portrait"
             id="selfieVideo"
             autoplay
             playsinline
             muted
           ></video>
-          <canvas class="camera-overlay" id="selfieOverlay"></canvas>
-          <div class="loading-overlay" id="selfieCamLoading">
+          <canvas class="cam-canvas" id="selfieCanvas"></canvas>
+          <div class="cam-overlay" id="selfieLoading">
             <div class="spinner"></div>
-            <span>Starting camera…</span>
+            <span style="font-size: 13px">Starting camera…</span>
           </div>
-          <div class="loading-overlay" id="faceApiLoading">
+          <div class="cam-overlay hidden" id="faceLoading">
             <div class="spinner"></div>
-            <span>Loading face detection…</span>
+            <span style="font-size: 13px">Loading face detection…</span>
           </div>
         </div>
-
-        <div class="error-msg" id="selfieError" style="display: none"></div>
-        <div class="feedback-bar" id="selfieFeedback">Initializing…</div>
-
+        <div class="err-box" id="selfieError" style="display: none"></div>
+        <div class="feedback" id="selfieFeedback">Initialising…</div>
         <button
           class="btn"
           id="btnCaptureSelfie"
@@ -788,174 +1121,162 @@
           Capture Selfie
         </button>
         <button
-          class="btn btn-secondary"
+          class="btn btn-ghost"
           id="btnRetrySelfie"
+          onclick="retrySelfie()"
           style="display: none; margin-top: 10px"
-          onclick="retrySelfieCam()"
         >
           Retry Camera
         </button>
       </div>
 
-      <!-- ===== STEP 5: RESULTS ===== -->
+      <!-- ════ STEP 5 — Results ════ -->
       <div class="step" id="step5">
-        <h2 class="step-heading">Verification Results</h2>
+        <div style="padding-top: 20px">
+          <h2 class="section-title">Verification Results</h2>
+        </div>
 
-        <div class="inline-loading" id="resultsLoading">
-          <div class="spinner"></div>
+        <div class="results-loading" id="resultsLoading">
+          <div class="spinner dark"></div>
           <span>Verifying your documents…</span>
         </div>
 
-        <div class="error-msg" id="resultsError" style="display: none"></div>
+        <div class="err-box" id="resultsError" style="display: none"></div>
 
-        <div
-          class="results-container"
-          id="resultsContainer"
-          style="display: none"
-        >
-          <div class="badge" id="resultBadge">PASS</div>
+        <div class="results-card" id="resultsCard" style="display: none">
+          <!-- Status badge -->
+          <span class="badge" id="resultBadge">REVIEW</span>
 
+          <!-- API score rows -->
           <div class="score-row">
-            <span class="score-label">Authenticity score</span
-            ><span class="score-value" id="scoreAuth">--</span>
+            <span class="score-label">Authenticity score</span>
+            <span class="score-val" id="scoreAuth">--</span>
           </div>
           <div class="score-row">
-            <span class="score-label">Face match score</span
-            ><span class="score-value" id="scoreFace">--</span>
+            <span class="score-label">Face match score</span>
+            <span class="score-val" id="scoreFace">--</span>
           </div>
           <div class="score-row">
-            <span class="score-label">Confidence</span
-            ><span class="score-value" id="scoreConf">--</span>
+            <span class="score-label">Confidence</span>
+            <span class="score-val" id="scoreConf">--</span>
           </div>
           <div class="score-row">
-            <span class="score-label">ID number valid</span
-            ><span class="score-value" id="scoreIdValid">--</span>
+            <span class="score-label" id="docNumLabel"
+              >Document number valid</span
+            >
+            <span class="score-val" id="scoreIdValid">--</span>
           </div>
 
-          <div class="extracted-title">Extracted ID data (editable)</div>
-          <div class="field-row">
-            <div class="field-label">Surname</div>
-            <input
-              type="text"
-              class="field-input"
-              id="fSurname"
-              placeholder="Not extracted"
-            />
-          </div>
-          <div class="field-row">
-            <div class="field-label">First names</div>
-            <input
-              type="text"
-              class="field-input"
-              id="fFirstNames"
-              placeholder="Not extracted"
-            />
-          </div>
-          <div class="field-row">
-            <div class="field-label">ID number</div>
-            <input
-              type="text"
-              class="field-input"
-              id="fIdNumber"
-              placeholder="Not extracted"
-            />
-          </div>
-          <div class="field-row">
-            <div class="field-label">Date of birth</div>
-            <input
-              type="text"
-              class="field-input"
-              id="fDob"
-              placeholder="Not extracted"
-            />
-          </div>
-          <div class="field-row">
-            <div class="field-label">Gender</div>
-            <input
-              type="text"
-              class="field-input"
-              id="fGender"
-              placeholder="Not extracted"
-            />
-          </div>
-          <div class="field-row">
-            <div class="field-label">Nationality</div>
-            <input
-              type="text"
-              class="field-input"
-              id="fNationality"
-              placeholder="Not extracted"
-            />
-          </div>
-          <div class="field-row">
-            <div class="field-label">Age</div>
-            <input
-              type="text"
-              class="field-input"
-              id="fAge"
-              placeholder="Not extracted"
-            />
+          <!-- Expired warning — passport only -->
+          <div
+            class="err-box"
+            id="rowExpiredWarning"
+            style="display: none; margin-top: 12px"
+          >
+            ⚠ This passport appears <strong>expired</strong> based on the MRZ
+            expiry date.
           </div>
 
-          <div class="failure-list" id="failureList" style="display: none">
-            <div class="extracted-title">Failure reasons</div>
-            <div id="failureItems"></div>
+          <!-- Country mismatch warning — passport only -->
+          <div
+            class="err-box"
+            id="rowCountryMismatch"
+            style="
+              display: none;
+              margin-top: 4px;
+              background: #fff8e1;
+              border-color: #ffe082;
+              color: #5f4000;
+            "
+          >
+            ⚠ Issuing country and nationality fields do not match — please
+            review manually.
+          </div>
+
+          <!-- Extracted fields — built dynamically -->
+          <div class="fields-title" id="extractedTitle" style="display: none">
+            Extracted data
+          </div>
+          <div id="extractedFields"></div>
+
+          <!-- MRZ integrity panel — passport only -->
+          <div id="mrzIntegritySection" style="display: none">
+            <div class="fields-title">MRZ integrity</div>
+            <div id="mrzIntegrityBody"></div>
+          </div>
+
+          <!-- Failure reasons -->
+          <div class="fail-list" id="failList" style="display: none">
+            <div class="fields-title" style="color: #8b1a1a">
+              Failure reasons
+            </div>
+            <div id="failItems"></div>
           </div>
         </div>
 
-        <div class="btn-group" id="resultsActions" style="display: none">
+        <div class="btn-row" id="resultsActions" style="display: none">
           <button class="btn" onclick="confirmResults()">
             Confirm &amp; Continue
           </button>
-          <button class="btn btn-secondary" onclick="restart()">Restart</button>
+          <button class="btn btn-ghost" onclick="restart()">Restart</button>
         </div>
       </div>
     </div>
-    <!-- /container -->
+    <!-- /app -->
 
-    <!-- Debug Panel (5 taps to toggle) -->
-    <div class="debug-panel" id="debugPanel">
-      <div class="debug-title">Debug Panel — tap 5× anywhere to dismiss</div>
-      <div class="debug-row">
-        <span class="debug-label">OCR status</span><span id="dbgOcr">--</span>
+    <!-- Debug panel -->
+    <div id="debugPanel">
+      <div class="dbg-title">🛠 Debug — tap 5× to dismiss</div>
+      <div class="dbg-row">
+        <span class="dbg-k">OCR ready:</span> <span id="dbgOcr">loading…</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">Extracted ID#</span
-        ><span id="dbgIdNum">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Face models:</span>
+        <span id="dbgFace">loading…</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">OCR confidence</span
-        ><span id="dbgOcrConf">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Doc type:</span> <span id="dbgDoc">--</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">Brightness</span
-        ><span id="dbgBright">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Parser used:</span> <span id="dbgParser">--</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">Sharpness</span><span id="dbgSharp">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Edge density:</span> <span id="dbgEdge">--</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">Face detected</span
-        ><span id="dbgFace">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Coverage:</span> <span id="dbgCov">--</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">Face width %</span
-        ><span id="dbgFaceW">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Centering:</span> <span id="dbgCtr">--</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">Center offset</span
-        ><span id="dbgFaceOff">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Sharpness:</span> <span id="dbgSharp">--</span>
       </div>
-      <div class="debug-row">
-        <span class="debug-label">Doc type</span><span id="dbgDocType">--</span>
+      <div class="dbg-row">
+        <span class="dbg-k">Brightness:</span> <span id="dbgBright">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Doc number:</span> <span id="dbgIdNum">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Face detected:</span><span id="dbgFaceD">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Face width%:</span> <span id="dbgFaceW">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Face offset:</span> <span id="dbgFaceOff">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Orientation:</span> <span id="dbgOrient">--</span>
       </div>
     </div>
 
     <script>
-      /* =============================================================
-   GLOBAL STATE
-   ============================================================= */
-      window.documentType = null;
+      /* ================================================================
+       GLOBAL STATE
+    ================================================================ */
+      window.documentType = null; // 'card' | 'book'
       window.capturedIDBlob = null;
       window.capturedSelfieBlob = null;
       window.extractedIDData = null;
@@ -965,815 +1286,1479 @@
       let selfieStream = null;
       let idRafId = null;
       let selfieRafId = null;
-      let faceModelsLoaded = false;
-      let ocrWorker = null;
-      let ocrReady = false;
+      let isIdCapturing = false;
+      let lastRoi = null;
 
-      /* =============================================================
-   TESSERACT INIT — create a single persistent worker on page load.
-   workerPath + corePath must be explicit CDN URLs when running
-   from a single HTML file with no bundler (browser cannot resolve
-   relative worker paths from a data: or file: context).
-   ============================================================= */
+      /* ================================================================
+       EAGER ENGINE INIT — starts while user reads Step 1
+    ================================================================ */
+      let ocrReady = false;
+      let faceReady = false;
+
       (async () => {
         try {
-          ocrWorker = await Tesseract.createWorker("eng", 1, {
+          const w = await Tesseract.createWorker("eng", 1, {
             workerPath:
               "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
             corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
             langPath: "https://tessdata.projectnaptha.com/4.0.0",
           });
+          window._ocrWorker = w;
           ocrReady = true;
-          document.getElementById("ocrInitStatus").style.display = "none";
+          dbg("dbgOcr", "ready ✓");
+          checkInitDone();
         } catch (e) {
-          document.getElementById("ocrInitMsg").textContent =
-            "OCR engine failed to load — check network";
           console.error("Tesseract init error:", e);
+          el("initMsg").textContent =
+            "⚠️ OCR engine failed to load — check your connection";
+          dbg("dbgOcr", "FAILED");
         }
       })();
 
-      /* face-api.js models loaded in background */
       (async () => {
         try {
           await faceapi.nets.tinyFaceDetector.loadFromUri(
             "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights",
           );
-          faceModelsLoaded = true;
+          faceReady = true;
+          dbg("dbgFace", "ready ✓");
+          checkInitDone();
         } catch (e) {
-          console.error("face-api model load error:", e);
+          console.error("face-api init error:", e);
+          dbg("dbgFace", "FAILED");
         }
       })();
 
-      /* =============================================================
-   STEP NAVIGATION
-   ============================================================= */
-      function showStep(n) {
-        if (n !== 3) stopIDCam();
-        if (n !== 4) stopSelfieCam();
+      function checkInitDone() {
+        if (ocrReady && faceReady) {
+          const b = el("initBanner");
+          if (b) {
+            b.style.opacity = "0";
+            setTimeout(() => (b.style.display = "none"), 400);
+          }
+        }
+      }
+
+      /* ================================================================
+       STEP NAVIGATION
+    ================================================================ */
+      function goStep(n) {
+        if (currentStep === 3) {
+          stopIdCam();
+          cancelRaf(idRafId);
+          idRafId = null;
+        }
+        if (currentStep === 4) {
+          stopSelfieCam();
+          cancelRaf(selfieRafId);
+          selfieRafId = null;
+        }
 
         document
           .querySelectorAll(".step")
           .forEach((s) => s.classList.remove("active"));
-        document.getElementById("step" + n).classList.add("active");
+        el("step" + n).classList.add("active");
         currentStep = n;
+        updateStepBar(n);
+        el("stepBar").classList.toggle("visible", n >= 2);
 
-        const ind = document.getElementById("stepIndicator");
-        ind.style.display = n >= 2 ? "flex" : "none";
-        document.querySelectorAll(".step-label").forEach((el) => {
-          const s = +el.dataset.step;
-          el.classList.remove("active", "completed");
-          if (s === n) el.classList.add("active");
-          else if (s < n) el.classList.add("completed");
+        if (n === 2) prewarmIdCamera();
+        if (n === 3) initStep3();
+        if (n === 4) {
+          startSelfieCamera();
+          startSelfieAnalysis();
+        }
+        if (n === 5) performVerification();
+      }
+
+      function updateStepBar(active) {
+        document.querySelectorAll(".step-pip").forEach((pip) => {
+          const s = +pip.dataset.step;
+          pip.classList.remove("active", "done");
+          if (s === active) pip.classList.add("active");
+          else if (s < active) pip.classList.add("done");
         });
-
-        if (n === 3) initIDStep();
-        if (n === 4) initSelfieStep();
-        if (n === 5) runVerification();
       }
 
-      /* =============================================================
-   STEP 2 — DOC TYPE
-   ============================================================= */
-      function selectDocType(type) {
-        window.documentType = type;
-        document
-          .getElementById("cardTypeCard")
-          .classList.toggle("selected", type === "card");
-        document
-          .getElementById("cardTypeBook")
-          .classList.toggle("selected", type === "book");
-        document.getElementById("btnContinue").disabled = false;
-        document.getElementById("dbgDocType").textContent = type;
-      }
+      /* ================================================================
+       STEP 2 — Document type selection
+    ================================================================ */
+      let idStreamReady = null;
+      let selfieStreamReady = null;
 
-      /* =============================================================
-   STEP 3 — ID CAMERA + GUIDE FRAME + REAL-TIME HINTS + OCR
-   ============================================================= */
-      async function initIDStep() {
-        setFeedback("idFeedback", "Starting camera…");
-        document.getElementById("idError").style.display = "none";
-        document.getElementById("btnRetryID").style.display = "none";
-        document.getElementById("btnCaptureID").disabled = false;
-        document.getElementById("idCamLoading").style.display = "flex";
-
-        try {
-          let stream;
+      function prewarmIdCamera() {
+        if (idStreamReady) return;
+        idStreamReady = (async () => {
           try {
-            stream = await navigator.mediaDevices.getUserMedia({
+            return await navigator.mediaDevices.getUserMedia({
               video: {
-                facingMode: { exact: "environment" },
+                facingMode: { ideal: "environment" },
                 width: { ideal: 1280 },
                 height: { ideal: 960 },
               },
               audio: false,
             });
           } catch {
-            stream = await navigator.mediaDevices.getUserMedia({
+            return await navigator.mediaDevices.getUserMedia({
               video: true,
               audio: false,
             });
           }
+        })();
+        idStreamReady.catch(() => {
+          idStreamReady = null;
+        });
+      }
+
+      function selectDoc(type) {
+        window.documentType = type;
+        document
+          .querySelectorAll(".doc-card")
+          .forEach((c) => c.classList.remove("selected"));
+        el(type === "card" ? "cardTypeCard" : "cardTypeBook").classList.add(
+          "selected",
+        );
+        el("btnContinue").disabled = false;
+        dbg("dbgDoc", type);
+        prewarmIdCamera();
+      }
+
+      /* ================================================================
+       STEP 3 INIT
+    ================================================================ */
+      function initStep3() {
+        isIdCapturing = false;
+        const isCard = window.documentType === "card";
+
+        el("step3Title").textContent = isCard
+          ? "ID Card"
+          : "Passport / ID Book";
+        el("step3Sub").textContent = isCard
+          ? "Rotate to landscape, then capture the front of your ID card"
+          : "Rotate to landscape, then capture the photo page of your passport";
+        el("btnCaptureID").textContent = isCard
+          ? "Capture ID Card"
+          : "Capture Passport Page";
+
+        // Reset camera UI to pre-open state
+        el("idCamWrap").style.display = "none";
+        el("idFeedback").style.display = "none";
+        el("btnOpenCam").style.display = "flex";
+        el("btnCaptureID").style.display = "none";
+        el("btnRetryID").style.display = "none";
+        el("idError").style.display = "none";
+
+        onOrientationChange();
+        prewarmSelfieCamera();
+      }
+
+      /* ================================================================
+       ID CAMERA
+    ================================================================ */
+      async function openIdCamera() {
+        el("btnOpenCam").style.display = "none";
+        el("idCamWrap").style.display = "block";
+        el("idFeedback").style.display = "flex";
+        el("btnCaptureID").style.display = "flex";
+        await startIdCamera();
+        startIdAnalysis();
+      }
+
+      async function startIdCamera() {
+        el("idError").style.display = "none";
+        el("btnRetryID").style.display = "none";
+
+        const streamPromise =
+          idStreamReady ||
+          (async () => {
+            try {
+              return await navigator.mediaDevices.getUserMedia({
+                video: {
+                  facingMode: { ideal: "environment" },
+                  width: { ideal: 1280 },
+                  height: { ideal: 960 },
+                },
+                audio: false,
+              });
+            } catch {
+              return await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false,
+              });
+            }
+          })();
+
+        const spinnerTimer = setTimeout(() => {
+          el("idLoading").style.display = "flex";
+          setFb("idFeedback", "Starting camera…");
+        }, 80);
+
+        try {
+          const stream = await streamPromise;
+          clearTimeout(spinnerTimer);
+          idStreamReady = null;
           idStream = stream;
-          const vid = document.getElementById("idVideo");
-          vid.srcObject = stream;
-          await vid.play();
-          document.getElementById("idCamLoading").style.display = "none";
-          setFeedback("idFeedback", "Position your ID within the frame");
-          startIDAnalysis();
+          const video = el("idVideo");
+          video.srcObject = stream;
+          await video.play();
+          el("idLoading").style.display = "none";
+          setFb("idFeedback", "Position your document within the frame");
+          resizeIdCanvas();
         } catch (err) {
-          document.getElementById("idCamLoading").style.display = "none";
-          showError(
-            "idError",
-            "Camera access denied — please allow camera permissions and retry.",
-          );
-          document.getElementById("btnRetryID").style.display = "flex";
-          setFeedback("idFeedback", "Camera error", "error");
+          clearTimeout(spinnerTimer);
+          idStreamReady = null;
+          el("idLoading").style.display = "none";
+          el("idError").textContent =
+            "Camera access denied or unavailable. Allow camera permissions and try again.";
+          el("idError").style.display = "block";
+          el("btnRetryID").style.display = "flex";
+          setFb("idFeedback", "Camera error", "bad");
         }
       }
 
-      function stopIDCam() {
-        if (idRafId) {
-          cancelAnimationFrame(idRafId);
-          idRafId = null;
-        }
+      function stopIdCam() {
         if (idStream) {
           idStream.getTracks().forEach((t) => t.stop());
           idStream = null;
         }
-        const v = document.getElementById("idVideo");
+        const v = el("idVideo");
         if (v) v.srcObject = null;
       }
 
-      function retryIDCam() {
-        document.getElementById("idError").style.display = "none";
-        document.getElementById("btnRetryID").style.display = "none";
-        initIDStep();
+      function retryID() {
+        idStreamReady = null;
+        el("idError").style.display = "none";
+        el("btnRetryID").style.display = "none";
+        el("idCamWrap").style.display = "block";
+        el("idFeedback").style.display = "flex";
+        el("btnCaptureID").style.display = "flex";
+        startIdCamera().then(() => startIdAnalysis());
       }
 
-      /* Guide frame — dashed white rectangle, orientation-aware */
-      function drawGuideFrame(canvas, video) {
+      /* ================================================================
+       GUIDE FRAME
+       Card (landscape) : 75% wide × ~54% wide (≈1.4:1 ratio)
+       Passport (portrait): 55% wide × 78% wide (≈0.7:1 ratio)
+    ================================================================ */
+      function resizeIdCanvas() {
+        const canvas = el("idCanvas"),
+          video = el("idVideo");
+        if (!canvas || !video) return;
+        const r = video.getBoundingClientRect();
+        canvas.width = r.width || video.videoWidth;
+        canvas.height = r.height || video.videoHeight;
+        drawIdGuide();
+      }
+
+      function drawIdGuide() {
+        const canvas = el("idCanvas"),
+          video = el("idVideo");
+        if (!canvas) return;
         const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!window.documentType) return;
+
         const cw = canvas.width,
           ch = canvas.height;
-        ctx.clearRect(0, 0, cw, ch);
+        const isCard = window.documentType === "card";
 
-        let fw, fh;
-        if (window.documentType === "book") {
-          fw = cw * 0.5;
-          fh = cw * 0.7;
-        } else {
-          fw = cw * 0.7;
-          fh = cw * 0.5;
-        }
-        const fx = (cw - fw) / 2,
-          fy = (ch - fh) / 2;
+        const fw = isCard ? cw * 0.75 : cw * 0.82; // passport: wider guide
+        const fh = isCard ? fw / 1.586 : fw / 1.42; // passport: landscape ratio ~A5 page
+        const fx = (cw - fw) / 2;
+        const fy = (ch - fh) / 2;
 
-        /* dark vignette outside guide */
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        // Dark vignette outside guide
+        ctx.fillStyle = "rgba(0,0,0,0.38)";
         ctx.beginPath();
         ctx.rect(0, 0, cw, ch);
         ctx.rect(fx, fy, fw, fh);
         ctx.fill("evenodd");
 
-        /* dashed white border */
+        // Dashed guide rect
         ctx.setLineDash([10, 8]);
-        ctx.strokeStyle = "rgba(255,255,255,0.9)";
+        ctx.strokeStyle = "rgba(255,255,255,0.92)";
         ctx.lineWidth = 3;
         ctx.strokeRect(fx, fy, fw, fh);
         ctx.setLineDash([]);
 
-        return { fx, fy, fw, fh };
-      }
+        // Corner accents
+        const cl = 20;
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 4;
+        [
+          [fx, fy, 1, 1],
+          [fx + fw, fy, -1, 1],
+          [fx, fy + fh, 1, -1],
+          [fx + fw, fy + fh, -1, -1],
+        ].forEach(([x, y, dx, dy]) => {
+          ctx.beginPath();
+          ctx.moveTo(x + dx * cl, y);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x, y + dy * cl);
+          ctx.stroke();
+        });
 
-      function syncCanvasSize(canvas, video) {
-        const r = video.getBoundingClientRect();
-        if (canvas.width !== r.width || canvas.height !== r.height) {
-          canvas.width = r.width;
-          canvas.height = r.height;
+        // Store ROI for pixel analysis
+        if (video.videoWidth) {
+          const sx = video.videoWidth / cw,
+            sy = video.videoHeight / ch;
+          lastRoi = {
+            roiX: Math.round(fx * sx),
+            roiY: Math.round(fy * sy),
+            roiW: Math.round(fw * sx),
+            roiH: Math.round(fh * sy),
+          };
         }
       }
 
-      /* Real-time lightweight image analysis (brightness + sharpness guidance only) */
-      function startIDAnalysis() {
-        const video = document.getElementById("idVideo");
-        const canvas = document.getElementById("idOverlay");
-        const scratch = document.createElement("canvas");
-        const sctx = scratch.getContext("2d", { willReadFrequently: true });
-        let last = 0;
+      /* ================================================================
+       REAL-TIME ID ANALYSIS (10 fps)
+    ================================================================ */
+      function startIdAnalysis() {
+        const video = el("idVideo");
+        const buf = document.createElement("canvas");
+        const bctx = buf.getContext("2d", { willReadFrequently: true });
+        let lastTs = 0;
 
         function loop(ts) {
           idRafId = requestAnimationFrame(loop);
-          if (ts - last < 100) return; // ~10 fps
-          last = ts;
+          if (ts - lastTs < 100) return;
+          lastTs = ts;
+          if (!video.videoWidth || video.readyState < 2 || isIdCapturing)
+            return;
 
-          if (!video.videoWidth || video.readyState < 2) return;
-
-          syncCanvasSize(canvas, video);
-          const { fx, fy, fw, fh } = drawGuideFrame(canvas, video);
-
-          /* Sample a small crop for brightness + sharpness */
-          const sw = Math.min(fw, video.videoWidth) | 0;
-          const sh = Math.min(fh, video.videoHeight) | 0;
+          drawIdGuide();
+          if (!lastRoi) return;
+          const { roiX, roiY, roiW, roiH } = lastRoi;
+          const sw = Math.min(roiW, video.videoWidth - roiX);
+          const sh = Math.min(roiH, video.videoHeight - roiY);
           if (sw < 10 || sh < 10) return;
 
-          const scaleX = video.videoWidth / canvas.width;
-          const scaleY = video.videoHeight / canvas.height;
+          buf.width = sw;
+          buf.height = sh;
+          bctx.drawImage(video, roiX, roiY, sw, sh, 0, 0, sw, sh);
+          const gray = toGray(bctx.getImageData(0, 0, sw, sh));
 
-          scratch.width = sw;
-          scratch.height = sh;
-          sctx.drawImage(
-            video,
-            fx * scaleX,
-            fy * scaleY,
-            fw * scaleX,
-            fh * scaleY,
-            0,
-            0,
-            sw,
-            sh,
-          );
+          const edge = edgeDensity(gray, sw, sh);
+          const { cov, cx, cy } = coverageCenter(gray, sw, sh);
+          const off = Math.max(Math.abs(cx - 0.5), Math.abs(cy - 0.5));
+          const sharp = sharpness(gray, sw, sh);
+          const bright = brightness(gray);
 
-          const px = sctx.getImageData(0, 0, sw, sh).data;
-          const gray = new Uint8Array(sw * sh);
-          for (let i = 0; i < gray.length; i++) {
-            gray[i] =
-              0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+          dbg("dbgEdge", edge.toFixed(3));
+          dbg("dbgCov", cov.toFixed(3));
+          dbg("dbgCtr", off.toFixed(3));
+          dbg("dbgSharp", sharp.toFixed(1));
+          dbg("dbgBright", bright.toFixed(1));
+
+          let msg, cls;
+          if (edge < 0.05) {
+            msg = "No document detected";
+            cls = "bad";
+          } else if (cov < 0.5) {
+            msg = "Move closer — document too small";
+            cls = "warn";
+          } else if (cov > 0.95) {
+            msg = "Move away — document cropped";
+            cls = "warn";
+          } else if (off > 0.1) {
+            msg = "Centre the document";
+            cls = "warn";
+          } else if (sharp < 30) {
+            msg = "Blurry — steady your phone";
+            cls = "warn";
+          } else if (bright < 80) {
+            msg = "Too dark — improve lighting";
+            cls = "warn";
+          } else {
+            msg = "Good — ready to capture";
+            cls = "ok";
           }
 
-          const brightness = gray.reduce((a, v) => a + v, 0) / gray.length;
-
-          let lap = 0,
-            n = 0;
-          for (let y = 1; y < sh - 1; y++) {
-            for (let x = 1; x < sw - 1; x++) {
-              const v =
-                4 * gray[y * sw + x] -
-                gray[(y - 1) * sw + x] -
-                gray[(y + 1) * sw + x] -
-                gray[y * sw + (x - 1)] -
-                gray[y * sw + (x + 1)];
-              lap += v * v;
-              n++;
-            }
-          }
-          const sharpness = n > 0 ? lap / n : 0;
-
-          document.getElementById("dbgBright").textContent =
-            brightness.toFixed(1);
-          document.getElementById("dbgSharp").textContent =
-            sharpness.toFixed(1);
-
-          /* Guidance only — capture button stays enabled */
-          if (brightness < 60)
-            setFeedback("idFeedback", "Too dark – improve lighting", "warning");
-          else if (sharpness < 20)
-            setFeedback("idFeedback", "Blurry – steady your phone", "warning");
-          else
-            setFeedback(
-              "idFeedback",
-              "Hold steady – ready to capture",
-              "success",
-            );
+          setFb("idFeedback", msg, cls);
+          el("btnCaptureID").disabled = cls !== "ok";
         }
-
         idRafId = requestAnimationFrame(loop);
       }
 
-      /* =============================================================
-   OCR CAPTURE + PARSE
-   Triggered by button; uses the single persistent Tesseract worker.
-   ============================================================= */
-      async function captureAndOCR() {
-        if (!ocrReady) {
-          setFeedback(
-            "idFeedback",
-            "OCR engine still loading – please wait",
-            "warning",
-          );
-          return;
-        }
+      /* ================================================================
+       ID CAPTURE + OCR
+    ================================================================ */
+      async function captureID() {
+        if (isIdCapturing) return;
+        isIdCapturing = true;
+        el("btnCaptureID").disabled = true;
+        setFb("idFeedback", "Processing — reading document data…");
+        cancelRaf(idRafId);
+        idRafId = null;
 
-        document.getElementById("btnCaptureID").disabled = true;
-        setFeedback("idFeedback", "Processing – reading ID data…");
-        if (idRafId) {
-          cancelAnimationFrame(idRafId);
-          idRafId = null;
-        }
+        const video = el("idVideo");
+        const vw = video.videoWidth,
+          vh = video.videoHeight;
+        const isCard = window.documentType === "card";
 
-        const video = document.getElementById("idVideo");
+        // Crop to guide frame using correct aspect ratios
+        let fw = isCard ? vw * 0.75 : vw * 0.82;
+        let fh = isCard ? fw / 1.586 : fw / 1.42;
+        fw = Math.min(fw, vw);
+        fh = Math.min(fh, vh);
+
         const cap = document.createElement("canvas");
-        cap.width = video.videoWidth;
-        cap.height = video.videoHeight;
+        cap.width = Math.round(fw);
+        cap.height = Math.round(fh);
         const cctx = cap.getContext("2d");
-        cctx.drawImage(video, 0, 0);
+        cctx.drawImage(
+          video,
+          Math.round((vw - fw) / 2),
+          Math.round((vh - fh) / 2),
+          Math.round(fw),
+          Math.round(fh),
+          0,
+          0,
+          cap.width,
+          cap.height,
+        );
 
-        /* Preprocessing: grayscale → contrast stretch → binary threshold */
-        const imgData = cctx.getImageData(0, 0, cap.width, cap.height);
-        preprocessForOCR(imgData, cap.width, cap.height);
-        cctx.putImageData(imgData, 0, 0);
-
-        document.getElementById("dbgOcr").textContent = "running…";
+        preprocessOCR(cctx, cap.width, cap.height);
 
         try {
-          const { data } = await ocrWorker.recognize(cap);
-          const text = data.text || "";
-          document.getElementById("dbgOcrConf").textContent =
-            (data.confidence || 0).toFixed(1) + "%";
+          if (!window._ocrWorker) {
+            setFb("idFeedback", "Loading OCR engine…");
+            window._ocrWorker = await Tesseract.createWorker("eng", 1, {
+              workerPath:
+                "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+              corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
+              langPath: "https://tessdata.projectnaptha.com/4.0.0",
+            });
+          }
+          setFb("idFeedback", "Reading document data…");
+          const { data } = await window._ocrWorker.recognize(
+            cap,
+            {},
+            { tessedit_pageseg_mode: "6" },
+          );
+          dbg("dbgOcr", "conf " + (data.confidence || 0).toFixed(1) + "%");
 
-          const parsed = parseIDText(text);
-          document.getElementById("dbgIdNum").textContent =
-            parsed.idNumber || "none";
+          const parsed = parseDocumentText(data.text || "");
+          dbg("dbgIdNum", parsed.idNumber || "none");
+          dbg(
+            "dbgParser",
+            parsed.isPassport ? "MRZ/passport" : "Kenyan ID card",
+          );
 
           if (!parsed.idNumber) {
-            document.getElementById("dbgOcr").textContent = "failed";
-            showError(
-              "idError",
-              "Could not read ID – adjust lighting and try again.",
+            setFb(
+              "idFeedback",
+              "Could not read document — adjust lighting and try again",
+              "bad",
             );
-            setFeedback("idFeedback", "Try again – ID not readable", "error");
-            document.getElementById("btnCaptureID").disabled = false;
-            startIDAnalysis();
+            el("idError").textContent =
+              "Could not read the document number. Ensure the document is well-lit, flat, and fully within the frame.";
+            el("idError").style.display = "block";
+            el("btnCaptureID").disabled = false;
+            isIdCapturing = false;
+            startIdAnalysis();
             return;
           }
 
-          document.getElementById("dbgOcr").textContent = "success";
           window.extractedIDData = parsed;
 
-          /* Compress captured frame to ≤ 1.5 MB */
-          window.capturedIDBlob = await compressJPEG(
-            video,
-            0.85,
-            1.5 * 1024 * 1024,
-          );
+          // Compress full-frame JPEG ≤ 1.5 MB
+          const full = document.createElement("canvas");
+          full.width = vw;
+          full.height = vh;
+          full.getContext("2d").drawImage(video, 0, 0);
+          let q = 0.85,
+            blob;
+          while (q >= 0.4) {
+            blob = await new Promise((r) => full.toBlob(r, "image/jpeg", q));
+            if (blob.size <= 1.5 * 1024 * 1024) break;
+            q -= 0.05;
+          }
+          window.capturedIDBlob = blob;
 
-          setFeedback("idFeedback", "ID successfully read ✓", "success");
-          document.getElementById("idError").style.display = "none";
-          stopIDCam();
-
-          setTimeout(() => showStep(4), 900);
+          setFb("idFeedback", "Document successfully read ✓", "ok");
+          el("idError").style.display = "none";
+          stopIdCam();
+          setTimeout(() => goStep(4), 900);
         } catch (err) {
           console.error("OCR error:", err);
-          showError("idError", "OCR failed – please try again.");
-          setFeedback("idFeedback", "Error – try again", "error");
-          document.getElementById("btnCaptureID").disabled = false;
-          startIDAnalysis();
+          setFb("idFeedback", "OCR failed — please try again", "bad");
+          el("btnCaptureID").disabled = false;
+          isIdCapturing = false;
+          startIdAnalysis();
         }
       }
 
-      /* Grayscale → contrast stretch → Otsu threshold */
-      function preprocessForOCR(imgData, w, h) {
-        const d = imgData.data;
-        const gray = new Uint8Array(w * h);
-
-        for (let i = 0; i < gray.length; i++) {
-          gray[i] =
-            0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+      /* ================================================================
+       IMAGE PREPROCESSING — greyscale + contrast stretch
+    ================================================================ */
+      function preprocessOCR(ctx, w, h) {
+        const im = ctx.getImageData(0, 0, w, h),
+          d = im.data;
+        const gr = new Uint8Array(w * h);
+        for (let i = 0; i < w * h; i++) {
+          const g = Math.round(
+            0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2],
+          );
+          d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = gr[i] = g;
         }
-
-        /* Contrast stretch */
-        let lo = 255,
-          hi = 0;
-        for (let i = 0; i < gray.length; i++) {
-          if (gray[i] < lo) lo = gray[i];
-          if (gray[i] > hi) hi = gray[i];
-        }
-        const range = hi - lo || 1;
-        for (let i = 0; i < gray.length; i++)
-          gray[i] = (((gray[i] - lo) / range) * 255) | 0;
-
-        /* Otsu threshold */
         const hist = new Int32Array(256);
-        for (let i = 0; i < gray.length; i++) hist[gray[i]]++;
-        const total = gray.length;
-        let sumAll = 0;
-        for (let i = 0; i < 256; i++) sumAll += i * hist[i];
-        let wB = 0,
-          sumB = 0,
-          maxVar = 0,
-          thresh = 128;
-        for (let t = 0; t < 256; t++) {
-          wB += hist[t];
-          if (!wB) continue;
-          const wF = total - wB;
-          if (!wF) break;
-          sumB += t * hist[t];
-          const mB = sumB / wB,
-            mF = (sumAll - sumB) / wF;
-          const v = wB * wF * (mB - mF) * (mB - mF);
-          if (v > maxVar) {
-            maxVar = v;
-            thresh = t;
+        for (let i = 0; i < gr.length; i++) hist[gr[i]]++;
+        let lo = 0,
+          hi = 255,
+          acc = 0;
+        const tot = gr.length;
+        for (let v = 0; v < 256; v++) {
+          acc += hist[v];
+          if (acc >= tot * 0.02) {
+            lo = v;
+            break;
           }
         }
-
-        for (let i = 0; i < gray.length; i++) {
-          const v = gray[i] >= thresh ? 255 : 0;
-          d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v;
-          d[i * 4 + 3] = 255;
-        }
-      }
-
-      /* =============================================================
-   SA ID PARSING
-   Format: YYMMDD SSSS C A Z  (13 digits)
-   Gender: digits 7–10; 0000–4999 = F, 5000–9999 = M
-   Citizenship: digit 11 (0 = SA citizen, 1 = permanent resident)
-   Checksum: Luhn mod-10 on all 13 digits
-   ============================================================= */
-      function luhn(n) {
-        /* Standard Luhn mod-10 check */
-        let sum = 0;
-        let alt = false;
-        for (let i = n.length - 1; i >= 0; i--) {
-          let d = +n[i];
-          if (alt) {
-            d *= 2;
-            if (d > 9) d -= 9;
+        acc = 0;
+        for (let v = 255; v >= 0; v--) {
+          acc += hist[v];
+          if (acc >= tot * 0.02) {
+            hi = v;
+            break;
           }
-          sum += d;
-          alt = !alt;
         }
-        return sum % 10 === 0;
+        const rng = hi - lo || 1;
+        for (let i = 0; i < w * h; i++) {
+          const s = Math.max(
+            0,
+            Math.min(255, Math.round(((gr[i] - lo) / rng) * 255)),
+          );
+          d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = s;
+        }
+        ctx.putImageData(im, 0, 0);
       }
 
-      function parseIDText(text) {
-        /* Strip common OCR noise */
-        const clean = text
-          .replace(/[^0-9A-Za-z\s\-]/g, " ")
-          .replace(/\s+/g, " ");
+      /* ================================================================
+       DOCUMENT TEXT ROUTER
+    ================================================================ */
+      function parseDocumentText(text) {
+        if (window.documentType === "book") {
+          const lines = text
+            .split("\n")
+            .map((l) => l.trim().replace(/\s+/g, ""))
+            .filter(Boolean);
+          for (let i = 0; i < lines.length - 1; i++) {
+            if (
+              lines[i].length === 44 &&
+              lines[i + 1].length === 44 &&
+              (lines[i].startsWith("P") ||
+                (lines[i].match(/</g) || []).length > 8)
+            ) {
+              dbg("dbgParser", "MRZ detected");
+              return parsePassportMRZ(lines[i], lines[i + 1]);
+            }
+          }
+          dbg("dbgParser", "no MRZ → Kenyan ID parser");
+        }
+        return parseKenyanID(text);
+      }
 
-        /* Find 13-digit sequence (allow spaces/hyphens between digits in raw OCR) */
-        const raw13 = text.replace(/[\s\-]/g, "");
-        const match = raw13.match(/\d{13}/);
-        let idNumber = null;
+      /* ================================================================
+       PASSPORT MRZ PARSER (ICAO Doc 9303 — Type P, 44-char lines)
+    ================================================================ */
+      function parsePassportMRZ(l1, l2) {
+        function sanitise(raw) {
+          return raw
+            .toUpperCase()
+            .replace(/\s/g, "")
+            .replace(/[c\(\[\{]/g, "<")
+            .replace(/[^A-Z0-9<]/g, "<")
+            .padEnd(44, "<")
+            .slice(0, 44);
+        }
+        l1 = sanitise(l1);
+        l2 = sanitise(l2);
 
-        if (match) {
-          const candidate = match[0];
-          if (luhn(candidate)) idNumber = candidate;
+        const D2A = { 0: "O", 1: "I", 5: "S", 8: "B", 6: "G", 2: "Z" };
+        const A2D = { O: "0", I: "1", S: "5", B: "8", G: "6", Z: "2" };
+        const fa = (s) =>
+          s
+            .split("")
+            .map((c) => D2A[c] || c)
+            .join("");
+        const fd = (s) =>
+          s
+            .split("")
+            .map((c) => A2D[c] || c)
+            .join("");
+
+        // LINE 1
+        const docType = fa(l1.slice(0, 1));
+        const issuingCountry = fa(l1.slice(2, 5)).replace(/</g, "");
+        const nameField = l1.slice(5);
+
+        // LINE 2
+        const rawPassNo = l2.slice(0, 9);
+        const chkPassNo = fd(l2.charAt(9));
+        const nationality = fa(l2.slice(10, 13)).replace(/</g, "");
+        const rawDob = fd(l2.slice(13, 19));
+        const chkDob = fd(l2.charAt(19));
+        const rawSex = fa(l2.charAt(20));
+        const rawExpiry = fd(l2.slice(21, 27));
+        const chkExpiry = fd(l2.charAt(27));
+        const rawPersonal = l2.slice(28, 42);
+        const chkPersonal = fd(l2.charAt(42));
+        const chkComp = fd(l2.charAt(43));
+
+        // ICAO 7-3-1 check digit
+        function chk(str) {
+          const W = [7, 3, 1];
+          let t = 0;
+          for (let i = 0; i < str.length; i++) {
+            const c = str[i];
+            t +=
+              (c === "<"
+                ? 0
+                : c >= "0" && c <= "9"
+                  ? +c
+                  : c.charCodeAt(0) - 55) * W[i % 3];
+          }
+          return String(t % 10);
         }
 
-        if (!idNumber) return {};
+        const passOk = chk(rawPassNo) === chkPassNo;
+        const dobOk = chk(rawDob) === chkDob;
+        const expOk = chk(rawExpiry) === chkExpiry;
+        const personalOk =
+          rawPersonal.replace(/</g, "") === "" ||
+          chk(rawPersonal) === chkPersonal;
+        const compOk =
+          chk(l2.slice(0, 10) + l2.slice(13, 20) + l2.slice(21, 43)) ===
+          chkComp;
 
-        /* Decode fields from ID number */
-        const yy = idNumber.slice(0, 2);
-        const mm = idNumber.slice(2, 4);
-        const dd = idNumber.slice(4, 6);
-        const ssss = +idNumber.slice(6, 10);
-        const currentYY = +new Date().getFullYear().toString().slice(-2);
-        const century = +yy <= currentYY ? "20" : "19";
-        const dobISO = `${century}${yy}-${mm}-${dd}`;
-        const gender = ssss >= 5000 ? "M" : "F";
-        const birthYear = +(century + yy);
-        const age = new Date().getFullYear() - birthYear;
+        const passed = [passOk, dobOk, expOk, personalOk, compOk].filter(
+          Boolean,
+        ).length;
+        const integrityPct = Math.round((passed / 5) * 100);
 
-        /* Attempt to pull surname and names from OCR text */
+        // Names
+        const nameParts = nameField.split("<<");
+        const surname = (nameParts[0] || "").replace(/</g, " ").trim();
+        const firstNames = nameParts
+          .slice(1)
+          .join(" ")
+          .replace(/</g, " ")
+          .trim();
+
+        // Dates: YYMMDD → YYYY-MM-DD
+        function toISO(yymmdd, future) {
+          if (!/^\d{6}$/.test(yymmdd)) return "";
+          const yy = yymmdd.slice(0, 2),
+            mm = yymmdd.slice(2, 4),
+            dd = yymmdd.slice(4, 6);
+          const cy = +new Date().getFullYear().toString().slice(-2);
+          const cent = future
+            ? +yy <= cy + 20
+              ? "20"
+              : "19"
+            : +yy <= cy
+              ? "20"
+              : "19";
+          return `${cent}${yy}-${mm}-${dd}`;
+        }
+
+        const dobISO = toISO(rawDob, false);
+        const expiryISO = toISO(rawExpiry, true);
+        const dobYear = dobISO ? parseInt(dobISO.slice(0, 4)) : 0;
+        const age = dobYear > 1900 ? new Date().getFullYear() - dobYear : null;
+        const gender =
+          rawSex === "M"
+            ? "M"
+            : rawSex === "F"
+              ? "F"
+              : rawSex === "X"
+                ? "X"
+                : "";
+
+        const passportNumber = rawPassNo.replace(/</g, "").trim();
+        const personalNumber = rawPersonal.replace(/</g, "").trim();
+
+        const documentExpired = expiryISO
+          ? new Date(expiryISO) < new Date(new Date().toDateString())
+          : false;
+        const countryMismatch =
+          issuingCountry &&
+          nationality &&
+          issuingCountry !== nationality &&
+          nationality !== "XXX";
+
+        return {
+          isPassport: true,
+          docType,
+          issuingCountry,
+          surname,
+          firstNames,
+          passportNumber,
+          idNumber: passportNumber, // shared alias
+          nationality,
+          dobISO,
+          age,
+          gender,
+          expiryISO,
+          documentExpired,
+          personalNumber,
+          mrzLine1: l1,
+          mrzLine2: l2,
+          checks: {
+            passport: passOk,
+            dob: dobOk,
+            expiry: expOk,
+            personal: personalOk,
+            composite: compOk,
+            passed,
+            integrityPct,
+          },
+          countryMismatch,
+        };
+      }
+
+      /* ================================================================
+       KENYAN ID CARD PARSER
+    ================================================================ */
+      function parseKenyanID(text) {
         const lines = text
           .split("\n")
           .map((l) => l.trim())
           .filter(Boolean);
-        let surname = "";
-        let firstNames = "";
+        const flat = lines.join(" ");
 
+        const LABEL =
+          /^(JINA|FULL\s*NAMES?|TAREHE|DATE|KUZALIWA|BIRTH|JINSIA|SEX|NCHI|NATIONALITY|NAMBARI|NUMBER|KITAMBULISHO|KUTOLEWA|ISSUE|MAHALI|PLACE|JAMHURI|REPUBLIC|KENYA|NATIONAL|IDENTITY|CARD|TAIFA)/i;
+        const nextVal = (from) => {
+          for (let i = from + 1; i < lines.length; i++)
+            if (!LABEL.test(lines[i]) && lines[i].length > 1)
+              return { line: lines[i], idx: i };
+          return null;
+        };
+
+        // ID number: 8 digits
+        let idNumber = null;
         for (let i = 0; i < lines.length; i++) {
-          const l = lines[i];
-          /* Surname heuristic: all-caps word ≥4 chars, not a known label */
-          if (
-            /^[A-Z]{4,}$/.test(l) &&
-            !/^(SOUTH|AFRICA|NATIONAL|IDENTITY|REPUBLIC)$/.test(l)
-          ) {
-            surname = l;
-            if (lines[i + 1] && /^[A-Z\s]{2,}$/.test(lines[i + 1])) {
-              firstNames = lines[i + 1];
+          if (/NUMBER|NAMBARI/i.test(lines[i])) {
+            const m = [lines[i], lines[i + 1] || "", lines[i + 2] || ""]
+              .join(" ")
+              .replace(/[^0-9]/g, " ")
+              .match(/\b([1-9]\d{7})\b/);
+            if (m) {
+              idNumber = m[1];
+              break;
             }
-            break;
           }
         }
+        if (!idNumber) {
+          const m = flat
+            .replace(/\d{1,2}\.\d{1,2}\.\d{2,4}/g, "")
+            .replace(/[^0-9\s]/g, " ")
+            .match(/\b([1-9]\d{7})\b/);
+          if (m) idNumber = m[1];
+        }
+        if (!idNumber) return {};
 
-        /* Nationality heuristic */
-        let nationality = "RSA";
-        if (/SOUTH\s*AFRICA/i.test(text)) nationality = "RSA";
+        // Full name
+        let surname = "",
+          firstNames = "";
+        for (let i = 0; i < lines.length; i++) {
+          if (/JINA|FULL\s*NAME/i.test(lines[i])) {
+            const v = nextVal(i);
+            if (v) {
+              const p = v.line.trim().split(/\s+/);
+              surname = p[0] || "";
+              firstNames = p.slice(1).join(" ");
+              break;
+            }
+          }
+        }
+        if (!surname) {
+          const SKIP =
+            /^(MALE|FEMALE|KENYAN|KEN|KENYA|REPUBLIC|NATIONAL|IDENTITY|CARD|JAMHURI|TAIFA|KITAMBULISHO)/i;
+          for (const l of lines)
+            if (
+              /^[A-Z][A-Z\s]{4,}$/.test(l) &&
+              !SKIP.test(l) &&
+              !/\d/.test(l)
+            ) {
+              const p = l.trim().split(/\s+/);
+              surname = p[0];
+              firstNames = p.slice(1).join(" ");
+              break;
+            }
+        }
+
+        // Date of birth
+        let dobISO = "";
+        for (let i = 0; i < lines.length; i++) {
+          if (/DATE\s*OF\s*BIRTH|TAREHE.*KUZALIWA|KUZALIWA/i.test(lines[i])) {
+            const m = [lines[i], lines[i + 1] || "", lines[i + 2] || ""]
+              .join(" ")
+              .match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2,4})/);
+            if (m) {
+              const dd = m[1].padStart(2, "0"),
+                mm2 = m[2].padStart(2, "0");
+              let yy = m[3];
+              if (yy.length === 2) {
+                const cy = +new Date().getFullYear().toString().slice(-2);
+                yy = (+yy <= cy ? "20" : "19") + yy;
+              }
+              dobISO = `${yy}-${mm2}-${dd}`;
+              break;
+            }
+          }
+        }
+        if (!dobISO) {
+          const m = flat.match(/(\d{2})[.\-\/](\d{2})[.\-\/](\d{4})/);
+          if (m) dobISO = `${m[3]}-${m[2]}-${m[1]}`;
+        }
+
+        let age = null;
+        if (dobISO) {
+          const yr = +dobISO.slice(0, 4);
+          if (yr > 1900) age = new Date().getFullYear() - yr;
+        }
+
+        let gender = "";
+        for (let i = 0; i < lines.length; i++) {
+          if (
+            /^(SEX|JINSIA)$/i.test(lines[i]) ||
+            /JINSIA.*SEX|SEX.*JINSIA/i.test(lines[i])
+          ) {
+            const v = nextVal(i);
+            if (v) {
+              gender = /FEMALE/i.test(v.line)
+                ? "F"
+                : /MALE/i.test(v.line)
+                  ? "M"
+                  : "";
+              break;
+            }
+          }
+        }
+        if (!gender) {
+          if (/\bFEMALE\b/i.test(flat)) gender = "F";
+          else if (/\bMALE\b/i.test(flat)) gender = "M";
+        }
+
+        const nationality = /\bKENYAN\b/i.test(flat)
+          ? "KENYAN"
+          : /\bKEN\b/i.test(flat)
+            ? "KEN"
+            : "KENYAN";
 
         return {
           idNumber,
-          dobISO,
-          gender,
-          age,
           surname,
           firstNames,
+          dobISO,
+          age,
+          gender,
           nationality,
+          isPassport: false,
         };
       }
 
-      /* =============================================================
-   STEP 4 — SELFIE CAPTURE + FACE DETECTION
-   ============================================================= */
-      async function initSelfieStep() {
-        setFeedback("selfieFeedback", "Starting camera…");
-        document.getElementById("selfieError").style.display = "none";
-        document.getElementById("btnRetrySelfie").style.display = "none";
-        document.getElementById("btnCaptureSelfie").disabled = true;
-        document.getElementById("selfieCamLoading").style.display = "flex";
+      /* ================================================================
+       IMAGE PROCESSING HELPERS
+    ================================================================ */
+      function toGray(imgData) {
+        const d = imgData.data,
+          len = d.length / 4,
+          g = new Uint8Array(len);
+        for (let i = 0; i < len; i++)
+          g[i] = Math.round(
+            0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2],
+          );
+        return g;
+      }
 
-        /* Show face model loading indicator if not ready */
-        document.getElementById("faceApiLoading").style.display =
-          faceModelsLoaded ? "none" : "flex";
+      function edgeDensity(g, w, h) {
+        let n = 0;
+        for (let y = 1; y < h - 1; y++)
+          for (let x = 1; x < w - 1; x++) {
+            const tl = g[(y - 1) * w + (x - 1)],
+              t = g[(y - 1) * w + x],
+              tr = g[(y - 1) * w + (x + 1)];
+            const l = g[y * w + (x - 1)],
+              r = g[y * w + (x + 1)];
+            const bl = g[(y + 1) * w + (x - 1)],
+              b = g[(y + 1) * w + x],
+              br = g[(y + 1) * w + (x + 1)];
+            if (
+              Math.sqrt(
+                (-tl - 2 * l - bl + tr + 2 * r + br) ** 2 +
+                  (-tl - 2 * t - tr + bl + 2 * b + br) ** 2,
+              ) > 30
+            )
+              n++;
+          }
+        return n / (w * h);
+      }
 
-        try {
-          let stream;
+      function coverageCenter(g, w, h) {
+        const em = new Uint8Array(w * h);
+        for (let y = 1; y < h - 1; y++)
+          for (let x = 1; x < w - 1; x++) {
+            const tl = g[(y - 1) * w + (x - 1)],
+              t = g[(y - 1) * w + x],
+              tr = g[(y - 1) * w + (x + 1)];
+            const l = g[y * w + (x - 1)],
+              r = g[y * w + (x + 1)];
+            const bl = g[(y + 1) * w + (x - 1)],
+              b = g[(y + 1) * w + x],
+              br = g[(y + 1) * w + (x + 1)];
+            em[y * w + x] =
+              Math.sqrt(
+                (-tl - 2 * l - bl + tr + 2 * r + br) ** 2 +
+                  (-tl - 2 * t - tr + bl + 2 * b + br) ** 2,
+              ) > 30
+                ? 1
+                : 0;
+          }
+        const dil = new Uint8Array(w * h);
+        for (let y = 0; y < h; y++)
+          for (let x = 0; x < w; x++) {
+            if (!em[y * w + x]) continue;
+            for (let dy = -2; dy <= 2; dy++)
+              for (let dx = -2; dx <= 2; dx++) {
+                const nx = x + dx,
+                  ny = y + dy;
+                if (nx >= 0 && nx < w && ny >= 0 && ny < h)
+                  dil[ny * w + nx] = 1;
+              }
+          }
+        let cnt = 0,
+          sx = 0,
+          sy = 0;
+        for (let y = 0; y < h; y++)
+          for (let x = 0; x < w; x++)
+            if (dil[y * w + x]) {
+              cnt++;
+              sx += x;
+              sy += y;
+            }
+        return {
+          cov: cnt / (w * h),
+          cx: cnt ? sx / cnt / w : 0.5,
+          cy: cnt ? sy / cnt / h : 0.5,
+        };
+      }
+
+      function sharpness(g, w, h) {
+        let s = 0,
+          s2 = 0,
+          n = 0;
+        for (let y = 1; y < h - 1; y++)
+          for (let x = 1; x < w - 1; x++) {
+            const i = y * w + x,
+              v = 4 * g[i] - g[i - 1] - g[i + 1] - g[i - w] - g[i + w];
+            s += v;
+            s2 += v * v;
+            n++;
+          }
+        return n ? s2 / n - (s / n) ** 2 : 0;
+      }
+
+      function brightness(g) {
+        let s = 0;
+        for (let i = 0; i < g.length; i++) s += g[i];
+        return s / g.length;
+      }
+
+      /* ================================================================
+       STEP 4 — Selfie
+    ================================================================ */
+      function prewarmSelfieCamera() {
+        if (selfieStreamReady) return;
+        selfieStreamReady = (async () => {
           try {
-            stream = await navigator.mediaDevices.getUserMedia({
+            return await navigator.mediaDevices.getUserMedia({
               video: {
-                facingMode: { exact: "user" },
+                facingMode: { ideal: "user" },
                 width: { ideal: 1280 },
                 height: { ideal: 960 },
               },
               audio: false,
             });
           } catch {
-            stream = await navigator.mediaDevices.getUserMedia({
+            return await navigator.mediaDevices.getUserMedia({
               video: true,
               audio: false,
             });
           }
-          selfieStream = stream;
-          const vid = document.getElementById("selfieVideo");
-          vid.srcObject = stream;
-          await vid.play();
-          document.getElementById("selfieCamLoading").style.display = "none";
-
-          /* Wait for face models if still loading */
-          if (!faceModelsLoaded) {
-            setFeedback("selfieFeedback", "Loading face detection…");
-            await waitForFaceModels();
-            document.getElementById("faceApiLoading").style.display = "none";
-          }
-
-          syncSelfieCanvas();
-          startSelfieAnalysis();
-        } catch (err) {
-          document.getElementById("selfieCamLoading").style.display = "none";
-          document.getElementById("faceApiLoading").style.display = "none";
-          showError(
-            "selfieError",
-            "Camera access denied — please allow camera permissions and retry.",
-          );
-          document.getElementById("btnRetrySelfie").style.display = "flex";
-          setFeedback("selfieFeedback", "Camera error", "error");
-        }
-      }
-
-      function waitForFaceModels() {
-        return new Promise((res) => {
-          const check = setInterval(() => {
-            if (faceModelsLoaded) {
-              clearInterval(check);
-              res();
-            }
-          }, 200);
-          setTimeout(() => {
-            clearInterval(check);
-            res();
-          }, 10000);
+        })();
+        selfieStreamReady.catch(() => {
+          selfieStreamReady = null;
         });
       }
 
-      function stopSelfieCam() {
-        if (selfieRafId) {
-          cancelAnimationFrame(selfieRafId);
-          selfieRafId = null;
+      async function startSelfieCamera() {
+        const video = el("selfieVideo");
+        const loader = el("selfieLoading");
+        const fLoad = el("faceLoading");
+        const err = el("selfieError");
+        const retry = el("btnRetrySelfie");
+        err.style.display = "none";
+        retry.style.display = "none";
+
+        if (!faceReady) {
+          fLoad.classList.remove("hidden");
+          fLoad.style.display = "flex";
+          const poll = setInterval(() => {
+            if (faceReady) {
+              fLoad.classList.add("hidden");
+              fLoad.style.display = "none";
+              clearInterval(poll);
+            }
+          }, 200);
         }
+
+        const streamPromise =
+          selfieStreamReady ||
+          (async () => {
+            try {
+              return await navigator.mediaDevices.getUserMedia({
+                video: {
+                  facingMode: { ideal: "user" },
+                  width: { ideal: 1280 },
+                  height: { ideal: 960 },
+                },
+                audio: false,
+              });
+            } catch {
+              return await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false,
+              });
+            }
+          })();
+
+        const spinnerTimer = setTimeout(() => {
+          loader.classList.remove("hidden");
+          loader.style.display = "flex";
+          setFb("selfieFeedback", "Starting camera…");
+        }, 80);
+
+        try {
+          const stream = await streamPromise;
+          clearTimeout(spinnerTimer);
+          selfieStreamReady = null;
+          selfieStream = stream;
+          video.srcObject = stream;
+          await video.play();
+          loader.style.display = "none";
+          resizeSelfieCanvas();
+        } catch (e) {
+          clearTimeout(spinnerTimer);
+          selfieStreamReady = null;
+          loader.style.display = "none";
+          fLoad.style.display = "none";
+          err.textContent =
+            "Camera access denied or unavailable. Allow camera permissions and try again.";
+          err.style.display = "block";
+          retry.style.display = "flex";
+          setFb("selfieFeedback", "Camera error", "bad");
+        }
+      }
+
+      function stopSelfieCam() {
         if (selfieStream) {
           selfieStream.getTracks().forEach((t) => t.stop());
           selfieStream = null;
         }
-        const v = document.getElementById("selfieVideo");
+        const v = el("selfieVideo");
         if (v) v.srcObject = null;
       }
-
-      function retrySelfieCam() {
-        document.getElementById("selfieError").style.display = "none";
-        document.getElementById("btnRetrySelfie").style.display = "none";
-        initSelfieStep();
+      function retrySelfie() {
+        selfieStreamReady = null;
+        el("selfieError").style.display = "none";
+        el("btnRetrySelfie").style.display = "none";
+        startSelfieCamera();
       }
-
-      function syncSelfieCanvas() {
-        const vid = document.getElementById("selfieVideo");
-        const canvas = document.getElementById("selfieOverlay");
-        const r = vid.getBoundingClientRect();
-        canvas.width = r.width;
-        canvas.height = r.height;
+      function resizeSelfieCanvas() {
+        const v = el("selfieVideo"),
+          c = el("selfieCanvas");
+        if (!v || !c) return;
+        const r = v.getBoundingClientRect();
+        c.width = r.width;
+        c.height = r.height;
       }
 
       function startSelfieAnalysis() {
-        const video = document.getElementById("selfieVideo");
-        const canvas = document.getElementById("selfieOverlay");
+        const video = el("selfieVideo");
+        const canvas = el("selfieCanvas");
         const ctx = canvas.getContext("2d");
-        let last = 0;
+        let lastTs = 0;
 
         async function loop(ts) {
           selfieRafId = requestAnimationFrame(loop);
-          if (ts - last < 125) return; // ~8 fps
-          last = ts;
+          if (ts - lastTs < 125) return;
+          lastTs = ts;
+          if (!video.videoWidth || video.readyState < 2) return;
 
-          if (!video.videoWidth || video.readyState < 2 || !faceModelsLoaded)
-            return;
-
-          syncSelfieCanvas();
           ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+          const cw = canvas.width,
+            ch = canvas.height;
+          const ovalRx = cw * 0.38;
+          const ovalRy = ovalRx * 1.35;
+          const ovalCx = cw / 2,
+            ovalCy = ch / 2;
+
+          let ovalColor = "rgba(255,255,255,0.85)";
+          let ovalDash = true;
+          let ovalWidth = 2.5;
+
+          if (!faceReady) {
+            ctx.fillStyle = "rgba(0,0,0,0.30)";
+            ctx.beginPath();
+            ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.setLineDash([10, 7]);
+            ctx.strokeStyle = ovalColor;
+            ctx.lineWidth = ovalWidth;
+            ctx.beginPath();
+            ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            setFb("selfieFeedback", "Loading face detection…");
+            return;
+          }
+
+          let det;
           try {
-            const det = await faceapi.detectSingleFace(
+            det = await faceapi.detectSingleFace(
               video,
               new faceapi.TinyFaceDetectorOptions(),
             );
-
-            if (!det) {
-              setFeedback("selfieFeedback", "No face detected", "error");
-              document.getElementById("btnCaptureSelfie").disabled = true;
-              document.getElementById("dbgFace").textContent = "false";
-              return;
-            }
-
-            const box = det.box;
-            const fwPct = box.width / video.videoWidth;
-            const centerOffX = Math.abs(
-              (box.x + box.width / 2) / video.videoWidth - 0.5,
-            );
-            const centerOffY = Math.abs(
-              (box.y + box.height / 2) / video.videoHeight - 0.5,
-            );
-            const offset = Math.max(centerOffX, centerOffY);
-
-            document.getElementById("dbgFace").textContent = "true";
-            document.getElementById("dbgFaceW").textContent =
-              (fwPct * 100).toFixed(1) + "%";
-            document.getElementById("dbgFaceOff").textContent =
-              offset.toFixed(3);
-
-            /* Scale bounding box to canvas coordinates */
-            const sx = canvas.width / video.videoWidth;
-            const sy = canvas.height / video.videoHeight;
-            const bx = box.x * sx,
-              by = box.y * sy;
-            const bw = box.width * sx,
-              bh = box.height * sy;
-
-            /* Solid #e50914 oval overlay */
-            ctx.beginPath();
-            ctx.ellipse(
-              bx + bw / 2,
-              by + bh / 2,
-              bw / 2,
-              bh / 2,
-              0,
-              0,
-              Math.PI * 2,
-            );
-            ctx.setLineDash([]);
-            ctx.strokeStyle = "#e50914";
-            ctx.lineWidth = 3;
-            ctx.fillStyle = "rgba(255,255,255,0.10)";
-            ctx.fill();
-            ctx.stroke();
-
-            let ready = false;
-            if (fwPct < 0.25)
-              setFeedback(
-                "selfieFeedback",
-                "Face too small – move closer",
-                "warning",
-              );
-            else if (fwPct > 0.55)
-              setFeedback(
-                "selfieFeedback",
-                "Face too large – move away",
-                "warning",
-              );
-            else if (offset > 0.1)
-              setFeedback("selfieFeedback", "Center your face", "warning");
-            else {
-              setFeedback(
-                "selfieFeedback",
-                "Good – ready to capture",
-                "success",
-              );
-              ready = true;
-            }
-
-            document.getElementById("btnCaptureSelfie").disabled = !ready;
-          } catch {
-            /* skip frame on detection error */
+          } catch (e) {
+            return;
           }
-        }
 
+          let msg, cls;
+          if (!det) {
+            dbg("dbgFaceD", "false");
+            dbg("dbgFaceW", "--");
+            dbg("dbgFaceOff", "--");
+            msg = "Position your face in the oval";
+            cls = "bad";
+            el("btnCaptureSelfie").disabled = true;
+          } else {
+            const box = det.box;
+            const fw2 = box.width / video.videoWidth;
+            const fcx = (box.x + box.width / 2) / video.videoWidth;
+            const fcy = (box.y + box.height / 2) / video.videoHeight;
+            const off = Math.max(Math.abs(fcx - 0.5), Math.abs(fcy - 0.5));
+            dbg("dbgFaceD", "true");
+            dbg("dbgFaceW", (fw2 * 100).toFixed(1) + "%");
+            dbg("dbgFaceOff", off.toFixed(3));
+
+            if (fw2 < 0.25) {
+              msg = "Face too small — move closer";
+              cls = "warn";
+            } else if (fw2 > 0.55) {
+              msg = "Face too large — move away";
+              cls = "warn";
+            } else if (off > 0.1) {
+              msg = "Centre your face in the oval";
+              cls = "warn";
+            } else {
+              msg = "Good — ready to capture";
+              cls = "ok";
+            }
+            el("btnCaptureSelfie").disabled = cls !== "ok";
+
+            if (cls === "ok") {
+              ovalColor = "rgba(26,138,74,0.95)";
+              ovalDash = false;
+              ovalWidth = 3;
+            } else {
+              ovalColor = "rgba(194,124,0,0.9)";
+              ovalDash = true;
+              ovalWidth = 3;
+            }
+          }
+
+          // Vignette outside oval
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.beginPath();
+          ctx.rect(0, 0, cw, ch);
+          ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+          ctx.fill("evenodd");
+
+          // Guide oval
+          ctx.setLineDash(ovalDash ? [10, 7] : []);
+          ctx.strokeStyle = ovalColor;
+          ctx.lineWidth = ovalWidth;
+          ctx.beginPath();
+          ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          if (cls === "ok") {
+            ctx.fillStyle = "rgba(26,138,74,0.12)";
+            ctx.beginPath();
+            ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+
+          setFb("selfieFeedback", msg, cls);
+        }
         selfieRafId = requestAnimationFrame(loop);
       }
 
       async function captureSelfie() {
-        const video = document.getElementById("selfieVideo");
-        window.capturedSelfieBlob = await compressJPEG(
-          video,
-          0.85,
-          1.5 * 1024 * 1024,
-        );
+        const video = el("selfieVideo");
+        const c = document.createElement("canvas");
+        c.width = video.videoWidth;
+        c.height = video.videoHeight;
+        c.getContext("2d").drawImage(video, 0, 0);
+        let q = 0.85,
+          blob;
+        while (q >= 0.4) {
+          blob = await new Promise((r) => c.toBlob(r, "image/jpeg", q));
+          if (blob.size <= 1.5 * 1024 * 1024) break;
+          q -= 0.05;
+        }
+        window.capturedSelfieBlob = blob;
         stopSelfieCam();
-        showStep(5);
+        cancelRaf(selfieRafId);
+        selfieRafId = null;
+        goStep(5);
       }
 
-      /* =============================================================
-   STEP 5 — VERIFICATION API + RESULTS
-   ============================================================= */
-      async function runVerification() {
-        document.getElementById("resultsLoading").style.display = "flex";
-        document.getElementById("resultsError").style.display = "none";
-        document.getElementById("resultsContainer").style.display = "none";
-        document.getElementById("resultsActions").style.display = "none";
+      /* ================================================================
+       STEP 5 — Results
+    ================================================================ */
+      async function performVerification() {
+        el("resultsLoading").style.display = "flex";
+        el("resultsError").style.display = "none";
+        el("resultsCard").style.display = "none";
+        el("resultsActions").style.display = "none";
+
+        // Stub mode — no real API configured
+        if (
+          !window.API_BASE_URL ||
+          window.API_BASE_URL === "https://your-api.com/verify"
+        ) {
+          displayResults({
+            status: "REVIEW",
+            id_number_valid: !!(
+              window.extractedIDData && window.extractedIDData.idNumber
+            ),
+            extracted_data: {},
+          });
+          return;
+        }
 
         try {
           const fd = new FormData();
           fd.append("id_image", window.capturedIDBlob, "id.jpg");
           fd.append("selfie_image", window.capturedSelfieBlob, "selfie.jpg");
-
-          const res = await fetch(window.API_BASE_URL, {
+          const resp = await fetch(window.API_BASE_URL, {
             method: "POST",
             headers: { Authorization: "Bearer " + window.AUTH_TOKEN },
             body: fd,
           });
-
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const data = await res.json();
-          renderResults(data);
+          if (!resp.ok)
+            throw new Error("HTTP " + resp.status + " " + resp.statusText);
+          displayResults(await resp.json());
         } catch (err) {
-          document.getElementById("resultsLoading").style.display = "none";
-          showError(
-            "resultsError",
-            "Verification failed: " +
-              err.message +
-              ". You can restart and try again.",
-          );
-          document.getElementById("resultsActions").style.display = "flex";
+          el("resultsLoading").style.display = "none";
+          el("resultsError").textContent =
+            "Verification failed: " + err.message + ". Restart and try again.";
+          el("resultsError").style.display = "block";
+          el("resultsActions").style.display = "flex";
         }
       }
 
-      function renderResults(data) {
-        document.getElementById("resultsLoading").style.display = "none";
-        document.getElementById("resultsContainer").style.display = "block";
-        document.getElementById("resultsActions").style.display = "flex";
+      /* ----------------------------------------------------------------
+       buildField — create a labelled read-only input row
+    ---------------------------------------------------------------- */
+      function buildField(label, value, id) {
+        if (!value && value !== 0) return ""; // omit empty fields
+        const safeId = id ? ` id="${id}"` : "";
+        return `
+        <div class="field-row">
+          <div class="field-label">${esc(label)}</div>
+          <input class="field-input" type="text" value="${esc(String(value))}"${safeId}>
+        </div>`;
+      }
 
-        const status = (data.overall_decision || "REVIEW").toUpperCase();
-        const badge = document.getElementById("resultBadge");
+      function displayResults(data) {
+        el("resultsLoading").style.display = "none";
+        el("resultsCard").style.display = "block";
+        el("resultsActions").style.display = "flex";
+
+        const status = (
+          data.status ||
+          data.overall_decision ||
+          "REVIEW"
+        ).toUpperCase();
+        const badge = el("resultBadge");
         badge.textContent = status;
-        badge.className = "badge";
-        badge.classList.add(
-          status === "PASS"
+        badge.className =
+          "badge " +
+          (status === "PASS"
             ? "badge-pass"
             : status === "FAIL"
               ? "badge-fail"
-              : "badge-review",
-        );
+              : "badge-review");
 
-        document.getElementById("scoreAuth").textContent =
+        // API score rows
+        el("scoreAuth").textContent =
           data.authenticity_score != null
             ? data.authenticity_score.toFixed(2)
             : "--";
-        document.getElementById("scoreFace").textContent =
+        el("scoreFace").textContent =
           data.face_match_score != null
             ? data.face_match_score.toFixed(2)
             : "--";
-        document.getElementById("scoreConf").textContent =
-          data.face_match_confidence != null
-            ? data.face_match_confidence.toFixed(1) + "%"
-            : "--";
-        document.getElementById("scoreIdValid").textContent =
+        el("scoreConf").textContent =
+          data.confidence != null ? data.confidence.toFixed(1) + "%" : "--";
+        el("scoreIdValid").textContent =
           data.id_number_valid === true
             ? "✅ Yes"
             : data.id_number_valid === false
               ? "❌ No"
               : "--";
 
-        const ex = data.extracted_id_data || window.extractedIDData || {};
-        document.getElementById("fSurname").value = ex.surname || "";
-        document.getElementById("fFirstNames").value =
-          ex.first_names || ex.firstNames || "";
-        document.getElementById("fIdNumber").value =
-          ex.id_number || ex.idNumber || "";
-        document.getElementById("fDob").value =
-          ex.date_of_birth || ex.dobISO || "";
-        document.getElementById("fGender").value = ex.gender || "";
-        document.getElementById("fNationality").value = ex.nationality || "";
-        document.getElementById("fAge").value =
-          ex.age != null ? String(ex.age) : "";
+        const api = data.extracted_data || {};
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
 
-        const failures = data.failure_reasons || [];
-        const fl = document.getElementById("failureList");
-        if (failures.length) {
-          document.getElementById("failureItems").innerHTML = failures
-            .map((f) => `<div class="failure-item">${escHtml(f)}</div>`)
-            .join("");
-          fl.style.display = "block";
+        // Update dynamic score label
+        el("docNumLabel").textContent = isPassport
+          ? "Passport number valid"
+          : "ID number valid";
+
+        // ── Expiry / mismatch warnings ──
+        el("rowExpiredWarning").style.display =
+          isPassport && ocr.documentExpired ? "block" : "none";
+        el("rowCountryMismatch").style.display =
+          isPassport && ocr.countryMismatch ? "block" : "none";
+
+        // ── Extracted fields — built dynamically so empty fields are omitted ──
+        const fieldsEl = el("extractedFields");
+        let html = "";
+
+        if (isPassport) {
+          const passNum =
+            api.passport_number || ocr.passportNumber || ocr.idNumber || "";
+          html += buildField("Passport number", passNum, "fPassportNumber");
+          html += buildField("Surname", api.surname || ocr.surname, "fSurname");
+          html += buildField(
+            "First names",
+            api.first_names || ocr.firstNames,
+            "fFirstNames",
+          );
+          html += buildField(
+            "Date of birth",
+            api.date_of_birth || ocr.dobISO,
+            "fDob",
+          );
+          html += buildField(
+            "Age",
+            api.age != null ? api.age : ocr.age,
+            "fAge",
+          );
+          html += buildField("Gender", api.gender || ocr.gender, "fGender");
+          html += buildField(
+            "Nationality",
+            api.nationality || ocr.nationality,
+            "fNationality",
+          );
+          html += buildField(
+            "Issuing country",
+            api.issuing_country || ocr.issuingCountry,
+            "fIssuingCountry",
+          );
+          html += buildField(
+            "Expiry date",
+            api.expiry_date || ocr.expiryISO,
+            "fExpiry",
+          );
+          if (ocr.personalNumber) {
+            html += buildField(
+              "Personal / National ID",
+              ocr.personalNumber,
+              "fPersonalNumber",
+            );
+          }
         } else {
-          fl.style.display = "none";
+          html += buildField(
+            "ID number",
+            api.id_number || ocr.idNumber,
+            "fIdNumber",
+          );
+          html += buildField("Surname", api.surname || ocr.surname, "fSurname");
+          html += buildField(
+            "First names",
+            api.first_names || ocr.firstNames,
+            "fFirstNames",
+          );
+          html += buildField(
+            "Date of birth",
+            api.date_of_birth || ocr.dobISO,
+            "fDob",
+          );
+          html += buildField(
+            "Age",
+            api.age != null ? api.age : ocr.age,
+            "fAge",
+          );
+          html += buildField("Gender", api.gender || ocr.gender, "fGender");
+          html += buildField(
+            "Nationality",
+            api.nationality || ocr.nationality,
+            "fNationality",
+          );
         }
+
+        fieldsEl.innerHTML = html;
+        const hasFields = html.trim().length > 0;
+        el("extractedTitle").style.display = hasFields ? "block" : "none";
+
+        // ── MRZ integrity — passport only ──
+        const mrzSection = el("mrzIntegritySection");
+        if (isPassport && ocr.checks) {
+          const c = ocr.checks;
+          const checkRow = (label, ok) =>
+            `<div class="score-row">
+            <span class="score-label">${label}</span>
+            <span class="score-val" style="color:${ok ? "var(--green)" : "#c0392b"}">${ok ? "✓ Pass" : "✗ Fail"}</span>
+          </div>`;
+          el("mrzIntegrityBody").innerHTML =
+            checkRow("Passport number check", c.passport) +
+            checkRow("Date of birth check", c.dob) +
+            checkRow("Expiry date check", c.expiry) +
+            checkRow("Personal number check", c.personal) +
+            checkRow("Composite check", c.composite) +
+            `<div class="score-row">
+            <span class="score-label">Overall integrity</span>
+            <span class="score-val">${c.integrityPct}%</span>
+          </div>`;
+          // Display sanitised MRZ lines for audit
+          if (ocr.mrzLine1) {
+            el("mrzIntegrityBody").innerHTML +=
+              buildField("MRZ line 1", ocr.mrzLine1) +
+              buildField("MRZ line 2", ocr.mrzLine2);
+          }
+          mrzSection.style.display = "block";
+        } else {
+          mrzSection.style.display = "none";
+        }
+
+        // ── Failure reasons ──
+        const fails = data.failure_reasons || [];
+        el("failList").style.display = fails.length ? "block" : "none";
+        el("failItems").innerHTML = fails
+          .map((f) => `<div class="fail-item">${esc(f)}</div>`)
+          .join("");
       }
 
       function confirmResults() {
@@ -1786,88 +2771,127 @@
         window.documentType = null;
         window.extractedIDData = null;
 
-        stopIDCam();
+        stopIdCam();
         stopSelfieCam();
+        cancelRaf(idRafId);
+        idRafId = null;
+        cancelRaf(selfieRafId);
+        selfieRafId = null;
 
         document
-          .querySelectorAll(".doc-type-card")
+          .querySelectorAll(".doc-card")
           .forEach((c) => c.classList.remove("selected"));
-        document.getElementById("btnContinue").disabled = true;
+        el("btnContinue").disabled = true;
+        el("btnCaptureID").disabled = true;
+        el("btnCaptureSelfie").disabled = true;
+        document.body.classList.remove("landscape-capture");
+        el("rotateOverlay").classList.remove("show");
+
+        // Go directly to step 2 — do NOT call prewarmIdCamera here;
+        // that will be triggered by goStep(2) → prewarmIdCamera() only
+        // after user selects a doc type via selectDoc().
         document
-          .querySelectorAll(".field-input")
-          .forEach((i) => (i.value = ""));
-
-        showStep(2);
+          .querySelectorAll(".step")
+          .forEach((s) => s.classList.remove("active"));
+        el("step2").classList.add("active");
+        currentStep = 2;
+        updateStepBar(2);
+        el("stepBar").classList.add("visible");
       }
 
-      /* =============================================================
-   UTILITIES
-   ============================================================= */
-      function setFeedback(id, msg, cls) {
-        const el = document.getElementById(id);
-        el.textContent = msg;
-        el.classList.remove("success", "error", "warning");
-        if (cls) el.classList.add(cls);
+      /* ================================================================
+       UTILITIES
+    ================================================================ */
+      function el(id) {
+        return document.getElementById(id);
       }
-
-      function showError(id, msg) {
-        const el = document.getElementById(id);
-        el.textContent = msg;
-        el.style.display = "block";
+      function cancelRaf(id) {
+        if (id) cancelAnimationFrame(id);
       }
-
-      function escHtml(s) {
+      function esc(t) {
         const d = document.createElement("div");
-        d.textContent = s;
+        d.textContent = t;
         return d.innerHTML;
       }
-
-      async function compressJPEG(video, quality, maxBytes) {
-        const c = document.createElement("canvas");
-        c.width = video.videoWidth;
-        c.height = video.videoHeight;
-        c.getContext("2d").drawImage(video, 0, 0);
-        let q = quality,
-          blob;
-        do {
-          blob = await new Promise((res) => c.toBlob(res, "image/jpeg", q));
-          q -= 0.05;
-        } while (blob.size > maxBytes && q >= 0.3);
-        return blob;
+      function setFb(id, msg, cls) {
+        const e = el(id);
+        e.textContent = msg;
+        e.classList.remove("ok", "warn", "bad");
+        if (cls) e.classList.add(cls);
+      }
+      function dbg(id, v) {
+        const e = el(id);
+        if (e) e.textContent = v;
       }
 
-      /* =============================================================
-   ORIENTATION / RESIZE HANDLING
-   ============================================================= */
-      function onResize() {
-        if (currentStep === 3) {
-          const canvas = document.getElementById("idOverlay");
-          const video = document.getElementById("idVideo");
-          if (video.videoWidth) syncCanvasSize(canvas, video);
-        }
-        if (currentStep === 4) syncSelfieCanvas();
-      }
-      window.addEventListener("resize", onResize);
-      window.addEventListener("orientationchange", () =>
-        setTimeout(onResize, 300),
-      );
-
-      /* =============================================================
-   DEBUG PANEL — 5 taps anywhere to toggle
-   ============================================================= */
+      /* ================================================================
+       DEBUG PANEL — 5 taps
+    ================================================================ */
       let tapCount = 0,
         tapTimer = null;
-      document.addEventListener("click", () => {
+      document.addEventListener("click", handleTap);
+      document.addEventListener("touchstart", handleTap, { passive: true });
+      function handleTap() {
         tapCount++;
         if (tapCount >= 5) {
-          document.getElementById("debugPanel").classList.toggle("visible");
+          el("debugPanel").classList.toggle("visible");
           tapCount = 0;
-          clearTimeout(tapTimer);
+          if (tapTimer) clearTimeout(tapTimer);
           return;
         }
-        clearTimeout(tapTimer);
+        if (tapTimer) clearTimeout(tapTimer);
         tapTimer = setTimeout(() => (tapCount = 0), 2000);
-      });
+      }
+
+      /* ================================================================
+       ORIENTATION ENFORCEMENT — Step 3 (both card and passport)
+    ================================================================ */
+      function isLandscape() {
+        if (screen.orientation && screen.orientation.type)
+          return screen.orientation.type.startsWith("landscape");
+        if (typeof window.orientation === "number")
+          return Math.abs(window.orientation) === 90;
+        return window.innerWidth > window.innerHeight;
+      }
+
+      function onOrientationChange() {
+        const landscape = isLandscape();
+        dbg("dbgOrient", landscape ? "landscape" : "portrait");
+
+        if (currentStep === 3) {
+          if (landscape) {
+            el("rotateOverlay").classList.remove("show");
+            document.body.classList.add("landscape-capture");
+            resizeIdCanvas();
+          } else {
+            el("rotateOverlay").classList.add("show");
+            document.body.classList.remove("landscape-capture");
+            const btn = el("btnCaptureID");
+            if (btn) btn.disabled = true;
+          }
+          dbg(
+            "dbgDoc",
+            (window.documentType || "--") +
+              " | " +
+              (landscape ? "landscape" : "portrait"),
+          );
+        } else {
+          el("rotateOverlay").classList.remove("show");
+          document.body.classList.remove("landscape-capture");
+          if (currentStep === 4) resizeSelfieCanvas();
+        }
+      }
+
+      let orientDebounce = null;
+      function scheduleOrientCheck() {
+        if (orientDebounce) clearTimeout(orientDebounce);
+        orientDebounce = setTimeout(onOrientationChange, 300);
+      }
+
+      if (screen.orientation)
+        screen.orientation.addEventListener("change", scheduleOrientCheck);
+      window.addEventListener("orientationchange", scheduleOrientCheck);
+      window.addEventListener("resize", scheduleOrientCheck);
     </script>
   </body>
 </html>
