@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Identity Verification</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&family=DM+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -35,8 +35,8 @@
         --radius-lg: 20px;
         --radius-md: 12px;
         --radius-sm: 8px;
-        --font: "DM Sans", sans-serif;
-        --mono: "DM Mono", monospace;
+        --font: "Space Grotesk", sans-serif;
+        --mono: "Space Grotesk", sans-serif;
         --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
         --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
       }
@@ -134,20 +134,40 @@
         }
       }
 
+      #step2.active,
+      #step3.active,
+      #step4.active {
+        height: calc(100vh - 60px);
+        overflow: hidden;
+      }
+
+      #step5.active {
+        height: calc(100vh - 60px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      body:has(#step2.active),
+      body:has(#step3.active),
+      body:has(#step4.active) {
+        overflow: hidden;
+        height: 100vh;
+      }
+
       /* ── Typography ── */
       .hero-title {
-        font-size: clamp(30px, 8vw, 42px);
+        font-size: 28px;
         font-weight: 700;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        margin-bottom: 8px;
+        text-align: center;
+        margin-bottom: 6px;
+        color: #1a1a2e;
       }
       .hero-sub {
         font-size: 14px;
-        font-weight: 300;
-        color: var(--ink-mid);
-        line-height: 1.6;
+        text-align: center;
+        color: #666;
         margin-bottom: 20px;
+        line-height: 1.5;
       }
       .section-title {
         font-size: 22px;
@@ -690,6 +710,7 @@
           border-radius: 50%;
           padding: 0;
           z-index: 200;
+          right: max(12px, env(safe-area-inset-right));
           /* Show a white ring + red fill — classic shutter look */
           background: #fff;
           box-shadow:
@@ -719,7 +740,7 @@
         /* ── Feedback bar: centred at top, below step bar ── */
         body.landscape-capture #idFeedback {
           position: fixed;
-          top: 48px;
+          top: 12px;
           left: 50%;
           transform: translateX(-50%);
           width: auto;
@@ -733,7 +754,7 @@
         /* ── Retry button: above the shutter ── */
         body.landscape-capture #btnRetryID {
           position: fixed;
-          right: 12px;
+          right: max(12px, env(safe-area-inset-right));
           top: calc(50% - 80px);
           transform: none;
           width: auto;
@@ -749,7 +770,7 @@
         /* ── Error box: top-centre ── */
         body.landscape-capture #idError {
           position: fixed;
-          top: 12px;
+          top: 64px;
           left: 50%;
           transform: translateX(-50%);
           width: auto;
@@ -760,14 +781,7 @@
 
         /* ── Step bar: frosted top strip ── */
         body.landscape-capture .step-bar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 200;
-          background: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(6px);
-          padding: 6px 0;
+          display: none !important;
         }
         body.landscape-capture .step-pip {
           color: rgba(255, 255, 255, 0.6);
@@ -878,13 +892,10 @@
       <!-- ════ STEP 1 — Landing ════ -->
       <div class="step active" id="step1">
         <div style="padding-top: 24px">
-          <h1 class="hero-title">Identity<br />Verification</h1>
+          <h1 class="hero-title">Identity Verification</h1>
           <p class="hero-sub">
             Securely verify your identity document with guided camera capture
           </p>
-        </div>
-        <div class="init-banner" id="initBanner">
-          <span id="initMsg">⏳ Loading OCR &amp; face-detection engines…</span>
         </div>
         <div class="guide-list">
           <div class="guide-card">
@@ -1007,14 +1018,14 @@
             <div class="doc-card-icon">🪪</div>
             <div>
               <h3>National ID Card</h3>
-              <p>Landscape capture. Kenyan plastic ID card.</p>
+              <p>Landscape capture. South African Smart ID card.</p>
             </div>
           </div>
           <div class="doc-card" id="cardTypeBook" onclick="selectDoc('book')">
             <div class="doc-card-icon">📘</div>
             <div>
               <h3>Passport / ID Book</h3>
-              <p>Landscape capture. Kenyan passport booklet.</p>
+              <p>Landscape capture. South African passport booklet.</p>
             </div>
           </div>
         </div>
@@ -1031,7 +1042,7 @@
             Capture the front of your document
           </p>
         </div>
-        <div class="cam-wrap" id="idCamWrap" style="display: none">
+        <div class="cam-wrap" id="idCamWrap">
           <video
             class="cam-video landscape"
             id="idVideo"
@@ -1046,27 +1057,7 @@
           </div>
         </div>
         <div class="err-box" id="idError" style="display: none"></div>
-        <div class="feedback" id="idFeedback" style="display: none">
-          Initialising…
-        </div>
-        <button class="btn" id="btnOpenCam" onclick="openIdCamera()">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path
-              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
-            />
-            <circle cx="12" cy="13" r="4" />
-          </svg>
-          Open Camera
-        </button>
+        <div class="feedback" id="idFeedback">Initialising…</div>
         <button
           class="btn"
           id="btnCaptureID"
@@ -1103,7 +1094,7 @@
           <canvas class="cam-canvas" id="selfieCanvas"></canvas>
           <div class="cam-overlay" id="selfieLoading">
             <div class="spinner"></div>
-            <span style="font-size: 13px">Starting camera…</span>
+            <!-- <span style="font-size: 13px">Starting camera…</span> -->
           </div>
           <div class="cam-overlay hidden" id="faceLoading">
             <div class="spinner"></div>
@@ -1306,11 +1297,10 @@
           window._ocrWorker = w;
           ocrReady = true;
           dbg("dbgOcr", "ready ✓");
-          checkInitDone();
         } catch (e) {
           console.error("Tesseract init error:", e);
           el("initMsg").textContent =
-            "⚠️ OCR engine failed to load — check your connection";
+            "OCR engine failed to load — check your connection";
           dbg("dbgOcr", "FAILED");
         }
       })();
@@ -1322,22 +1312,11 @@
           );
           faceReady = true;
           dbg("dbgFace", "ready ✓");
-          checkInitDone();
         } catch (e) {
           console.error("face-api init error:", e);
           dbg("dbgFace", "FAILED");
         }
       })();
-
-      function checkInitDone() {
-        if (ocrReady && faceReady) {
-          const b = el("initBanner");
-          if (b) {
-            b.style.opacity = "0";
-            setTimeout(() => (b.style.display = "none"), 400);
-          }
-        }
-      }
 
       /* ================================================================
        STEP NAVIGATION
@@ -1440,30 +1419,21 @@
           ? "Capture ID Card"
           : "Capture Passport Page";
 
-        // Reset camera UI to pre-open state
-        el("idCamWrap").style.display = "none";
-        el("idFeedback").style.display = "none";
-        el("btnOpenCam").style.display = "flex";
-        el("btnCaptureID").style.display = "none";
+        // Reset UI
+        el("btnCaptureID").style.display = "flex";
         el("btnRetryID").style.display = "none";
         el("idError").style.display = "none";
 
         onOrientationChange();
         prewarmSelfieCamera();
+
+        // Auto-start camera per spec AC-3
+        startIdCamera().then(() => startIdAnalysis());
       }
 
       /* ================================================================
        ID CAMERA
     ================================================================ */
-      async function openIdCamera() {
-        el("btnOpenCam").style.display = "none";
-        el("idCamWrap").style.display = "block";
-        el("idFeedback").style.display = "flex";
-        el("btnCaptureID").style.display = "flex";
-        await startIdCamera();
-        startIdAnalysis();
-      }
-
       async function startIdCamera() {
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
@@ -1739,21 +1709,29 @@
           );
           dbg("dbgOcr", "conf " + (data.confidence || 0).toFixed(1) + "%");
 
-          const parsed = parseDocumentText(data.text || "");
+          const confidence = data.confidence || 0;
+          const rawText = data.text || "";
+          const parsed = parseDocumentText(rawText);
           dbg("dbgIdNum", parsed.idNumber || "none");
-          dbg(
-            "dbgParser",
-            parsed.isPassport ? "MRZ/passport" : "Kenyan ID card",
-          );
 
           if (!parsed.idNumber) {
-            setFb(
-              "idFeedback",
-              "Could not read document — adjust lighting and try again",
-              "bad",
-            );
-            el("idError").textContent =
-              "Could not read the document number. Ensure the document is well-lit, flat, and fully within the frame.";
+            let feedbackMsg, errorMsg;
+
+            if (confidence < 40) {
+              feedbackMsg = "Image too unclear — hold still and retake";
+              errorMsg = "Hold the document flat and steady in good light.";
+            } else if (/\d{8,}/g.test(rawText.replace(/\s/g, ""))) {
+              feedbackMsg = "Not a valid South African ID";
+              errorMsg = "Use your green ID book or smart ID card.";
+            } else {
+              feedbackMsg =
+                "No ID number found — check document is fully visible";
+              errorMsg =
+                "Ensure all four corners of the document are within the frame.";
+            }
+
+            setFb("idFeedback", feedbackMsg, "bad");
+            el("idError").textContent = errorMsg;
             el("idError").style.display = "block";
             el("btnCaptureID").disabled = false;
             isIdCapturing = false;
@@ -1764,10 +1742,12 @@
           window.extractedIDData = parsed;
 
           // Compress full-frame JPEG ≤ 1.5 MB
+          const MAX_LONG_EDGE = 1920;
+          const scale = Math.min(1, MAX_LONG_EDGE / Math.max(vw, vh));
           const full = document.createElement("canvas");
-          full.width = vw;
-          full.height = vh;
-          full.getContext("2d").drawImage(video, 0, 0);
+          full.width = Math.round(vw * scale);
+          full.height = Math.round(vh * scale);
+          full.getContext("2d").drawImage(video, 0, 0, full.width, full.height);
           let q = 0.85,
             blob;
           while (q >= 0.4) {
@@ -1844,20 +1824,42 @@
             .split("\n")
             .map((l) => l.trim().replace(/\s+/g, ""))
             .filter(Boolean);
+
+          // Show longest line length so we can diagnose MRZ detection failures
+          const longest = lines.reduce((max, l) => Math.max(max, l.length), 0);
+          dbg(
+            "dbgParser",
+            "book: scanning " +
+              lines.length +
+              " lines, longest=" +
+              longest +
+              "ch",
+          );
+
           for (let i = 0; i < lines.length - 1; i++) {
+            const a = lines[i],
+              b = lines[i + 1];
             if (
-              lines[i].length === 44 &&
-              lines[i + 1].length === 44 &&
-              (lines[i].startsWith("P") ||
-                (lines[i].match(/</g) || []).length > 8)
+              a.length >= 40 &&
+              a.length <= 48 &&
+              b.length >= 40 &&
+              b.length <= 48 &&
+              (a.startsWith("P") || (a.match(/</g) || []).length > 4)
             ) {
-              dbg("dbgParser", "MRZ detected");
-              return parsePassportMRZ(lines[i], lines[i + 1]);
+              dbg(
+                "dbgParser",
+                "passport MRZ ✓ (" + a.length + "+" + b.length + "ch)",
+              );
+              return parsePassportMRZ(a, b);
             }
           }
-          dbg("dbgParser", "no MRZ → Kenyan ID parser");
+
+          dbg("dbgParser", "book: no MRZ matched — hard fail");
+          return {};
         }
-        return parseKenyanID(text);
+
+        dbg("dbgParser", "card: SA ID parser");
+        return parseSouthAfricanID(text);
       }
 
       /* ================================================================
@@ -2020,146 +2022,221 @@
       }
 
       /* ================================================================
-       KENYAN ID CARD PARSER
-    ================================================================ */
-      function parseKenyanID(text) {
+     COMPREHENSIVE SOUTH AFRICAN ID CARD & BOOK PARSER
+================================================================ */
+      function parseSouthAfricanID(text) {
+        if (!text) return {};
+
+        // Clean lines and keep structural context
         const lines = text
           .split("\n")
           .map((l) => l.trim())
-          .filter(Boolean);
+          .filter((l) => l.length > 0);
         const flat = lines.join(" ");
 
-        const LABEL =
-          /^(JINA|FULL\s*NAMES?|TAREHE|DATE|KUZALIWA|BIRTH|JINSIA|SEX|NCHI|NATIONALITY|NAMBARI|NUMBER|KITAMBULISHO|KUTOLEWA|ISSUE|MAHALI|PLACE|JAMHURI|REPUBLIC|KENYA|NATIONAL|IDENTITY|CARD|TAIFA)/i;
-        const nextVal = (from) => {
-          for (let i = from + 1; i < lines.length; i++)
-            if (!LABEL.test(lines[i]) && lines[i].length > 1)
-              return { line: lines[i], idx: i };
-          return null;
-        };
-
-        // ID number: 8 digits
+        /* 1. ID Number Extraction (With Luhn Verification) */
         let idNumber = null;
-        for (let i = 0; i < lines.length; i++) {
-          if (/NUMBER|NAMBARI/i.test(lines[i])) {
-            const m = [lines[i], lines[i + 1] || "", lines[i + 2] || ""]
-              .join(" ")
-              .replace(/[^0-9]/g, " ")
-              .match(/\b([1-9]\d{7})\b/);
-            if (m) {
-              idNumber = m[1];
-              break;
-            }
+
+        // OCR often inserts spaces/hyphens inside numbers.
+        // This matches 13 digits potentially broken up by whitespace/dashes.
+        const idRegex = /\b\d[\d\s\-]{11,18}\d\b/g;
+        const candidates = flat.match(idRegex) || [];
+
+        for (const raw of candidates) {
+          const digits = raw.replace(/[\s\-]/g, "");
+          if (digits.length === 13 && luhn13(digits)) {
+            idNumber = digits;
+            break;
           }
         }
-        if (!idNumber) {
-          const m = flat
-            .replace(/\d{1,2}\.\d{1,2}\.\d{2,4}/g, "")
-            .replace(/[^0-9\s]/g, " ")
-            .match(/\b([1-9]\d{7})\b/);
-          if (m) idNumber = m[1];
-        }
+
+        // If no valid ID number is found, the spec requires a failure block
         if (!idNumber) return {};
 
-        // Full name
-        let surname = "",
-          firstNames = "";
-        for (let i = 0; i < lines.length; i++) {
-          if (/JINA|FULL\s*NAME/i.test(lines[i])) {
-            const v = nextVal(i);
-            if (v) {
-              const p = v.line.trim().split(/\s+/);
-              surname = p[0] || "";
-              firstNames = p.slice(1).join(" ");
-              break;
-            }
-          }
-        }
-        if (!surname) {
-          const SKIP =
-            /^(MALE|FEMALE|KENYAN|KEN|KENYA|REPUBLIC|NATIONAL|IDENTITY|CARD|JAMHURI|TAIFA|KITAMBULISHO)/i;
-          for (const l of lines)
-            if (
-              /^[A-Z][A-Z\s]{4,}$/.test(l) &&
-              !SKIP.test(l) &&
-              !/\d/.test(l)
-            ) {
-              const p = l.trim().split(/\s+/);
-              surname = p[0];
-              firstNames = p.slice(1).join(" ");
-              break;
-            }
-        }
+        /* 2. Structural Field Metadata Derivation */
+        const yy = idNumber.slice(0, 2);
+        const mm = idNumber.slice(2, 4);
+        const dd = idNumber.slice(4, 6);
 
-        // Date of birth
-        let dobISO = "";
-        for (let i = 0; i < lines.length; i++) {
-          if (/DATE\s*OF\s*BIRTH|TAREHE.*KUZALIWA|KUZALIWA/i.test(lines[i])) {
-            const m = [lines[i], lines[i + 1] || "", lines[i + 2] || ""]
-              .join(" ")
-              .match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2,4})/);
-            if (m) {
-              const dd = m[1].padStart(2, "0"),
-                mm2 = m[2].padStart(2, "0");
-              let yy = m[3];
-              if (yy.length === 2) {
-                const cy = +new Date().getFullYear().toString().slice(-2);
-                yy = (+yy <= cy ? "20" : "19") + yy;
-              }
-              dobISO = `${yy}-${mm2}-${dd}`;
-              break;
-            }
-          }
-        }
-        if (!dobISO) {
-          const m = flat.match(/(\d{2})[.\-\/](\d{2})[.\-\/](\d{4})/);
-          if (m) dobISO = `${m[3]}-${m[2]}-${m[1]}`;
-        }
+        // Century roll-over logic (matching spec: assume 19xx for older years)
+        const currentYearShort = new Date().getFullYear() % 100;
+        const century = parseInt(yy, 10) <= currentYearShort ? "20" : "19";
+        const dobISO = `${century}${yy}-${mm}-${dd}`;
 
+        // Age calculation
         let age = null;
-        if (dobISO) {
-          const yr = +dobISO.slice(0, 4);
-          if (yr > 1900) age = new Date().getFullYear() - yr;
+        const dob = new Date(dobISO);
+        if (!isNaN(dob.getTime())) {
+          const today = new Date();
+          age = today.getFullYear() - dob.getFullYear();
+          if (
+            today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate())
+          ) {
+            age--;
+          }
         }
 
-        let gender = "";
+        // Gender: digits 7-10 -> 0000-4999 Female, 5000-9999 Male
+        const genderCode = parseInt(idNumber.slice(6, 10), 10);
+        const gender = genderCode >= 5000 ? "M" : "F";
+
+        // Citizenship status
+        const citizenshipCode = idNumber.charAt(10);
+        const citizenship =
+          citizenshipCode === "0" ? "SA CITIZEN" : "PERMANENT RESIDENT";
+
+        const nationality = "RSA";
+
+        /* 3. Name Parsing Engine (Handles Card vs Book variations) */
+        let surname = "";
+        let firstNames = "";
+
+        // Dynamic headers to ignore when identifying raw entity values
+        const SKIP_WORDS =
+          /^(SOUTH|AFRICA|REPUBLIC|NATIONAL|IDENTITY|DOCUMENT|IDENTITEITSDOKUMENT|SURNAME|VAN|NAMES|VOORNAME|DOB|GEBOORTEDATUM|GENDER|GESLAG|NATIONALITY|NASIONALITEIT|STATUS|CITIZENSHIP|IDNO|IDENTITEITSNOMMER|CARD)/i;
+
+        // Attempt A: Anchor-based parsing for labels "SURNAME/VAN" & "NAMES/VOORNAME"
         for (let i = 0; i < lines.length; i++) {
-          if (
-            /^(SEX|JINSIA)$/i.test(lines[i]) ||
-            /JINSIA.*SEX|SEX.*JINSIA/i.test(lines[i])
-          ) {
-            const v = nextVal(i);
-            if (v) {
-              gender = /FEMALE/i.test(v.line)
-                ? "F"
-                : /MALE/i.test(v.line)
-                  ? "M"
-                  : "";
-              break;
+          const currentLine = lines[i];
+
+          // Find Surname block
+          if (/SURNAME|VAN/i.test(currentLine) && !surname) {
+            const inline = currentLine
+              .replace(/.*(?:SURNAME|VAN)\s*[:\-]?\s*/i, "")
+              .trim();
+            if (
+              inline.length > 1 &&
+              !/^\d/.test(inline) &&
+              !SKIP_WORDS.test(inline)
+            ) {
+              surname = inline;
+            } else if (i + 1 < lines.length) {
+              const nextLine = lines[i + 1].trim();
+              if (
+                !SKIP_WORDS.test(nextLine) &&
+                /^[A-Z\s\-']{2,}$/.test(nextLine)
+              ) {
+                surname = nextLine;
+              }
+            }
+          }
+
+          // Find First Names block
+          if (/NAMES?|VOORNAME|FORENAME/i.test(currentLine) && !firstNames) {
+            const inline = currentLine
+              .replace(/.*(?:NAMES?|VOORNAME|FORENAME)\s*[:\-]?\s*/i, "")
+              .trim();
+            if (
+              inline.length > 1 &&
+              !/^\d/.test(inline) &&
+              !SKIP_WORDS.test(inline)
+            ) {
+              firstNames = inline;
+            } else if (i + 1 < lines.length) {
+              const nextLine = lines[i + 1].trim();
+              if (
+                !SKIP_WORDS.test(nextLine) &&
+                /^[A-Z\s\-']{2,}$/.test(nextLine) &&
+                nextLine !== surname
+              ) {
+                firstNames = nextLine;
+              }
             }
           }
         }
-        if (!gender) {
-          if (/\bFEMALE\b/i.test(flat)) gender = "F";
-          else if (/\bMALE\b/i.test(flat)) gender = "M";
+
+        // Attempt B: Proximity Fallbacks based on ID layout rules
+        // Rule B1: In ID books, the surname line is commonly found directly above the words "SOUTH AFRICA"
+        if (!surname) {
+          for (let i = 0; i < lines.length; i++) {
+            if (/SOUTH\s+AFRICA/i.test(lines[i]) && i > 0) {
+              const potentialSurname = lines[i - 1].trim();
+              if (
+                /^[A-Z\s\-']{2,}$/.test(potentialSurname) &&
+                !SKIP_WORDS.test(potentialSurname)
+              ) {
+                surname = potentialSurname;
+                // Often first names are sitting on the line right under "SOUTH AFRICA"
+                if (i + 1 < lines.length && !firstNames) {
+                  const potentialFirst = lines[i + 1].trim();
+                  if (
+                    /^[A-Z\s\-']{2,}$/.test(potentialFirst) &&
+                    !SKIP_WORDS.test(potentialFirst)
+                  ) {
+                    firstNames = potentialFirst;
+                  }
+                }
+                break;
+              }
+            }
+          }
         }
 
-        const nationality = /\bKENYAN\b/i.test(flat)
-          ? "KENYAN"
-          : /\bKEN\b/i.test(flat)
-            ? "KEN"
-            : "KENYAN";
+        // Rule B2: For modern Smart ID Cards, the surname follows the "NATIONAL IDENTITY CARD" header
+        if (!surname) {
+          for (let i = 0; i < lines.length; i++) {
+            if (/IDENTITY\s+CARD/i.test(lines[i]) && i + 1 < lines.length) {
+              const potentialSurname = lines[i + 1].trim();
+              if (
+                /^[A-Z\s\-']{2,}$/.test(potentialSurname) &&
+                !SKIP_WORDS.test(potentialSurname)
+              ) {
+                surname = potentialSurname;
+                if (i + 2 < lines.length && !firstNames) {
+                  const potentialFirst = lines[i + 2].trim();
+                  if (
+                    /^[A-Z\s\-']{2,}$/.test(potentialFirst) &&
+                    !SKIP_WORDS.test(potentialFirst)
+                  ) {
+                    firstNames = potentialFirst;
+                  }
+                }
+                break;
+              }
+            }
+          }
+        }
+
+        // Rule B3: Blind regex fallback loop if labels were missed entirely due to image skew
+        if (!surname || !firstNames) {
+          const cleanAllsCapsLines = lines.filter(
+            (l) =>
+              /^[A-Z\s\-']{3,}$/.test(l) &&
+              !SKIP_WORDS.test(l) &&
+              !/\d/.test(l),
+          );
+          if (!surname && cleanAllsCapsLines.length > 0)
+            surname = cleanAllsCapsLines[0];
+          if (!firstNames && cleanAllsCapsLines.length > 1) {
+            firstNames = cleanAllsCapsLines.find((l) => l !== surname) || "";
+          }
+        }
 
         return {
           idNumber,
-          surname,
-          firstNames,
+          surname: surname.toUpperCase(),
+          firstNames: firstNames.toUpperCase(),
           dobISO,
           age,
           gender,
           nationality,
+          citizenship,
           isPassport: false,
         };
+      }
+
+      /* ── Luhn algorithm for 13-digit SA ID ── */
+      function luhn13(num) {
+        let sum = 0;
+        for (let i = 0; i < 13; i++) {
+          let d = +num[i];
+          if (i % 2 === 1) {
+            d *= 2;
+            if (d > 9) d -= 9;
+          }
+          sum += d;
+        }
+        return sum % 10 === 0;
       }
 
       /* ================================================================
@@ -2409,88 +2486,81 @@
           const ovalCx = cw / 2,
             ovalCy = ch / 2;
 
-          let ovalColor = "rgba(255,255,255,0.85)";
-          let ovalDash = true;
-          let ovalWidth = 2.5;
-
-          if (!faceReady) {
-            ctx.fillStyle = "rgba(0,0,0,0.30)";
-            ctx.beginPath();
-            ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.setLineDash([10, 7]);
-            ctx.strokeStyle = ovalColor;
-            ctx.lineWidth = ovalWidth;
-            ctx.beginPath();
-            ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            setFb("selfieFeedback", "Loading face detection…");
-            return;
-          }
-
-          let det;
-          try {
-            det = await faceapi.detectSingleFace(
-              video,
-              new faceapi.TinyFaceDetectorOptions(),
-            );
-          } catch (e) {
-            return;
-          }
-
-          let msg, cls;
-          if (!det) {
-            dbg("dbgFaceD", "false");
-            dbg("dbgFaceW", "--");
-            dbg("dbgFaceOff", "--");
-            msg = "Position your face in the oval";
-            cls = "bad";
-            el("btnCaptureSelfie").disabled = true;
-          } else {
-            const box = det.box;
-            const fw2 = box.width / video.videoWidth;
-            const fcx = (box.x + box.width / 2) / video.videoWidth;
-            const fcy = (box.y + box.height / 2) / video.videoHeight;
-            const off = Math.max(Math.abs(fcx - 0.5), Math.abs(fcy - 0.5));
-            dbg("dbgFaceD", "true");
-            dbg("dbgFaceW", (fw2 * 100).toFixed(1) + "%");
-            dbg("dbgFaceOff", off.toFixed(3));
-
-            if (fw2 < 0.25) {
-              msg = "Face too small — move closer";
-              cls = "warn";
-            } else if (fw2 > 0.55) {
-              msg = "Face too large — move away";
-              cls = "warn";
-            } else if (off > 0.1) {
-              msg = "Centre your face in the oval";
-              cls = "warn";
-            } else {
-              msg = "Good — ready to capture";
-              cls = "ok";
-            }
-            el("btnCaptureSelfie").disabled = cls !== "ok";
-
-            if (cls === "ok") {
-              ovalColor = "rgba(26,138,74,0.95)";
-              ovalDash = false;
-              ovalWidth = 3;
-            } else {
-              ovalColor = "rgba(194,124,0,0.9)";
-              ovalDash = true;
-              ovalWidth = 3;
-            }
-          }
-
-          // Vignette outside oval
+          // ── Always draw vignette outside oval ──
+          // This persists regardless of detection state, matching ID guide frame behaviour
           ctx.fillStyle = "rgba(0,0,0,0.35)";
           ctx.beginPath();
           ctx.rect(0, 0, cw, ch);
           ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
           ctx.fill("evenodd");
 
-          // Guide oval
+          // Default stroke — neutral dashed white, same as ID guide frame
+          let ovalColor = "rgba(255,255,255,0.85)";
+          let ovalDash = true;
+          let ovalWidth = 2.5;
+          let msg = "Position your face in the oval";
+          let cls = "bad";
+          let fillInside = false;
+
+          if (!faceReady) {
+            msg = "Loading face detection…";
+            cls = null;
+          } else {
+            let det;
+            try {
+              det = await faceapi.detectSingleFace(
+                video,
+                new faceapi.TinyFaceDetectorOptions(),
+              );
+            } catch (e) {
+              // silently skip this frame
+            }
+
+            if (det) {
+              const box = det.box;
+              const fw2 = box.width / video.videoWidth;
+              const fcx = (box.x + box.width / 2) / video.videoWidth;
+              const fcy = (box.y + box.height / 2) / video.videoHeight;
+              const off = Math.max(Math.abs(fcx - 0.5), Math.abs(fcy - 0.5));
+
+              dbg("dbgFaceD", "true");
+              dbg("dbgFaceW", (fw2 * 100).toFixed(1) + "%");
+              dbg("dbgFaceOff", off.toFixed(3));
+
+              if (fw2 < 0.25) {
+                msg = "Face too small — move closer";
+                cls = "warn";
+                ovalColor = "rgba(194,124,0,0.9)";
+                ovalDash = true;
+              } else if (fw2 > 0.55) {
+                msg = "Face too large — move away";
+                cls = "warn";
+                ovalColor = "rgba(194,124,0,0.9)";
+                ovalDash = true;
+              } else if (off > 0.1) {
+                msg = "Centre your face in the oval";
+                cls = "warn";
+                ovalColor = "rgba(194,124,0,0.9)";
+                ovalDash = true;
+              } else {
+                msg = "Good — ready to capture";
+                cls = "ok";
+                ovalColor = "rgba(26,138,74,0.95)";
+                ovalDash = false;
+                ovalWidth = 3;
+                fillInside = true;
+              }
+              el("btnCaptureSelfie").disabled = cls !== "ok";
+            } else {
+              // No face — oval stays neutral dashed white
+              dbg("dbgFaceD", "false");
+              dbg("dbgFaceW", "--");
+              dbg("dbgFaceOff", "--");
+              el("btnCaptureSelfie").disabled = true;
+            }
+          }
+
+          // ── Always draw oval stroke — colour reflects state ──
           ctx.setLineDash(ovalDash ? [10, 7] : []);
           ctx.strokeStyle = ovalColor;
           ctx.lineWidth = ovalWidth;
@@ -2499,24 +2569,32 @@
           ctx.stroke();
           ctx.setLineDash([]);
 
-          if (cls === "ok") {
+          // Green fill tint inside oval on good state only
+          if (fillInside) {
             ctx.fillStyle = "rgba(26,138,74,0.12)";
             ctx.beginPath();
             ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
             ctx.fill();
           }
 
-          setFb("selfieFeedback", msg, cls);
+          if (cls !== null) setFb("selfieFeedback", msg, cls);
+          else setFb("selfieFeedback", msg);
         }
+
         selfieRafId = requestAnimationFrame(loop);
       }
 
       async function captureSelfie() {
         const video = el("selfieVideo");
+        const MAX_LONG_EDGE = 1920;
+        const scale = Math.min(
+          1,
+          MAX_LONG_EDGE / Math.max(video.videoWidth, video.videoHeight),
+        );
         const c = document.createElement("canvas");
-        c.width = video.videoWidth;
-        c.height = video.videoHeight;
-        c.getContext("2d").drawImage(video, 0, 0);
+        c.width = Math.round(video.videoWidth * scale);
+        c.height = Math.round(video.videoHeight * scale);
+        c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
         let q = 0.85,
           blob;
         while (q >= 0.4) {
@@ -2525,12 +2603,62 @@
           q -= 0.05;
         }
         window.capturedSelfieBlob = blob;
-        stopSelfieCam();
+
+        // Stop analysis loop and camera — freeze the frame
         cancelRaf(selfieRafId);
         selfieRafId = null;
-        goStep(5);
-      }
+        stopSelfieCam();
 
+        // Draw success state on frozen canvas
+        const canvas = el("selfieCanvas");
+        const ctx = canvas.getContext("2d");
+        const cw = canvas.width,
+          ch = canvas.height;
+        const ovalRx = cw * 0.38;
+        const ovalRy = ovalRx * 1.35;
+        const ovalCx = cw / 2,
+          ovalCy = ch / 2;
+
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Dark vignette outside oval
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.beginPath();
+        ctx.rect(0, 0, cw, ch);
+        ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+        ctx.fill("evenodd");
+
+        // Solid green oval — success state
+        ctx.setLineDash([]);
+        ctx.strokeStyle = "rgba(26,138,74,1)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Green fill inside oval
+        ctx.fillStyle = "rgba(26,138,74,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Checkmark in centre
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(ovalCx - 24, ovalCy);
+        ctx.lineTo(ovalCx - 6, ovalCy + 18);
+        ctx.lineTo(ovalCx + 28, ovalCy - 20);
+        ctx.stroke();
+
+        setFb("selfieFeedback", "Selfie captured ✓", "ok");
+        el("btnCaptureSelfie").disabled = true;
+
+        setTimeout(() => goStep(5), 900);
+      }
       /* ================================================================
        STEP 5 — Results
     ================================================================ */
@@ -2580,13 +2708,13 @@
        buildField — create a labelled read-only input row
     ---------------------------------------------------------------- */
       function buildField(label, value, id) {
-        if (!value && value !== 0) return ""; // omit empty fields
         const safeId = id ? ` id="${id}"` : "";
+        const safeVal = value != null && value !== "" ? esc(String(value)) : "";
         return `
-        <div class="field-row">
-          <div class="field-label">${esc(label)}</div>
-          <input class="field-input" type="text" value="${esc(String(value))}"${safeId}>
-        </div>`;
+    <div class="field-row">
+      <div class="field-label">${esc(label)}</div>
+      <input class="field-input" type="text" value="${safeVal}" placeholder="Not extracted"${safeId}>
+    </div>`;
       }
 
       function displayResults(data) {
@@ -2619,12 +2747,16 @@
             ? data.face_match_score.toFixed(2)
             : "--";
         el("scoreConf").textContent =
-          data.confidence != null ? data.confidence.toFixed(1) + "%" : "--";
+          data.face_match_confidence != null
+            ? data.face_match_confidence.toFixed(1) + "%"
+            : data.confidence != null
+              ? data.confidence.toFixed(1) + "%"
+              : "--";
         el("scoreIdValid").textContent =
           data.id_number_valid === true
-            ? "✅ Yes"
+            ? "Yes"
             : data.id_number_valid === false
-              ? "❌ No"
+              ? "No"
               : "--";
 
         const api = data.extracted_data || {};
@@ -2717,6 +2849,13 @@
             api.nationality || ocr.nationality,
             "fNationality",
           );
+          if (ocr.citizenship) {
+            html += buildField(
+              "Citizenship status",
+              api.citizenship || ocr.citizenship,
+              "fCitizenship",
+            );
+          }
         }
 
         fieldsEl.innerHTML = html;
@@ -2787,7 +2926,7 @@
         document.body.classList.remove("landscape-capture");
         el("rotateOverlay").classList.remove("show");
 
-        // Go directly to step 2 — do NOT call prewarmIdCamera here;
+        // Here, we go directly to step 2 — do NOT call prewarmIdCamera here;
         // that will be triggered by goStep(2) → prewarmIdCamera() only
         // after user selects a doc type via selectDoc().
         document
