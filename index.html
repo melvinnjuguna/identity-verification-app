@@ -7,10 +7,10 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Identity Verification</title>
+    <title>SA Identity Verification</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -23,22 +23,23 @@
       :root {
         --red: #e50914;
         --red-dark: #b8070f;
-        --ink: #0d0d0d;
-        --ink-mid: #444;
-        --ink-light: #888;
-        --surface: #f7f6f4;
+        --ink: #0f0f0f;
+        --ink-mid: #555;
+        --ink-light: #999;
+        --surface: #f5f4f2;
         --white: #ffffff;
-        --border: #e2e0db;
+        --border: #e0deda;
         --green: #1a8a4a;
         --amber: #c27c00;
-        --radius-lg: 20px;
+        --radius-lg: 18px;
         --radius-md: 12px;
         --radius-sm: 8px;
-        --font: "Space Grotesk", sans-serif;
-        --mono: "Space Grotesk", sans-serif;
-        --shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-        --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+        --font: "DM Sans", sans-serif;
+        --mono: "DM Mono", monospace;
+        --shadow: 0 2px 14px rgba(0, 0, 0, 0.07);
+        --shadow-lg: 0 8px 36px rgba(0, 0, 0, 0.11);
       }
+
       *,
       *::before,
       *::after {
@@ -57,6 +58,7 @@
         overflow-x: hidden;
         -webkit-font-smoothing: antialiased;
       }
+
       .app {
         width: 100%;
         max-width: 480px;
@@ -70,16 +72,15 @@
         .app {
           padding: 0 20px 32px;
         }
-        .hero-title {
-          font-size: 38px;
-        }
       }
+
+      /* ── STEP BAR ── */
       .step-bar {
         display: none;
         align-items: center;
         justify-content: center;
         gap: 4px;
-        padding: 16px 0 12px;
+        padding: 14px 0 10px;
         flex-wrap: wrap;
       }
       .step-bar.visible {
@@ -88,7 +89,6 @@
       .step-pip {
         font-size: 11px;
         font-weight: 500;
-        letter-spacing: 0.02em;
         color: var(--ink-light);
         padding: 4px 10px;
         border-radius: 20px;
@@ -106,6 +106,8 @@
         color: var(--border);
         font-size: 10px;
       }
+
+      /* ── STEP PANELS ── */
       .step {
         display: none;
         flex-direction: column;
@@ -113,12 +115,12 @@
       }
       .step.active {
         display: flex;
-        animation: stepIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation: stepIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
       }
       @keyframes stepIn {
         from {
           opacity: 0;
-          transform: translateY(12px);
+          transform: translateY(10px);
         }
         to {
           opacity: 1;
@@ -128,11 +130,11 @@
       #step2.active,
       #step3.active,
       #step4.active {
-        height: calc(100vh - 60px);
+        height: calc(100vh - 56px);
         overflow: hidden;
       }
       #step5.active {
-        height: calc(100vh - 60px);
+        height: calc(100vh - 56px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
@@ -142,53 +144,57 @@
         overflow: hidden;
         height: 100vh;
       }
+
+      /* ── TYPOGRAPHY ── */
       .hero-title {
         font-size: 28px;
         font-weight: 700;
         text-align: center;
         margin-bottom: 6px;
-        color: #1a1a2e;
+        letter-spacing: -0.02em;
       }
       .hero-sub {
-        font-size: 14px;
+        font-size: 13px;
         text-align: center;
-        color: #666;
+        color: var(--ink-mid);
         margin-bottom: 20px;
-        line-height: 1.5;
+        line-height: 1.55;
       }
       .section-title {
-        font-size: 22px;
+        font-size: 21px;
         font-weight: 700;
-        letter-spacing: -0.01em;
-        margin-bottom: 4px;
+        letter-spacing: -0.02em;
+        margin-bottom: 3px;
       }
       .section-sub {
         font-size: 13px;
         color: var(--ink-mid);
-        margin-bottom: 16px;
+        margin-bottom: 14px;
       }
+
+      /* ── GUIDE CARDS ── */
       .guide-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        margin-bottom: 20px;
+        gap: 9px;
+        margin-bottom: 18px;
         flex: 1;
       }
       .guide-card {
         background: var(--white);
         border-radius: var(--radius-lg);
-        padding: 16px;
+        padding: 14px 16px;
         display: flex;
         align-items: flex-start;
-        gap: 14px;
+        gap: 13px;
         box-shadow: var(--shadow);
         border: 1px solid var(--border);
       }
       .guide-icon {
-        width: 38px;
-        height: 38px;
+        width: 36px;
+        height: 36px;
         background: rgba(229, 9, 20, 0.08);
-        border-radius: 10px;
+        border-radius: 9px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
@@ -196,8 +202,8 @@
         color: var(--red);
       }
       .guide-icon svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         stroke: currentColor;
         stroke-width: 2;
         fill: none;
@@ -205,7 +211,7 @@
         stroke-linejoin: round;
       }
       .guide-text h4 {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
         margin-bottom: 2px;
       }
@@ -214,48 +220,53 @@
         color: var(--ink-mid);
         line-height: 1.5;
       }
+
+      /* ── DOC TYPE CARDS ── */
       .doc-grid {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        margin-bottom: 20px;
+        gap: 11px;
+        margin-bottom: 18px;
         flex: 1;
       }
       .doc-card {
         background: var(--white);
         border: 2px solid var(--border);
         border-radius: var(--radius-lg);
-        padding: 20px 16px;
+        padding: 18px 16px;
         cursor: pointer;
         transition:
           border-color 0.2s,
-          box-shadow 0.2s;
+          box-shadow 0.2s,
+          transform 0.1s;
         display: flex;
         align-items: flex-start;
-        gap: 16px;
+        gap: 15px;
         touch-action: manipulation;
       }
       .doc-card.selected {
         border-color: var(--red);
-        box-shadow: 0 0 0 4px rgba(229, 9, 20, 0.1);
+        box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.1);
       }
       .doc-card:active {
         transform: scale(0.98);
       }
       .doc-card-icon {
-        font-size: 32px;
+        font-size: 30px;
         line-height: 1;
         flex-shrink: 0;
       }
       .doc-card h3 {
         font-size: 15px;
         font-weight: 700;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
       }
       .doc-card p {
-        font-size: 13px;
+        font-size: 12px;
         color: var(--ink-mid);
       }
+
+      /* ── BUTTONS ── */
       .btn {
         background: var(--red);
         color: var(--white);
@@ -291,7 +302,7 @@
       .btn-ghost {
         background: transparent;
         color: var(--ink-mid);
-        border: 2px solid var(--border);
+        border: 1.5px solid var(--border);
       }
       .btn-ghost:active {
         background: var(--border);
@@ -304,20 +315,20 @@
       .btn-row .btn {
         flex: 1;
       }
+
+      /* ── CAMERA ── */
       .cam-wrap {
         position: relative;
         width: 100%;
         border-radius: var(--radius-lg);
         overflow: hidden;
         background: #111;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
       }
       .cam-video {
         width: 100%;
         display: block;
         object-fit: cover;
-      }
-      .cam-video.portrait {
         aspect-ratio: 3/4;
       }
       .cam-canvas {
@@ -340,50 +351,121 @@
       .cam-overlay.hidden {
         display: none;
       }
+
+      /* ── GATE BANNER ── single in-frame indicator, priority 1 ── */
+      .gate-banner {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        background: rgba(15, 15, 15, 0.82);
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        z-index: 30;
+        display: none;
+        backdrop-filter: blur(4px);
+        letter-spacing: 0.01em;
+      }
+      .gate-banner.visible {
+        display: block;
+      }
+
+      /* ── CAPTURE RING ── priority 2, mutually exclusive with banner ── */
+      .capture-ring-wrap {
+        position: absolute;
+        bottom: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+      .capture-ring-wrap.visible {
+        display: flex;
+      }
+      .capture-ring-svg {
+        width: 52px;
+        height: 52px;
+        transform: rotate(-90deg);
+      }
+      .capture-ring-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.18);
+        stroke-width: 4;
+      }
+      .capture-ring-fill {
+        fill: none;
+        stroke: #4ade80;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 138.2;
+        stroke-dashoffset: 138.2;
+        transition: stroke-dashoffset 0.1s linear;
+      }
+      .capture-ring-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      /* ── FEEDBACK BAR ── always visible below camera, priority 3 ── */
       .feedback {
-        background: rgba(13, 13, 13, 0.8);
+        background: rgba(15, 15, 15, 0.82);
         color: #fff;
         border-radius: var(--radius-md);
         padding: 10px 16px;
         font-size: 13px;
-        font-weight: 500;
+        font-weight: 600;
         text-align: center;
-        margin-bottom: 12px;
-        min-height: 42px;
+        margin-bottom: 10px;
+        min-height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
         backdrop-filter: blur(6px);
         transition: background 0.2s;
+        letter-spacing: 0.01em;
       }
       .feedback.ok {
-        background: rgba(26, 138, 74, 0.85);
+        background: rgba(26, 138, 74, 0.88);
       }
       .feedback.warn {
-        background: rgba(194, 124, 0, 0.85);
+        background: rgba(194, 124, 0, 0.88);
       }
       .feedback.bad {
-        background: rgba(200, 30, 30, 0.85);
+        background: rgba(15, 15, 15, 0.82);
       }
+
+      /* ── ERROR BOX ── */
       .err-box {
         background: #fdecea;
         border: 1px solid #f5c6cb;
         color: #8b1a1a;
         border-radius: var(--radius-md);
-        padding: 12px 14px;
+        padding: 11px 13px;
         font-size: 13px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
       }
+
+      /* ── SPINNER ── */
       .spinner {
-        width: 38px;
-        height: 38px;
-        border: 3px solid rgba(255, 255, 255, 0.25);
+        width: 36px;
+        height: 36px;
+        border: 3px solid rgba(255, 255, 255, 0.22);
         border-top-color: var(--red);
         border-radius: 50%;
-        animation: spin 0.75s linear infinite;
+        animation: spin 0.72s linear infinite;
       }
       .spinner.dark {
-        border-color: rgba(13, 13, 13, 0.12);
+        border-color: rgba(15, 15, 15, 0.1);
         border-top-color: var(--red);
       }
       @keyframes spin {
@@ -391,20 +473,22 @@
           transform: rotate(360deg);
         }
       }
+
+      /* ── RESULTS ── */
       .results-card {
         background: var(--white);
         border-radius: var(--radius-lg);
         padding: 20px;
         box-shadow: var(--shadow-lg);
-        margin-bottom: 16px;
+        margin-bottom: 14px;
         border: 1px solid var(--border);
         flex: 1;
       }
       .badge {
         display: inline-block;
-        padding: 5px 16px;
+        padding: 4px 14px;
         border-radius: 20px;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
         letter-spacing: 0.1em;
         text-transform: uppercase;
@@ -426,7 +510,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 9px 0;
+        padding: 8px 0;
         border-bottom: 1px solid var(--surface);
         font-size: 13px;
       }
@@ -439,33 +523,33 @@
       .score-val {
         font-weight: 700;
         font-family: var(--mono);
-        font-size: 13px;
+        font-size: 12px;
       }
       .fields-title {
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 700;
         color: var(--ink);
-        margin: 16px 0 10px;
+        margin: 14px 0 9px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.07em;
       }
       .field-row {
-        margin-bottom: 10px;
+        margin-bottom: 9px;
       }
       .field-label {
-        font-size: 11px;
+        font-size: 10px;
         color: var(--ink-light);
-        margin-bottom: 4px;
+        margin-bottom: 3px;
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
       .field-input {
         width: 100%;
-        padding: 10px 12px;
+        padding: 9px 11px;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
         font-family: var(--mono);
-        font-size: 13px;
+        font-size: 12px;
         background: var(--surface);
         color: var(--ink);
         transition: border-color 0.2s;
@@ -475,168 +559,54 @@
         border-color: var(--red);
         background: var(--white);
       }
-      .fail-list {
-        margin-top: 14px;
-      }
-      .fail-item {
-        font-size: 13px;
-        color: #8b1a1a;
-        padding: 4px 0 4px 14px;
-        position: relative;
-      }
-      .fail-item::before {
-        content: "•";
-        position: absolute;
-        left: 2px;
-      }
       .results-loading {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 14px;
+        gap: 13px;
         padding: 40px 0;
         color: var(--ink-mid);
-        font-size: 14px;
+        font-size: 13px;
       }
       .cam-note {
         font-size: 11px;
         color: var(--ink-light);
         text-align: center;
-        margin-top: 10px;
-      }
-      .id-hud {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(0, 0, 0, 0.72);
-        border-radius: 10px;
-        padding: 8px 10px;
-        font-size: 10px;
-        font-family: monospace;
-        color: #fff;
-        z-index: 20;
-        display: none;
-        flex-direction: column;
-        gap: 3px;
-        min-width: 130px;
-      }
-      .id-hud.visible {
-        display: flex;
-      }
-      .hud-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-      }
-      .hud-k {
-        color: #aaa;
-      }
-      .hud-v {
-        font-weight: 700;
-      }
-      .hud-v.pass {
-        color: #4ade80;
-      }
-      .hud-v.fail {
-        color: #f87171;
-      }
-      .hud-v.warn {
-        color: #fbbf24;
-      }
-      .detect-ring {
-        position: absolute;
-        bottom: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: none;
-        align-items: center;
-        gap: 8px;
-        background: rgba(0, 0, 0, 0.7);
-        border-radius: 20px;
-        padding: 6px 12px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #fff;
-        z-index: 20;
-      }
-      .detect-ring.visible {
-        display: flex;
-      }
-      .ring-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #888;
-      }
-      .ring-dot.green {
-        background: #4ade80;
-        box-shadow: 0 0 6px #4ade80;
-      }
-      .ring-dot.amber {
-        background: #fbbf24;
-        box-shadow: 0 0 6px #fbbf24;
-      }
-      .ring-dot.red {
-        background: #f87171;
-        box-shadow: 0 0 6px #f87171;
+        margin-top: 8px;
       }
 
-      /* ── OCR scanning pulse indicator ── */
-      .ocr-pulse {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: rgba(0, 0, 0, 0.72);
-        border-radius: 10px;
-        padding: 6px 10px;
-        font-size: 10px;
-        font-family: monospace;
-        color: #fff;
-        z-index: 20;
+      /* ── RETRY NOTICE ── replaces the old ocr-gate-box ── */
+      .retry-notice {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        font-size: 13px;
+        margin-bottom: 10px;
+        line-height: 1.5;
         display: none;
-        align-items: center;
-        gap: 6px;
+        color: var(--ink-mid);
+        text-align: center;
       }
-      .ocr-pulse.visible {
-        display: flex;
-      }
-      .ocr-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #fbbf24;
-      }
-      .ocr-dot.scanning {
-        animation: ocrPulse 0.9s ease-in-out infinite;
-      }
-      .ocr-dot.found {
-        background: #4ade80;
-        animation: none;
-      }
-      @keyframes ocrPulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.2;
-        }
+      .retry-notice.visible {
+        display: block;
       }
 
+      /* ── DEBUG PANEL ── */
       #debugPanel {
         display: none;
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        background: rgba(0, 0, 0, 0.92);
+        background: rgba(0, 0, 0, 0.93);
         color: #0f0;
-        padding: 16px;
+        padding: 14px 16px;
         font-family: var(--mono);
-        font-size: 12px;
+        font-size: 11px;
         z-index: 9999;
-        border-radius: 16px 16px 0 0;
-        max-height: 45vh;
+        border-radius: 14px 14px 0 0;
+        max-height: 48vh;
         overflow-y: auto;
       }
       #debugPanel.visible {
@@ -645,7 +615,8 @@
       .dbg-title {
         color: #fff;
         font-weight: 700;
-        margin-bottom: 8px;
+        margin-bottom: 7px;
+        font-size: 12px;
       }
       .dbg-row {
         display: flex;
@@ -653,30 +624,41 @@
         padding: 2px 0;
       }
       .dbg-k {
-        color: #aaa;
+        color: #888;
+      }
+      .dbg-v {
+        color: #0f0;
+      }
+      .dbg-v.warn {
+        color: #fbbf24;
+      }
+      .dbg-v.fail {
+        color: #f87171;
       }
     </style>
   </head>
   <body>
     <div class="app">
+      <!-- STEP BAR -->
       <nav class="step-bar" id="stepBar">
         <span class="step-pip" data-step="1">Start</span
         ><span class="step-sep">›</span>
-        <span class="step-pip" data-step="2">Select Type</span
+        <span class="step-pip" data-step="2">Document</span
         ><span class="step-sep">›</span>
-        <span class="step-pip" data-step="3">ID Photo</span
+        <span class="step-pip" data-step="3">ID Capture</span
         ><span class="step-sep">›</span>
         <span class="step-pip" data-step="4">Selfie</span
         ><span class="step-sep">›</span>
         <span class="step-pip" data-step="5">Results</span>
       </nav>
 
-      <!-- STEP 1 -->
+      <!-- ══ STEP 1 — Intro ══ -->
       <div class="step active" id="step1">
         <div style="padding-top: 24px">
           <h1 class="hero-title">Identity Verification</h1>
           <p class="hero-sub">
-            Securely verify your identity document with guided camera capture
+            Have your South African Smart ID card or passport ready before you
+            begin.
           </p>
         </div>
         <div class="guide-list">
@@ -692,8 +674,8 @@
             <div class="guide-text">
               <h4>Good Lighting</h4>
               <p>
-                Natural or bright indoor light. Avoid harsh shadows or glare on
-                the ID.
+                Use natural or bright indoor light. Avoid shadows and glare on
+                the document.
               </p>
             </div>
           </div>
@@ -705,10 +687,10 @@
               </svg>
             </div>
             <div class="guide-text">
-              <h4>Flat Document Placement</h4>
+              <h4>Flat Surface</h4>
               <p>
-                Place your document on a flat, dark surface. All corners must be
-                visible.
+                Place your document on a flat, dark surface with all four
+                corners visible.
               </p>
             </div>
           </div>
@@ -722,8 +704,8 @@
             <div class="guide-text">
               <h4>Clear Selfie</h4>
               <p>
-                Face camera directly. Remove glasses, hats, or masks. Neutral
-                expression.
+                Face the camera directly. Remove glasses, hats, and masks.
+                Neutral expression.
               </p>
             </div>
           </div>
@@ -732,10 +714,10 @@
               <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </div>
             <div class="guide-text">
-              <h4>Proper Distance</h4>
+              <h4>Correct Distance</h4>
               <p>
-                Hold phone 20–30 cm above your document. For selfie, arm's
-                length is ideal.
+                Hold your phone 20–30 cm above the document so the entire card
+                fills the frame.
               </p>
             </div>
           </div>
@@ -746,33 +728,18 @@
               </svg>
             </div>
             <div class="guide-text">
-              <h4>Stay Steady</h4>
+              <h4>Accepted Documents</h4>
               <p>
-                Keep both hands steady while capturing. The app guides you in
-                real time.
-              </p>
-            </div>
-          </div>
-          <div class="guide-card">
-            <div class="guide-icon">
-              <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M15 9l-6 6M9 9l6 6" />
-              </svg>
-            </div>
-            <div class="guide-text">
-              <h4>Avoid</h4>
-              <p>
-                No blurry images, cut-off documents, dark rooms, or reflective
-                surfaces.
+                South African Smart ID card or SA passport only. Open your
+                passport to the photo page.
               </p>
             </div>
           </div>
         </div>
-        <button class="btn" id="btnStart" onclick="goStep(2)">
+        <button class="btn" onclick="goStep(2)">
           <svg
-            width="18"
-            height="18"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -789,25 +756,25 @@
         </p>
       </div>
 
-      <!-- STEP 2 -->
+      <!-- ══ STEP 2 — Document type ══ -->
       <div class="step" id="step2">
-        <div style="padding-top: 20px">
-          <h2 class="section-title">Select your document type</h2>
-          <p class="section-sub">Choose the document you want to verify</p>
+        <div style="padding-top: 18px">
+          <h2 class="section-title">Select document type</h2>
+          <p class="section-sub">Choose the document you have ready</p>
         </div>
         <div class="doc-grid">
           <div class="doc-card" id="cardTypeCard" onclick="selectDoc('card')">
             <div class="doc-card-icon">🪪</div>
             <div>
-              <h3>National ID Card</h3>
-              <p>Portrait capture. South African Smart ID card.</p>
+              <h3>SA Smart ID Card</h3>
+              <p>South African Smart ID card issued from 2013 onwards</p>
             </div>
           </div>
           <div class="doc-card" id="cardTypeBook" onclick="selectDoc('book')">
             <div class="doc-card-icon">📘</div>
             <div>
-              <h3>Passport / ID Book</h3>
-              <p>Portrait capture. South African passport booklet.</p>
+              <h3>SA Passport</h3>
+              <p>South African passport — open to the photo and data page</p>
             </div>
           </div>
         </div>
@@ -816,9 +783,9 @@
         </button>
       </div>
 
-      <!-- STEP 3 -->
+      <!-- ══ STEP 3 — ID capture ══ -->
       <div class="step" id="step3">
-        <div style="padding-top: 20px">
+        <div style="padding-top: 18px">
           <h2 class="section-title" id="step3Title">ID Document</h2>
           <p class="section-sub" id="step3Sub">
             Capture the front of your document
@@ -826,91 +793,76 @@
         </div>
         <div class="cam-wrap" id="idCamWrap">
           <video
-            class="cam-video portrait"
+            class="cam-video"
             id="idVideo"
             autoplay
             playsinline
             muted
           ></video>
           <canvas class="cam-canvas" id="idCanvas"></canvas>
-          <div class="id-hud" id="idHud">
-            <div class="hud-row">
-              <span class="hud-k">Rect</span
-              ><span class="hud-v" id="hudRect">--</span>
-            </div>
-            <div class="hud-row">
-              <span class="hud-k">Aspect</span
-              ><span class="hud-v" id="hudAspect">--</span>
-            </div>
-            <div class="hud-row">
-              <span class="hud-k">Face</span
-              ><span class="hud-v" id="hudFace">--</span>
-            </div>
-            <div class="hud-row">
-              <span class="hud-k">Text</span
-              ><span class="hud-v" id="hudText">--</span>
-            </div>
-            <div class="hud-row">
-              <span class="hud-k">Sharp</span
-              ><span class="hud-v" id="hudSharp">--</span>
-            </div>
-            <div class="hud-row">
-              <span class="hud-k">Score</span
-              ><span class="hud-v" id="hudScore">--</span>
-            </div>
-            <div class="hud-row">
-              <span class="hud-k">OCR</span
-              ><span class="hud-v" id="hudOcr">--</span>
-            </div>
+
+          <!-- Priority 1: gate banner (replaces status pill — single in-frame indicator) -->
+          <div class="gate-banner" id="gateBanner"></div>
+
+          <!-- Priority 2: capture ring (mutually exclusive with banner) -->
+          <div class="capture-ring-wrap" id="captureRingWrap">
+            <svg class="capture-ring-svg" viewBox="0 0 48 48">
+              <circle class="capture-ring-track" cx="24" cy="24" r="22" />
+              <circle
+                class="capture-ring-fill"
+                id="captureRingFill"
+                cx="24"
+                cy="24"
+                r="22"
+              />
+            </svg>
+            <span class="capture-ring-label">Hold still</span>
           </div>
-          <!-- OCR live scan indicator (top-left) -->
-          <div class="ocr-pulse" id="ocrPulse">
-            <div class="ocr-dot" id="ocrDot"></div>
-            <span id="ocrPulseLabel">Reading…</span>
-          </div>
-          <div class="detect-ring" id="detectRing">
-            <div class="ring-dot" id="ringDot"></div>
-            <span id="ringLabel">Scanning…</span>
-          </div>
+
           <div class="cam-overlay" id="idLoading">
             <div class="spinner"></div>
             <span style="font-size: 13px">Starting camera…</span>
           </div>
         </div>
-        <div class="err-box" id="idError" style="display: none"></div>
+
+        <!-- Priority 3: feedback bar — clean user-facing messages only -->
         <div class="feedback" id="idFeedback">Initialising…</div>
-        <!--
-          Capture button: hidden while auto-capture is active.
-          Re-enabled as a fallback if OCR keeps failing.
-        -->
+
+        <!-- Retry notice — no technical detail exposed -->
+        <div class="retry-notice" id="retryNotice">
+          Please ensure your document is fully visible, well lit, and in focus,
+          then try again.
+        </div>
+
+        <div class="err-box" id="idError" style="display: none"></div>
         <button
           class="btn"
           id="btnCaptureID"
           disabled
-          onclick="captureID()"
+          onclick="manualCapture()"
           style="display: none"
         >
-          Capture Document
+          Capture Now
         </button>
         <button
           class="btn btn-ghost"
           id="btnRetryID"
-          onclick="retryID()"
+          onclick="retryIdCamera()"
           style="display: none; margin-top: 10px"
         >
-          Retry Camera
+          Try Again
         </button>
       </div>
 
-      <!-- STEP 4 -->
+      <!-- ══ STEP 4 — Selfie ══ -->
       <div class="step" id="step4">
-        <div style="padding-top: 20px">
+        <div style="padding-top: 18px">
           <h2 class="section-title">Selfie Verification</h2>
           <p class="section-sub">Position your face within the oval</p>
         </div>
         <div class="cam-wrap" id="selfieCamWrap">
           <video
-            class="cam-video portrait"
+            class="cam-video"
             id="selfieVideo"
             autoplay
             playsinline
@@ -922,7 +874,7 @@
           </div>
           <div class="cam-overlay hidden" id="faceLoading">
             <div class="spinner"></div>
-            <span style="font-size: 13px">Loading face detection…</span>
+            <span style="font-size: 13px">Preparing…</span>
           </div>
         </div>
         <div class="err-box" id="selfieError" style="display: none"></div>
@@ -941,13 +893,13 @@
           onclick="retrySelfie()"
           style="display: none; margin-top: 10px"
         >
-          Retry Camera
+          Try Again
         </button>
       </div>
 
-      <!-- STEP 5 -->
+      <!-- ══ STEP 5 — Results ══ -->
       <div class="step" id="step5">
-        <div style="padding-top: 20px">
+        <div style="padding-top: 18px">
           <h2 class="section-title">Verification Results</h2>
         </div>
         <div class="results-loading" id="resultsLoading">
@@ -977,37 +929,20 @@
           <div
             class="err-box"
             id="rowExpiredWarning"
-            style="display: none; margin-top: 12px"
+            style="display: none; margin-top: 10px"
           >
-            ⚠ This passport appears <strong>expired</strong> based on the MRZ
-            expiry date.
-          </div>
-          <div
-            class="err-box"
-            id="rowCountryMismatch"
-            style="
-              display: none;
-              margin-top: 4px;
-              background: #fff8e1;
-              border-color: #ffe082;
-              color: #5f4000;
-            "
-          >
-            ⚠ Issuing country and nationality fields do not match — please
-            review manually.
+            ⚠ This document may be expired. Please check the expiry date.
           </div>
           <div class="fields-title" id="extractedTitle" style="display: none">
             Extracted data
           </div>
           <div id="extractedFields"></div>
           <div id="mrzIntegritySection" style="display: none">
-            <div class="fields-title">MRZ integrity</div>
+            <div class="fields-title">Document integrity</div>
             <div id="mrzIntegrityBody"></div>
           </div>
-          <div class="fail-list" id="failList" style="display: none">
-            <div class="fields-title" style="color: #8b1a1a">
-              Failure reasons
-            </div>
+          <div id="failList" style="display: none">
+            <div class="fields-title" style="color: #8b1a1a">Notes</div>
             <div id="failItems"></div>
           </div>
         </div>
@@ -1020,66 +955,111 @@
       </div>
     </div>
 
+    <!-- DEBUG PANEL — internal only, tap 5× to toggle -->
     <div id="debugPanel">
-      <div class="dbg-title">🛠 Debug — tap 5× to dismiss</div>
+      <div class="dbg-title">Debug</div>
       <div class="dbg-row">
-        <span class="dbg-k">OCR ready:</span><span id="dbgOcr">loading…</span>
+        <span class="dbg-k">Composite</span
+        ><span class="dbg-v" id="dbgScore">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Face models:</span
-        ><span id="dbgFace">loading…</span>
+        <span class="dbg-k">Aspect sig</span
+        ><span class="dbg-v" id="dbgAspectSig">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Doc type:</span><span id="dbgDoc">--</span>
+        <span class="dbg-k">Green sig</span
+        ><span class="dbg-v" id="dbgGreen">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Parser used:</span><span id="dbgParser">--</span>
+        <span class="dbg-k">Face zone</span
+        ><span class="dbg-v" id="dbgFaceZone">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">ID Score:</span><span id="dbgIdScore">--</span>
+        <span class="dbg-k">Sharpness</span
+        ><span class="dbg-v" id="dbgSharp">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Rect found:</span><span id="dbgRect">--</span>
+        <span class="dbg-k">Brightness</span
+        ><span class="dbg-v" id="dbgBright">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Aspect ratio:</span><span id="dbgAspectR">--</span>
+        <span class="dbg-k">Frame delta</span
+        ><span class="dbg-v" id="dbgDelta">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Photo zone:</span><span id="dbgPhotoZone">--</span>
+        <span class="dbg-k">Stable ms</span
+        ><span class="dbg-v" id="dbgStableMs">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Text density:</span
-        ><span id="dbgTextDensity">--</span>
+        <span class="dbg-k">Gate green</span
+        ><span class="dbg-v" id="dbgGateGreen">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Dark stripe:</span><span id="dbgStripe">--</span>
+        <span class="dbg-k">Gate aspect</span
+        ><span class="dbg-v" id="dbgGateAspect">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Edge density:</span><span id="dbgEdge">--</span>
+        <span class="dbg-k">Gate face</span
+        ><span class="dbg-v" id="dbgGateFace">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Sharpness:</span><span id="dbgSharp">--</span>
+        <span class="dbg-k">OCR status</span
+        ><span class="dbg-v" id="dbgOcr">loading…</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Brightness:</span><span id="dbgBright">--</span>
+        <span class="dbg-k">Face models</span
+        ><span class="dbg-v" id="dbgFace">loading…</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Doc number:</span><span id="dbgIdNum">--</span>
+        <span class="dbg-k">Doc type</span
+        ><span class="dbg-v" id="dbgDoc">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">OCR attempts:</span
-        ><span id="dbgOcrAttempts">0</span>
+        <span class="dbg-k">ID number</span
+        ><span class="dbg-v" id="dbgIdNum">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">OCR last result:</span
-        ><span id="dbgOcrResult">--</span>
+        <span class="dbg-k">ID valid</span
+        ><span class="dbg-v" id="dbgIdValid">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Face (selfie):</span><span id="dbgFaceD">--</span>
+        <span class="dbg-k">SA country</span
+        ><span class="dbg-v" id="dbgSaCountry">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Fallbacks</span
+        ><span class="dbg-v" id="dbgFallback">0</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Selfie face</span
+        ><span class="dbg-v" id="dbgFaceD">--</span>
       </div>
     </div>
 
     <script>
+      /* ================================================================
+         CONSTANTS
+      ================================================================ */
+      const CARD_ASPECT = 1.586;
+      const BOOK_ASPECT = 1.42;
+      const ASPECT_TOLERANCE = 0.08;
+
+      const GATE_GREEN_MIN = 40;
+      const GATE_ASPECT_MIN = 55;
+      const GATE_FACE_MIN = 25;
+      const SCORE_GATE = 75;
+
+      const STABLE_DURATION_MS = 900;
+      const STABLE_DELTA_MAX = 8;
+      const FALLBACK_ATTEMPTS = 6;
+
+      const SA_GREEN_H_MIN = 100;
+      const SA_GREEN_H_MAX = 135;
+      const SA_GREEN_S_MIN = 40;
+      const SA_GREEN_V_MIN = 35;
+      const SA_GREEN_H_MIN_BOOK = 90;
+      const SA_GREEN_H_MAX_BOOK = 150;
+
       /* ================================================================
          GLOBAL STATE
       ================================================================ */
@@ -1089,19 +1069,33 @@
       window.extractedIDData = null;
 
       let currentStep = 1;
-      let idStream = null,
-        selfieStream = null;
-      let idRafId = null,
-        selfieRafId = null;
-      let isIdCapturing = false;
+      let idStream = null;
+      let selfieStream = null;
+      let idRafId = null;
+      let selfieRafId = null;
+      let isCaptureInProgress = false;
+
+      let stableStartMs = null;
+      let fallbackCount = 0;
+      let prevFrameGray = null;
+      let lastFaceZoneScore = 0;
+      let faceZonePending = false;
+      let lastFaceZoneTs = 0;
+      let idStreamReady = null;
+      let selfieStreamReady = null;
       let lastRoi = null;
-      let debugVisible = false;
+      let globalInactivityTimeout = null;
+      const INACTIVITY_LIMIT = 60 * 1000;
+
+      /* ── Feedback debounce ── only update DOM when message actually changes ── */
+      let _lastFbMsg = "";
+      let _lastFbCls = "";
 
       /* ================================================================
          EAGER ENGINE INIT
       ================================================================ */
-      let ocrReady = false,
-        faceReady = false;
+      let ocrReady = false;
+      let faceReady = false;
 
       (async () => {
         try {
@@ -1114,7 +1108,7 @@
           window._ocrWorker = w;
           ocrReady = true;
           dbg("dbgOcr", "ready ✓");
-        } catch (e) {
+        } catch {
           dbg("dbgOcr", "FAILED");
         }
       })();
@@ -1126,7 +1120,7 @@
           );
           faceReady = true;
           dbg("dbgFace", "ready ✓");
-        } catch (e) {
+        } catch {
           dbg("dbgFace", "FAILED");
         }
       })();
@@ -1145,6 +1139,7 @@
           cancelRaf(selfieRafId);
           selfieRafId = null;
         }
+
         document
           .querySelectorAll(".step")
           .forEach((s) => s.classList.remove("active"));
@@ -1152,6 +1147,7 @@
         currentStep = n;
         updateStepBar(n);
         el("stepBar").classList.toggle("visible", n >= 2);
+
         if (n === 2) prewarmIdCamera();
         if (n === 3) initStep3();
         if (n === 4) {
@@ -1173,29 +1169,9 @@
       /* ================================================================
          STEP 2
       ================================================================ */
-      let idStreamReady = null,
-        selfieStreamReady = null;
-
       function prewarmIdCamera() {
         if (idStreamReady) return;
-        idStreamReady = (async () => {
-          try {
-            return await navigator.mediaDevices.getUserMedia({
-              video: {
-                facingMode: { ideal: "environment" },
-                width: { ideal: 1280 },
-                height: { ideal: 960 },
-              },
-              audio: false,
-            });
-          } catch {
-            return await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: false,
-            });
-          }
-        })();
-        idStreamReady.catch(() => {
+        idStreamReady = requestCamera("environment").catch(() => {
           idStreamReady = null;
         });
       }
@@ -1214,38 +1190,35 @@
       }
 
       /* ================================================================
-         STEP 3 INIT
+         STEP 3 — INIT
       ================================================================ */
       function initStep3() {
-        isIdCapturing = false;
-        // Reset live-OCR state
-        liveOcrPending = false;
-        liveOcrLastTs = 0;
-        liveOcrAttempts = 0;
-        liveOcrFoundId = false;
-        el("ocrPulse").classList.remove("visible");
-        el("ocrDot").className = "ocr-dot";
-        el("ocrPulseLabel").textContent = "Reading…";
+        isCaptureInProgress = false;
+        stableStartMs = null;
+        fallbackCount = 0;
+        prevFrameGray = null;
+        lastFaceZoneScore = 0;
+        faceZonePending = false;
+        lastFaceZoneTs = 0;
+        _lastFbMsg = "";
+        _lastFbCls = "";
 
         const isCard = window.documentType === "card";
         el("step3Title").textContent = isCard
-          ? "ID Card"
-          : "Passport / ID Book";
+          ? "SA Smart ID Card"
+          : "SA Passport";
         el("step3Sub").textContent = isCard
-          ? "Hold your phone above the front of your ID card"
+          ? "Hold your phone above the front of your Smart ID card"
           : "Hold your phone above the photo page of your passport";
-        el("btnCaptureID").textContent = isCard
-          ? "Capture ID Card"
-          : "Capture Passport Page";
-        // Button hidden by default — auto-capture drives flow
-        // Will be shown as fallback after MAX_OCR_FALLBACK_ATTEMPTS
+
+        el("idError").style.display = "none";
         el("btnCaptureID").style.display = "none";
         el("btnCaptureID").disabled = true;
         el("btnRetryID").style.display = "none";
-        el("idError").style.display = "none";
-        el("detectRing").classList.add("visible");
-        if (debugVisible) el("idHud").classList.add("visible");
-        prewarmSelfieCamera();
+        el("retryNotice").classList.remove("visible");
+        el("gateBanner").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
+
         startIdCamera().then(() => startIdAnalysis());
       }
 
@@ -1255,31 +1228,16 @@
       async function startIdCamera() {
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
-        const streamPromise =
-          idStreamReady ||
-          (async () => {
-            try {
-              return await navigator.mediaDevices.getUserMedia({
-                video: {
-                  facingMode: { ideal: "environment" },
-                  width: { ideal: 1280 },
-                  height: { ideal: 960 },
-                },
-                audio: false,
-              });
-            } catch {
-              return await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: false,
-              });
-            }
-          })();
+
         const spinnerTimer = setTimeout(() => {
           el("idLoading").style.display = "flex";
           setFb("idFeedback", "Starting camera…");
         }, 80);
+
         try {
-          const stream = await streamPromise;
+          const stream = idStreamReady
+            ? await idStreamReady
+            : await requestCamera("environment");
           clearTimeout(spinnerTimer);
           idStreamReady = null;
           idStream = stream;
@@ -1287,42 +1245,54 @@
           video.srcObject = stream;
           await video.play();
           el("idLoading").style.display = "none";
-          setFb("idFeedback", "Position your document within the frame");
           resizeIdCanvas();
-        } catch (err) {
+          setFb("idFeedback", "Position your document in the frame");
+          resetInactivityTimer();
+        } catch {
           clearTimeout(spinnerTimer);
           idStreamReady = null;
           el("idLoading").style.display = "none";
-          el("idError").textContent =
-            "Camera access denied or unavailable. Allow camera permissions and try again.";
-          el("idError").style.display = "block";
+          showIdError(
+            "Camera access denied. Please allow camera permissions and try again.",
+          );
           el("btnRetryID").style.display = "flex";
-          setFb("idFeedback", "Camera error", "bad");
+          setFb("idFeedback", "Camera unavailable", "bad");
         }
       }
 
       function stopIdCam() {
+        clearInactivityTimer();
         if (idStream) {
           idStream.getTracks().forEach((t) => t.stop());
           idStream = null;
         }
         const v = el("idVideo");
         if (v) v.srcObject = null;
+        if (selfieStream) {
+          selfieStream.getTracks().forEach((t) => t.stop());
+          selfieStream = null;
+        }
+        selfieStreamReady = null;
       }
 
-      function retryID() {
+      function retryIdCamera() {
         idStreamReady = null;
+        isCaptureInProgress = false;
+        stableStartMs = null;
+        fallbackCount = 0;
+        prevFrameGray = null;
+        _lastFbMsg = "";
+        _lastFbCls = "";
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
-        el("idCamWrap").style.display = "block";
-        el("idFeedback").style.display = "flex";
-        // Hide fallback button again on retry
         el("btnCaptureID").style.display = "none";
         el("btnCaptureID").disabled = true;
-        liveOcrPending = false;
-        liveOcrLastTs = 0;
-        liveOcrAttempts = 0;
-        liveOcrFoundId = false;
+        el("retryNotice").classList.remove("visible");
+        el("gateBanner").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
+        cancelRaf(idRafId);
+        idRafId = null;
+        clearInactivityTimer();
         startIdCamera().then(() => startIdAnalysis());
       }
 
@@ -1333,74 +1303,381 @@
         const r = video.getBoundingClientRect();
         canvas.width = r.width || video.videoWidth;
         canvas.height = r.height || video.videoHeight;
-        drawIdGuide();
       }
 
-      function drawIdGuide(detectionResult) {
+      /* ================================================================
+         INACTIVITY TIMER
+      ================================================================ */
+      function resetInactivityTimer() {
+        if (globalInactivityTimeout) clearTimeout(globalInactivityTimeout);
+        globalInactivityTimeout = setTimeout(
+          handleCameraTimeout,
+          INACTIVITY_LIMIT,
+        );
+      }
+      function clearInactivityTimer() {
+        if (globalInactivityTimeout) {
+          clearTimeout(globalInactivityTimeout);
+          globalInactivityTimeout = null;
+        }
+      }
+      function handleCameraTimeout() {
+        cancelRaf(idRafId);
+        idRafId = null;
+        cancelRaf(window.selfieRafId);
+        window.selfieRafId = null;
+        isCaptureInProgress = false;
+        window.isSelfieCaptureInProgress = false;
+        stopIdCam();
+        stopSelfieCam();
+        window.documentType = null;
+        goStep(2);
+      }
+
+      /* ================================================================
+         CAMERA HELPER
+      ================================================================ */
+      async function requestCamera(facing) {
+        try {
+          return await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: facing },
+              width: { ideal: 1280 },
+              height: { ideal: 960 },
+            },
+            audio: false,
+          });
+        } catch {
+          return await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
+      }
+
+      /* ================================================================
+         SA ID DETECTION ENGINE
+      ================================================================ */
+      function analyseFrame(video, buf, bctx) {
+        if (!video.videoWidth || video.readyState < 2) return null;
+
+        const vw = video.videoWidth,
+          vh = video.videoHeight;
+        const isCard = window.documentType === "card";
+        const cw = el("idCanvas").width,
+          ch = el("idCanvas").height;
+        const guideW = cw * 0.88;
+        const guideH = isCard ? guideW / CARD_ASPECT : guideW / BOOK_ASPECT;
+        const guideX = (cw - guideW) / 2;
+        const guideY = (ch - guideH) / 2;
+
+        const scaleX = vw / cw,
+          scaleY = vh / ch;
+        const roiX = Math.round(guideX * scaleX);
+        const roiY = Math.round(guideY * scaleY);
+        const roiW = Math.round(guideW * scaleX);
+        const roiH = Math.round(guideH * scaleY);
+        lastRoi = { roiX, roiY, roiW, roiH };
+
+        const sw = Math.min(roiW, vw - roiX);
+        const sh = Math.min(roiH, vh - roiY);
+        if (sw < 20 || sh < 20) return null;
+
+        buf.width = sw;
+        buf.height = sh;
+        bctx.drawImage(video, roiX, roiY, sw, sh, 0, 0, sw, sh);
+        const imgData = bctx.getImageData(0, 0, sw, sh);
+        const gray = toGray(imgData);
+
+        /* Signal 1: Aspect ratio (25pts) */
+        const targetAspect = isCard ? CARD_ASPECT : BOOK_ASPECT;
+        const actualAspect = sw / sh;
+        const aspectDiff = Math.abs(actualAspect - targetAspect) / targetAspect;
+        const sig_aspect =
+          aspectDiff <= ASPECT_TOLERANCE
+            ? Math.round((1 - aspectDiff / ASPECT_TOLERANCE) * 100)
+            : 0;
+        dbg("dbgAspectSig", sig_aspect.toFixed(0));
+
+        /* Signal 2: SA green header (25pts) */
+        const headerH = Math.round(sh * (isCard ? 0.18 : 0.12));
+        const sig_green = measureSAGreenBand(imgData, sw, headerH, isCard);
+        dbg("dbgGreen", sig_green.toFixed(0));
+
+        /* Signal 3: Face in photo zone (20pts, throttled 800ms) */
+        const now = performance.now();
+        if (faceReady && !faceZonePending && now - lastFaceZoneTs > 800) {
+          faceZonePending = true;
+          lastFaceZoneTs = now;
+          const photoW = Math.round(sw * (isCard ? 0.32 : 0.28));
+          detectFaceInZone(video, roiX, roiY, photoW, sh).then((score) => {
+            lastFaceZoneScore = score;
+            faceZonePending = false;
+            dbg("dbgFaceZone", score.toFixed(0));
+          });
+        }
+        const sig_face = lastFaceZoneScore;
+
+        /* Signal 4: Sharpness (15pts) */
+        const lapVar = laplacianVariance(gray, sw, sh);
+        const sig_sharp = Math.min(100, Math.max(0, (lapVar - 50) / 3.5));
+        dbg("dbgSharp", lapVar.toFixed(0));
+
+        /* Signal 5: Quality — brightness + edge density (15pts) */
+        const bright = brightness(gray);
+        const edge = edgeDensity(gray, sw, sh);
+        const sig_quality =
+          (bright >= 80 && bright <= 220 ? 50 : 0) + (edge >= 0.05 ? 50 : 0);
+        dbg("dbgBright", bright.toFixed(0));
+
+        /* Composite */
+        const composite = Math.round(
+          sig_aspect * 0.25 +
+            sig_green * 0.25 +
+            sig_face * 0.2 +
+            sig_sharp * 0.15 +
+            sig_quality * 0.15,
+        );
+        dbg("dbgScore", composite);
+
+        /* Hard gates */
+        const gateGreen = sig_green >= GATE_GREEN_MIN;
+        const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
+        const gateFace =
+          !faceReady || lastFaceZoneTs === 0 || sig_face >= GATE_FACE_MIN;
+        const gateAll =
+          gateGreen && gateAspect && gateFace && composite >= SCORE_GATE;
+
+        dbg("dbgGateGreen", gateGreen ? "✓" : "✗ " + sig_green.toFixed(0));
+        dbg("dbgGateAspect", gateAspect ? "✓" : "✗ " + sig_aspect.toFixed(0));
+        dbg("dbgGateFace", gateFace ? "✓" : "✗ " + sig_face.toFixed(0));
+
+        /* ── USER-FACING FEEDBACK — clean messages only ── */
+        let message, cls;
+
+        if (bright < 80) {
+          message = "Too dark — move to a brighter area";
+          cls = "bad";
+        } else if (bright > 220) {
+          message = "Too much glare — reduce the light";
+          cls = "bad";
+        } else if (lapVar < 50) {
+          message = "Hold steady";
+          cls = "warn";
+        } else if (edge < 0.03) {
+          message = "Place your document in the frame";
+          cls = "bad";
+        } else if (sig_aspect < 20) {
+          message =
+            actualAspect < targetAspect - targetAspect * ASPECT_TOLERANCE
+              ? "Rotate your document sideways"
+              : "Align your document in the frame";
+          cls = "warn";
+        } else if (!gateGreen && composite < SCORE_GATE) {
+          message = "Show the front of your document";
+          cls = "warn";
+        } else if (!gateFace && lastFaceZoneTs > 0) {
+          message = "Show the front of your document";
+          cls = "warn";
+        } else if (!gateAspect) {
+          message =
+            actualAspect < targetAspect - targetAspect * ASPECT_TOLERANCE
+              ? "Move back slightly"
+              : "Align your document in the frame";
+          cls = "warn";
+        } else if (gateAll) {
+          message = "Hold still…";
+          cls = "ok";
+        } else {
+          message = "Align your document in the frame";
+          cls = "warn";
+        }
+
+        /* ── GATE BANNER — only shown when document clearly not matching ──
+           Never reveal what signal failed or how detection works.
+           One neutral message covers all gate failures. */
+        let gateBannerMsg = null;
+        if (!gateGreen && composite < SCORE_GATE) {
+          gateBannerMsg = "Place the front of your document flat in the frame";
+        } else if (!gateFace && lastFaceZoneTs > 0) {
+          gateBannerMsg = "Place the front of your document flat in the frame";
+        }
+
+        return {
+          composite,
+          sig_aspect,
+          sig_green,
+          sig_face,
+          sig_sharp,
+          sig_quality,
+          bright,
+          edge,
+          lapVar,
+          actualAspect,
+          gateAll,
+          gateGreen,
+          gateAspect,
+          gateFace,
+          message,
+          cls,
+          gateBannerMsg,
+        };
+      }
+
+      /* ================================================================
+         REAL-TIME ANALYSIS LOOP
+         Priority: banner (1) → ring (2) → feedback bar (3)
+         Banner and ring are mutually exclusive.
+      ================================================================ */
+      function startIdAnalysis() {
+        const video = el("idVideo");
+        const buf = document.createElement("canvas");
+        const bctx = buf.getContext("2d", { willReadFrequently: true });
+        let lastTs = 0;
+
+        function loop(ts) {
+          idRafId = requestAnimationFrame(loop);
+          if (ts - lastTs < 100) return;
+          lastTs = ts;
+          if (!video.videoWidth || video.readyState < 2 || isCaptureInProgress)
+            return;
+
+          const result = analyseFrame(video, buf, bctx);
+          if (!result) return;
+
+          if (result.composite >= 40) resetInactivityTimer();
+
+          drawGuideOverlay(result);
+
+          /* ── FEEDBACK BAR: debounced — only update DOM on change ── */
+          if (result.message !== _lastFbMsg || result.cls !== _lastFbCls) {
+            setFb("idFeedback", result.message, result.cls);
+            _lastFbMsg = result.message;
+            _lastFbCls = result.cls;
+          }
+
+          const banner = el("gateBanner");
+          const isStableFrame = checkFrameDelta(buf, bctx);
+          dbg("dbgDelta", isStableFrame ? "stable" : "moving");
+
+          /* ── PRIORITY 1: Gate banner ── */
+          if (result.gateBannerMsg) {
+            banner.textContent = result.gateBannerMsg;
+            banner.classList.add("visible");
+            updateCaptureRing(0, STABLE_DURATION_MS); /* hide ring */
+            stableStartMs = null;
+          } else {
+            banner.classList.remove("visible");
+
+            if (result.gateAll && isStableFrame) {
+              /* ── PRIORITY 2: Capture ring ── */
+              if (!stableStartMs) stableStartMs = ts;
+              const elapsed = ts - stableStartMs;
+              dbg("dbgStableMs", elapsed.toFixed(0));
+              updateCaptureRing(elapsed, STABLE_DURATION_MS);
+              if (elapsed >= STABLE_DURATION_MS) triggerCapture(video);
+            } else {
+              /* ── PRIORITY 3: Nothing in-frame — feedback bar is enough ── */
+              if (stableStartMs) {
+                stableStartMs = null;
+                fallbackCount++;
+                dbg("dbgFallback", fallbackCount);
+                if (
+                  fallbackCount >= FALLBACK_ATTEMPTS &&
+                  result.gateGreen &&
+                  result.gateAspect
+                ) {
+                  el("btnCaptureID").style.display = "flex";
+                  el("btnCaptureID").disabled = false;
+                }
+              }
+              updateCaptureRing(0, STABLE_DURATION_MS);
+            }
+          }
+        }
+
+        idRafId = requestAnimationFrame(loop);
+      }
+
+      /* ================================================================
+         FRAME DELTA
+      ================================================================ */
+      function checkFrameDelta(buf, bctx) {
+        const sw = buf.width,
+          sh = buf.height;
+        if (sw < 4 || sh < 4) return false;
+        const px = Math.round(sw / 2) - 25,
+          py = Math.round(sh / 2) - 25;
+        const pw = Math.min(50, sw),
+          ph = Math.min(50, sh);
+        const curData = bctx.getImageData(px, py, pw, ph);
+        const curGray = toGray(curData);
+        if (!prevFrameGray || prevFrameGray.length !== curGray.length) {
+          prevFrameGray = curGray;
+          return false;
+        }
+        let sum = 0;
+        for (let i = 0; i < curGray.length; i++)
+          sum += Math.abs(curGray[i] - prevFrameGray[i]);
+        prevFrameGray = curGray;
+        return sum / curGray.length < STABLE_DELTA_MAX;
+      }
+
+      /* ================================================================
+         CAPTURE RING
+      ================================================================ */
+      function updateCaptureRing(elapsed, duration) {
+        const wrap = el("captureRingWrap"),
+          fill = el("captureRingFill");
+        const C = 138.2;
+        if (elapsed <= 0) {
+          wrap.classList.remove("visible");
+          fill.style.strokeDashoffset = C;
+          return;
+        }
+        wrap.classList.add("visible");
+        fill.style.strokeDashoffset = C * (1 - Math.min(elapsed / duration, 1));
+      }
+
+      /* ================================================================
+         CANVAS GUIDE OVERLAY
+      ================================================================ */
+      function drawGuideOverlay(result) {
         const canvas = el("idCanvas"),
           video = el("idVideo");
-        if (!canvas) return;
+        if (!canvas || !video || !window.documentType) return;
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (!window.documentType) return;
+
         const cw = canvas.width,
           ch = canvas.height;
         const isCard = window.documentType === "card";
         const fw = cw * 0.88;
-        const fh = isCard ? fw / 1.586 : fw / 1.42;
+        const fh = isCard ? fw / CARD_ASPECT : fw / BOOK_ASPECT;
         const fx = (cw - fw) / 2,
           fy = (ch - fh) / 2;
 
-        ctx.fillStyle = "rgba(0,0,0,0.38)";
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
         ctx.beginPath();
         ctx.rect(0, 0, cw, ch);
         ctx.rect(fx, fy, fw, fh);
         ctx.fill("evenodd");
 
-        if (detectionResult && detectionResult.quad) {
-          const q = detectionResult.quad;
-          const score = detectionResult.score || 0;
-          const lineColor =
-            score >= 45
-              ? "rgba(26,138,74,0.95)"
-              : score >= 25
-                ? "rgba(194,124,0,0.9)"
-                : "rgba(229,9,20,0.85)";
-          ctx.strokeStyle = lineColor;
-          ctx.lineWidth = 3;
-          ctx.setLineDash([]);
-          ctx.beginPath();
-          ctx.moveTo(q[0].x, q[0].y);
-          ctx.lineTo(q[1].x, q[1].y);
-          ctx.lineTo(q[2].x, q[2].y);
-          ctx.lineTo(q[3].x, q[3].y);
-          ctx.closePath();
-          ctx.stroke();
-          if (score >= 45) {
-            ctx.fillStyle = "rgba(26,138,74,0.08)";
-            ctx.beginPath();
-            ctx.moveTo(q[0].x, q[0].y);
-            ctx.lineTo(q[1].x, q[1].y);
-            ctx.lineTo(q[2].x, q[2].y);
-            ctx.lineTo(q[3].x, q[3].y);
-            ctx.closePath();
-            ctx.fill();
-          }
-        }
+        const fc =
+          result && result.gateAll
+            ? "rgba(74,222,128,.95)"
+            : result && result.composite >= 40
+              ? "rgba(251,191,36,.9)"
+              : "rgba(255,255,255,.85)";
 
-        ctx.setLineDash([10, 8]);
-        ctx.strokeStyle =
-          detectionResult && detectionResult.score >= 45
-            ? "rgba(26,138,74,0.5)"
-            : "rgba(255,255,255,0.92)";
-        ctx.lineWidth = 3;
+        ctx.setLineDash(result && result.gateAll ? [] : [10, 8]);
+        ctx.strokeStyle = fc;
+        ctx.lineWidth = 2.5;
         ctx.strokeRect(fx, fy, fw, fh);
         ctx.setLineDash([]);
 
-        const cl = 20;
-        const cornerColor =
-          detectionResult && detectionResult.score >= 45 ? "#4ade80" : "#fff";
-        ctx.strokeStyle = cornerColor;
+        const cl = 18;
+        ctx.strokeStyle = fc;
         ctx.lineWidth = 4;
         [
           [fx, fy, 1, 1],
@@ -1415,465 +1692,313 @@
           ctx.stroke();
         });
 
-        if (video.videoWidth) {
-          const sx = video.videoWidth / cw,
-            sy = video.videoHeight / ch;
-          lastRoi = {
-            roiX: Math.round(fx * sx),
-            roiY: Math.round(fy * sy),
-            roiW: Math.round(fw * sx),
-            roiH: Math.round(fh * sy),
-          };
+        if (result && result.gateAll) {
+          ctx.fillStyle = "rgba(74,222,128,.07)";
+          ctx.fillRect(fx, fy, fw, fh);
         }
       }
 
       /* ================================================================
-         ID DOCUMENT DETECTION ENGINE  v3
-         Visual gate threshold: 45 (was 70)
-         OCR gate: live Tesseract reads valid ID / MRZ number
-         Auto-capture fires when BOTH gates pass.
+         TRIGGER CAPTURE
       ================================================================ */
+      async function triggerCapture(videoEl) {
+        if (isCaptureInProgress) return;
+        isCaptureInProgress = true;
 
-      const ID_SIGNALS = {
-        RECT: 25,
-        FACE_ZONE: 25,
-        TEXT_BAND: 20,
-        STRIPE: 10,
-        SHARPNESS: 10,
-        QUALITY: 10,
-      };
-
-      let lastFaceInIdScore = 0,
-        faceInIdPending = false,
-        lastFaceInIdTs = 0;
-
-      async function detectIDDocument(video, buf, bctx, isCard) {
-        if (!video.videoWidth || video.readyState < 2) return null;
-        if (!lastRoi) return null;
-        const { roiX, roiY, roiW, roiH } = lastRoi;
-        const sw = Math.min(roiW, video.videoWidth - roiX);
-        const sh = Math.min(roiH, video.videoHeight - roiY);
-        if (sw < 10 || sh < 10) return null;
-        buf.width = sw;
-        buf.height = sh;
-        bctx.drawImage(video, roiX, roiY, sw, sh, 0, 0, sw, sh);
-        const imgData = bctx.getImageData(0, 0, sw, sh);
-        const gray = toGray(imgData);
-        const signals = {};
-
-        const rectResult = detectDocumentRect(gray, sw, sh, isCard);
-        signals.rect = rectResult.score;
-        dbg("dbgRect", rectResult.found ? "YES" : "NO");
-        dbg(
-          "dbgAspectR",
-          rectResult.aspectRatio ? rectResult.aspectRatio.toFixed(3) : "--",
-        );
-
-        const now = performance.now();
-        if (faceReady && !faceInIdPending && now - lastFaceInIdTs > 800) {
-          faceInIdPending = true;
-          lastFaceInIdTs = now;
-          detectFaceInPhotoZone(video, roiX, roiY, roiW, roiH, isCard).then(
-            (score) => {
-              lastFaceInIdScore = score;
-              faceInIdPending = false;
-              dbg("dbgPhotoZone", score.toFixed(0) + "%");
-            },
-          );
-        }
-        signals.faceZone = lastFaceInIdScore;
-
-        signals.textBand = measureTextBandDensity(gray, sw, sh);
-        dbg("dbgTextDensity", signals.textBand.toFixed(1));
-
-        signals.stripe = detectHeaderStripe(imgData, sw, sh);
-        dbg("dbgStripe", signals.stripe.toFixed(1));
-
-        const sharp = sharpness(gray, sw, sh);
-        signals.sharpness = Math.min(100, sharp / 5);
-        dbg("dbgSharp", sharp.toFixed(1));
-
-        const bright = brightness(gray);
-        const edge = edgeDensity(gray, sw, sh);
-        signals.quality =
-          (edge >= 0.05 ? 50 : 0) + (bright >= 80 && bright <= 220 ? 50 : 0);
-        dbg("dbgEdge", edge.toFixed(3));
-        dbg("dbgBright", bright.toFixed(1));
-
-        const composite =
-          (signals.rect * ID_SIGNALS.RECT) / 100 +
-          (signals.faceZone * ID_SIGNALS.FACE_ZONE) / 100 +
-          (signals.textBand * ID_SIGNALS.TEXT_BAND) / 100 +
-          (signals.stripe * ID_SIGNALS.STRIPE) / 100 +
-          (signals.sharpness * ID_SIGNALS.SHARPNESS) / 100 +
-          (signals.quality * ID_SIGNALS.QUALITY) / 100;
-
-        dbg("dbgIdScore", composite.toFixed(1));
-        setHud("hudRect", signals.rect, signals.rect > 60);
-        setHud("hudFace", signals.faceZone, signals.faceZone > 50);
-        setHud("hudText", signals.textBand, signals.textBand > 50);
-        setHud("hudSharp", signals.sharpness, signals.sharpness > 40);
-        setHud(
-          "hudAspect",
-          rectResult.aspectRatio ? rectResult.aspectRatio.toFixed(2) : "--",
-          signals.rect > 60,
-        );
-        setHud("hudScore", composite.toFixed(0), composite >= 45);
-
-        let message, cls;
-        if (bright < 80) {
-          message = "Too dark — improve lighting";
-          cls = "bad";
-        } else if (bright > 230) {
-          message = "Too bright — reduce glare";
-          cls = "bad";
-        } else if (edge < 0.04) {
-          message = "No document detected — place ID in frame";
-          cls = "bad";
-        } else if (signals.sharpness < 20) {
-          message = "Blurry — hold phone steady";
-          cls = "warn";
-        } else if (composite < 20) {
-          message = "No ID detected — align document in guide";
-          cls = "bad";
-        } else if (composite < 45) {
-          if (signals.rect < 30) {
-            message = "Align all four corners in the frame";
-            cls = "warn";
-          } else {
-            message = "Possible document — keep steady";
-            cls = "warn";
-          }
-        } else {
-          // Visual gate passed (≥45) — OCR gate will determine auto-capture
-          if (liveOcrFoundId) {
-            message = "ID confirmed — capturing ✓";
-            cls = "ok";
-          } else if (liveOcrPending) {
-            message = "Reading document data…";
-            cls = "warn";
-          } else {
-            message = "Document detected — reading ID…";
-            cls = "warn";
-          }
-        }
-
-        const dot = el("ringDot"),
-          label = el("ringLabel");
-        dot.className =
-          "ring-dot " +
-          (composite >= 45
-            ? liveOcrFoundId
-              ? "green"
-              : "amber"
-            : composite >= 25
-              ? "amber"
-              : "red");
-        label.textContent =
-          composite >= 45
-            ? liveOcrFoundId
-              ? "ID Confirmed"
-              : "Reading…"
-            : composite >= 25
-              ? "Possible Doc"
-              : "Scanning…";
-
-        return {
-          score: composite,
-          signals,
-          message,
-          cls,
-          quad: rectResult.quad,
-          sharp,
-          bright,
-          edge,
-        };
-      }
-
-      /* ================================================================
-         LIVE OCR ENGINE
-         - Throttled to run every ~2.5s
-         - Only fires when visual gate score >= 45
-         - On success: stores parsed data + triggers auto-capture
-         - After MAX_OCR_FALLBACK_ATTEMPTS failures: shows manual button
-      ================================================================ */
-      let liveOcrPending = false;
-      let liveOcrLastTs = 0;
-      let liveOcrAttempts = 0;
-      let liveOcrFoundId = false;
-      const LIVE_OCR_INTERVAL = 2500; // ms between OCR attempts
-      const MAX_OCR_FALLBACK_ATTEMPTS = 4; // show manual btn after this many failures
-
-      async function runLiveOcr(video, isCard) {
-        if (liveOcrPending || liveOcrFoundId || isIdCapturing) return;
-        if (!ocrReady || !window._ocrWorker) return;
-
-        liveOcrPending = true;
-        liveOcrAttempts++;
-        dbg("dbgOcrAttempts", liveOcrAttempts);
-
-        // Show OCR pulse indicator
-        el("ocrPulse").classList.add("visible");
-        el("ocrDot").className = "ocr-dot scanning";
-        el("ocrPulseLabel").textContent = "Reading…";
-
-        try {
-          const vw = video.videoWidth,
-            vh = video.videoHeight;
-          let fw = vw * 0.88;
-          let fh = isCard ? fw / 1.586 : fw / 1.42;
-          fw = Math.min(fw, vw);
-          fh = Math.min(fh, vh);
-
-          const cap = document.createElement("canvas");
-          cap.width = Math.round(fw);
-          cap.height = Math.round(fh);
-          const cctx = cap.getContext("2d");
-          cctx.drawImage(
-            video,
-            Math.round((vw - fw) / 2),
-            Math.round((vh - fh) / 2),
-            Math.round(fw),
-            Math.round(fh),
-            0,
-            0,
-            cap.width,
-            cap.height,
-          );
-          preprocessOCR(cctx, cap.width, cap.height);
-
-          const { data } = await window._ocrWorker.recognize(
-            cap,
-            {},
-            { tessedit_pageseg_mode: "6" },
-          );
-          const rawText = data.text || "";
-          const parsed = parseDocumentText(rawText);
-
-          dbg(
-            "dbgOcrResult",
-            parsed.idNumber ? "FOUND: " + parsed.idNumber : "not found",
-          );
-          dbg("dbgIdNum", parsed.idNumber || "none");
-          setHud("hudOcr", parsed.idNumber ? "✓" : "×", !!parsed.idNumber);
-
-          if (parsed.idNumber) {
-            // ✅ BOTH GATES PASSED — trigger auto-capture
-            liveOcrFoundId = true;
-            el("ocrDot").className = "ocr-dot found";
-            el("ocrPulseLabel").textContent = "ID found ✓";
-            window.extractedIDData = parsed;
-            setFb(
-              "idFeedback",
-              "ID confirmed — capturing automatically…",
-              "ok",
-            );
-            // Small delay so user sees the confirmation message
-            setTimeout(() => captureID(), 600);
-          } else {
-            // OCR ran but no valid ID found
-            el("ocrDot").className = "ocr-dot";
-            el("ocrPulseLabel").textContent = "Retrying…";
-
-            // After several failures, show manual fallback button
-            if (liveOcrAttempts >= MAX_OCR_FALLBACK_ATTEMPTS) {
-              el("btnCaptureID").style.display = "flex";
-              el("btnCaptureID").disabled = false;
-              setFb(
-                "idFeedback",
-                "Hold still — tap button if ID not auto-detected",
-                "warn",
-              );
-            }
-          }
-        } catch (e) {
-          el("ocrDot").className = "ocr-dot";
-          el("ocrPulseLabel").textContent = "Retrying…";
-        } finally {
-          liveOcrPending = false;
-        }
-      }
-
-      /* ================================================================
-         REAL-TIME ID ANALYSIS LOOP
-         Gate 1 (visual, ≥45): cheap, runs every 100ms
-         Gate 2 (OCR): throttled every 2.5s, only when Gate 1 passes
-      ================================================================ */
-      function startIdAnalysis() {
-        const video = el("idVideo");
-        const buf = document.createElement("canvas");
-        const bctx = buf.getContext("2d", { willReadFrequently: true });
-        let lastTs = 0;
-
-        async function loop(ts) {
-          idRafId = requestAnimationFrame(loop);
-          if (ts - lastTs < 100) return;
-          lastTs = ts;
-          if (!video.videoWidth || video.readyState < 2 || isIdCapturing)
-            return;
-
-          const result = await detectIDDocument(
-            video,
-            buf,
-            bctx,
-            window.documentType === "card",
-          );
-          if (!result) return;
-
-          drawIdGuide(result);
-          setFb("idFeedback", result.message, result.cls);
-
-          // Gate 1 passed — try live OCR if enough time has elapsed
-          if (result.score >= 45 && !liveOcrFoundId) {
-            const now = performance.now();
-            if (now - liveOcrLastTs >= LIVE_OCR_INTERVAL) {
-              liveOcrLastTs = now;
-              runLiveOcr(video, window.documentType === "card");
-            }
-          }
-
-          // Fallback manual button: only enabled if shown (after MAX_OCR_FALLBACK_ATTEMPTS)
-          // and visual gate also passing
-          if (el("btnCaptureID").style.display !== "none") {
-            el("btnCaptureID").disabled = result.score < 45;
-          }
-        }
-
-        idRafId = requestAnimationFrame(loop);
-      }
-
-      /* ================================================================
-         ID CAPTURE — now called automatically by live OCR or manually
-      ================================================================ */
-      async function captureID() {
-        if (isIdCapturing) return;
-        isIdCapturing = true;
-        el("btnCaptureID").disabled = true;
-        setFb("idFeedback", "Processing — reading document data…");
         cancelRaf(idRafId);
         idRafId = null;
+        el("captureRingWrap").classList.remove("visible");
+        el("gateBanner").classList.remove("visible");
+        el("btnCaptureID").disabled = true;
+        setFb("idFeedback", "Processing…", "ok");
 
-        const video = el("idVideo");
+        const video = videoEl || el("idVideo");
         const vw = video.videoWidth,
           vh = video.videoHeight;
-        const isCard = window.documentType === "card";
 
-        let fw = vw * 0.88;
-        let fh = isCard ? fw / 1.586 : fw / 1.42;
-        fw = Math.min(fw, vw);
-        fh = Math.min(fh, vh);
+        const MAX_LONG = 1920;
+        const scale = Math.min(1, MAX_LONG / Math.max(vw, vh));
+        const full = document.createElement("canvas");
+        full.width = Math.round(vw * scale);
+        full.height = Math.round(vh * scale);
+        full.getContext("2d").drawImage(video, 0, 0, full.width, full.height);
 
-        const cap = document.createElement("canvas");
-        cap.width = Math.round(fw);
-        cap.height = Math.round(fh);
-        const cctx = cap.getContext("2d");
-        cctx.drawImage(
-          video,
-          Math.round((vw - fw) / 2),
-          Math.round((vh - fh) / 2),
-          Math.round(fw),
-          Math.round(fh),
-          0,
-          0,
-          cap.width,
-          cap.height,
-        );
-        preprocessOCR(cctx, cap.width, cap.height);
+        let q = 0.85,
+          blob;
+        while (q >= 0.4) {
+          blob = await new Promise((r) => full.toBlob(r, "image/jpeg", q));
+          if (blob.size <= 1.5 * 1024 * 1024) break;
+          q -= 0.05;
+        }
+        window.capturedIDBlob = blob;
+
+        let ocrCanvas,
+          parsed = {};
+        if (lastRoi) {
+          const { roiX, roiY, roiW, roiH } = lastRoi;
+          const UP = 2;
+          ocrCanvas = document.createElement("canvas");
+          ocrCanvas.width = Math.round(roiW * UP);
+          ocrCanvas.height = Math.round(roiH * UP);
+          const octx = ocrCanvas.getContext("2d");
+          octx.imageSmoothingEnabled = true;
+          octx.imageSmoothingQuality = "high";
+          octx.drawImage(
+            video,
+            roiX,
+            roiY,
+            roiW,
+            roiH,
+            0,
+            0,
+            ocrCanvas.width,
+            ocrCanvas.height,
+          );
+          preprocessOCR(octx, ocrCanvas.width, ocrCanvas.height);
+        }
 
         try {
-          // If live OCR already found the ID number, we can skip re-running OCR
-          // and go straight to capturing the hi-res blob
-          let parsed = window.extractedIDData;
-
-          if (!parsed || !parsed.idNumber) {
-            // Manual capture path: run OCR now
-            if (!window._ocrWorker) {
-              setFb("idFeedback", "Loading OCR engine…");
-              window._ocrWorker = await Tesseract.createWorker("eng", 1, {
-                workerPath:
-                  "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
-                corePath:
-                  "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
-                langPath: "https://tessdata.projectnaptha.com/4.0.0",
-              });
-            }
-            setFb("idFeedback", "Reading document data…");
-            const { data } = await window._ocrWorker.recognize(
-              cap,
+          if (!window._ocrWorker) {
+            window._ocrWorker = await Tesseract.createWorker("eng", 1, {
+              workerPath:
+                "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+              corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
+              langPath: "https://tessdata.projectnaptha.com/4.0.0",
+            });
+          }
+          if (ocrCanvas) {
+            const ocrPromise = window._ocrWorker.recognize(
+              ocrCanvas,
               {},
               { tessedit_pageseg_mode: "6" },
             );
-            const confidence = data.confidence || 0;
-            const rawText = data.text || "";
-            parsed = parseDocumentText(rawText);
+            const timeout = new Promise((_, rej) =>
+              setTimeout(() => rej(new Error("timeout")), 9000),
+            );
+            const { data } = await Promise.race([ocrPromise, timeout]);
+            parsed = parseDocumentText(data.text || "");
             dbg("dbgIdNum", parsed.idNumber || "none");
-
-            if (!parsed.idNumber) {
-              let feedbackMsg, errorMsg;
-              if (confidence < 40) {
-                feedbackMsg = "Image too unclear — hold still and retake";
-                errorMsg = "Hold the document flat and steady in good light.";
-              } else if (/\d{8,}/g.test(rawText.replace(/\s/g, ""))) {
-                feedbackMsg = "Not a valid South African ID";
-                errorMsg = "Use your green ID book or smart ID card.";
-              } else {
-                feedbackMsg =
-                  "No ID number found — check document is fully visible";
-                errorMsg =
-                  "Ensure all four corners of the document are within the frame.";
-              }
-              setFb("idFeedback", feedbackMsg, "bad");
-              el("idError").textContent = errorMsg;
-              el("idError").style.display = "block";
-              el("btnCaptureID").disabled = false;
-              isIdCapturing = false;
-              liveOcrFoundId = false;
-              liveOcrAttempts = 0;
-              startIdAnalysis();
-              return;
-            }
-            window.extractedIDData = parsed;
+            dbg("dbgIdValid", parsed._idValid ? "✓" : "✗");
+            dbg("dbgSaCountry", parsed._saCountry ? "✓ SA" : "✗");
           }
+        } catch {
+          parsed = {};
+          dbg("dbgIdNum", "ocr-failed");
+        }
 
-          // Capture full-res blob for API
-          const MAX_LONG_EDGE = 1920;
-          const scale = Math.min(1, MAX_LONG_EDGE / Math.max(vw, vh));
-          const full = document.createElement("canvas");
-          full.width = Math.round(vw * scale);
-          full.height = Math.round(vh * scale);
-          full.getContext("2d").drawImage(video, 0, 0, full.width, full.height);
-          let q = 0.85,
-            blob;
-          while (q >= 0.4) {
-            blob = await new Promise((r) => full.toBlob(r, "image/jpeg", q));
-            if (blob.size <= 1.5 * 1024 * 1024) break;
-            q -= 0.05;
-          }
-          window.capturedIDBlob = blob;
+        window.extractedIDData = parsed;
+        const gate2Pass = validateExtractedData(parsed);
 
-          setFb("idFeedback", "Document successfully read ✓", "ok");
-          el("idError").style.display = "none";
-          el("ocrPulse").classList.remove("visible");
+        if (!gate2Pass) {
+          isCaptureInProgress = false;
           stopIdCam();
-          setTimeout(() => goStep(4), 900);
-        } catch (err) {
-          console.error("OCR error:", err);
-          setFb("idFeedback", "OCR failed — please try again", "bad");
-          el("btnCaptureID").disabled = false;
-          isIdCapturing = false;
-          liveOcrFoundId = false;
-          startIdAnalysis();
+          setFb(
+            "idFeedback",
+            "Unable to read document — please try again",
+            "bad",
+          );
+          el("retryNotice").classList.add("visible");
+          el("btnRetryID").style.display = "flex";
+          el("captureRingWrap").classList.remove("visible");
+          return;
+        }
+
+        stopIdCam();
+        prewarmSelfieCamera();
+        setFb("idFeedback", "Document captured ✓", "ok");
+        setTimeout(() => goStep(4), 700);
+      }
+
+      /* ================================================================
+         GATE 2 VALIDATION
+      ================================================================ */
+      function validateExtractedData(parsed) {
+        if (!parsed || typeof parsed !== "object") return false;
+
+        if (parsed.isPassport) {
+          if (!parsed.passportNumber) return false;
+          const isSA =
+            (parsed.issuingCountry &&
+              parsed.issuingCountry.startsWith("ZAF")) ||
+            (parsed.nationality && parsed.nationality.startsWith("ZAF"));
+          if (!isSA) {
+            dbg("dbgSaCountry", "✗ foreign");
+            return false;
+          }
+          if (!parsed.checks || parsed.checks.passed < 3) return false;
+          parsed._idValid = true;
+          parsed._saCountry = true;
+          return true;
+        } else {
+          const id = parsed.idNumber;
+          if (!id || id.length !== 13) return false;
+          if (!saLuhn13(id)) return false;
+          const yy = id.slice(0, 2),
+            mm = id.slice(2, 4),
+            dd = id.slice(4, 6);
+          const month = parseInt(mm, 10),
+            day = parseInt(dd, 10);
+          if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+          const cy = new Date().getFullYear();
+          const yyi = parseInt(yy, 10);
+          const fullYear = yyi <= cy % 100 ? 2000 + yyi : 1900 + yyi;
+          if (fullYear < 1900 || fullYear > cy) return false;
+          const citizenDigit = parseInt(id.charAt(10), 10);
+          if (citizenDigit !== 0 && citizenDigit !== 1) return false;
+          parsed._idValid = true;
+          parsed._saCountry = true;
+          return true;
         }
       }
 
       /* ================================================================
-         SIGNAL DETECTION FUNCTIONS (unchanged)
+         SA LUHN ALGORITHM
       ================================================================ */
-      function detectDocumentRect(gray, w, h, isCard) {
-        const targetAspect = isCard ? 1.586 : 1.42;
-        const aspectTolerance = 0.18;
-        const edgeMap = new Uint8Array(w * h);
-        const EDGE_THRESH = 28;
+      function saLuhn13(num) {
+        if (!/^\d{13}$/.test(num)) return false;
+        let oddStr = "";
+        for (let i = 1; i < 13; i += 2) oddStr += num[i];
+        let doubled = parseInt(oddStr, 10) * 2;
+        let doubledSum = String(doubled)
+          .split("")
+          .reduce((a, c) => a + parseInt(c, 10), 0);
+        let evenSum = 0;
+        for (let i = 0; i < 12; i += 2) evenSum += parseInt(num[i], 10);
+        return (doubledSum + evenSum + parseInt(num[12], 10)) % 10 === 0;
+      }
+
+      /* ================================================================
+         MANUAL CAPTURE
+      ================================================================ */
+      function manualCapture() {
+        const video = el("idVideo");
+        if (!video.videoWidth || video.readyState < 2) return;
+        const buf = document.createElement("canvas");
+        const bctx = buf.getContext("2d", { willReadFrequently: true });
+        const r = analyseFrame(video, buf, bctx);
+        if (!r || !r.gateGreen || !r.gateAspect) {
+          setFb(
+            "idFeedback",
+            "Position your document in the frame first",
+            "bad",
+          );
+          return;
+        }
+        triggerCapture(video);
+      }
+
+      /* ================================================================
+         SA GREEN SIGNAL
+      ================================================================ */
+      function measureSAGreenBand(imgData, w, headerH, isCard) {
+        const d = imgData.data;
+        const hMin = isCard ? SA_GREEN_H_MIN : SA_GREEN_H_MIN_BOOK;
+        const hMax = isCard ? SA_GREEN_H_MAX : SA_GREEN_H_MAX_BOOK;
+        let qualifying = 0;
+        const total = w * headerH;
+        if (total < 1) return 0;
+        for (let y = 0; y < headerH; y++) {
+          for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            const { h, s, v } = rgbToHsv(d[i], d[i + 1], d[i + 2]);
+            if (
+              h >= hMin &&
+              h <= hMax &&
+              s >= SA_GREEN_S_MIN &&
+              v >= SA_GREEN_V_MIN
+            )
+              qualifying++;
+          }
+        }
+        return Math.min(100, Math.round((qualifying / total / 0.18) * 100));
+      }
+
+      function rgbToHsv(r, g, b) {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+        const max = Math.max(r, g, b),
+          min = Math.min(r, g, b),
+          d = max - min;
+        let h = 0;
+        if (d !== 0) {
+          if (max === r) h = 60 * (((g - b) / d) % 6);
+          else if (max === g) h = 60 * ((b - r) / d + 2);
+          else h = 60 * ((r - g) / d + 4);
+        }
+        if (h < 0) h += 360;
+        return { h, s: max === 0 ? 0 : (d / max) * 100, v: max * 100 };
+      }
+
+      async function detectFaceInZone(video, roiX, roiY, photoW, roiH) {
+        if (!faceReady) return 0;
+        try {
+          const pz = document.createElement("canvas");
+          pz.width = Math.max(photoW, 80);
+          pz.height = Math.max(roiH, 100);
+          pz.getContext("2d").drawImage(
+            video,
+            roiX,
+            roiY,
+            photoW,
+            roiH,
+            0,
+            0,
+            pz.width,
+            pz.height,
+          );
+          const det = await faceapi.detectSingleFace(
+            pz,
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 160,
+              scoreThreshold: 0.35,
+            }),
+          );
+          if (!det) return 0;
+          const fill =
+            (det.box.width * det.box.height) / (pz.width * pz.height);
+          return Math.round(
+            det.score * (fill > 0.08 && fill < 0.92 ? 1 : 0.3) * 100,
+          );
+        } catch {
+          return 0;
+        }
+      }
+
+      /* ================================================================
+         IMAGE UTILITIES
+      ================================================================ */
+      function toGray(imgData) {
+        const d = imgData.data,
+          len = d.length / 4,
+          g = new Uint8Array(len);
+        for (let i = 0; i < len; i++)
+          g[i] = Math.round(
+            0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2],
+          );
+        return g;
+      }
+      function laplacianVariance(gray, w, h) {
+        let sum = 0,
+          sum2 = 0,
+          n = 0;
+        for (let y = 1; y < h - 1; y++)
+          for (let x = 1; x < w - 1; x++) {
+            const i = y * w + x;
+            const v =
+              4 * gray[i] -
+              gray[i - 1] -
+              gray[i + 1] -
+              gray[i - w] -
+              gray[i + w];
+            sum += v;
+            sum2 += v * v;
+            n++;
+          }
+        return n ? sum2 / n - Math.pow(sum / n, 2) : 0;
+      }
+      function edgeDensity(gray, w, h) {
+        let n = 0;
         for (let y = 1; y < h - 1; y++)
           for (let x = 1; x < w - 1; x++) {
             const tl = gray[(y - 1) * w + (x - 1)],
@@ -1886,267 +2011,18 @@
               br = gray[(y + 1) * w + (x + 1)];
             const gx = -tl - 2 * l - bl + tr + 2 * r + br,
               gy = -tl - 2 * t - tr + bl + 2 * b + br;
-            edgeMap[y * w + x] =
-              Math.sqrt(gx * gx + gy * gy) > EDGE_THRESH ? 1 : 0;
+            if (Math.sqrt(gx * gx + gy * gy) > 30) n++;
           }
-        const rowProj = new Float32Array(h);
-        for (let y = 0; y < h; y++) {
-          let cnt = 0;
-          for (let x = 0; x < w; x++) cnt += edgeMap[y * w + x];
-          rowProj[y] = cnt / w;
-        }
-        const colProj = new Float32Array(w);
-        for (let x = 0; x < w; x++) {
-          let cnt = 0;
-          for (let y = 0; y < h; y++) cnt += edgeMap[y * w + x];
-          colProj[x] = cnt / h;
-        }
-        const ROW_THRESH = 0.04,
-          COL_THRESH = 0.04;
-        let topEdge = -1,
-          bottomEdge = -1,
-          leftEdge = -1,
-          rightEdge = -1;
-        for (let y = Math.floor(h * 0.05); y < h * 0.5; y++) {
-          if (rowProj[y] > ROW_THRESH) {
-            topEdge = y;
-            break;
-          }
-        }
-        for (let y = h - Math.floor(h * 0.05); y > h * 0.5; y--) {
-          if (rowProj[y] > ROW_THRESH) {
-            bottomEdge = y;
-            break;
-          }
-        }
-        for (let x = Math.floor(w * 0.03); x < w * 0.5; x++) {
-          if (colProj[x] > COL_THRESH) {
-            leftEdge = x;
-            break;
-          }
-        }
-        for (let x = w - Math.floor(w * 0.03); x > w * 0.5; x--) {
-          if (colProj[x] > COL_THRESH) {
-            rightEdge = x;
-            break;
-          }
-        }
-        if (topEdge < 0 || bottomEdge < 0 || leftEdge < 0 || rightEdge < 0)
-          return { score: 0, found: false, aspectRatio: null, quad: null };
-        const rw = rightEdge - leftEdge,
-          rh = bottomEdge - topEdge;
-        if (rw <= 0 || rh <= 0)
-          return { score: 0, found: false, aspectRatio: null, quad: null };
-        const detectedAspect = rw / rh;
-        const aspectDiff =
-          Math.abs(detectedAspect - targetAspect) / targetAspect;
-        const aspectScore = Math.max(0, 1 - aspectDiff / aspectTolerance);
-        const fillRatio = (rw * rh) / (w * h);
-        const fillScore =
-          fillRatio > 0.45 && fillRatio < 0.98 ? 1 : fillRatio / 0.45;
-        const CORNER_R = Math.floor(Math.min(rw, rh) * 0.06);
-        const corners = [
-          [leftEdge, topEdge],
-          [rightEdge, topEdge],
-          [leftEdge, bottomEdge],
-          [rightEdge, bottomEdge],
-        ];
-        let cornerStrength = 0;
-        for (const [cx, cy] of corners) {
-          let cnt = 0,
-            total = 0;
-          for (let dy = -CORNER_R; dy <= CORNER_R; dy++)
-            for (let dx = -CORNER_R; dx <= CORNER_R; dx++) {
-              const nx = cx + dx,
-                ny = cy + dy;
-              if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                cnt += edgeMap[ny * w + nx];
-                total++;
-              }
-            }
-          if (total > 0) cornerStrength += cnt / total;
-        }
-        cornerStrength /= 4;
-        const rectScore =
-          (aspectScore * 0.5 + fillScore * 0.25 + cornerStrength * 0.25) * 100;
-        const cw2 = el("idCanvas").width,
-          ch2 = el("idCanvas").height;
-        const scaleX = cw2 / el("idVideo").videoWidth,
-          scaleY = ch2 / el("idVideo").videoHeight;
-        const quad = [
-          {
-            x: (lastRoi.roiX + leftEdge) * scaleX,
-            y: (lastRoi.roiY + topEdge) * scaleY,
-          },
-          {
-            x: (lastRoi.roiX + rightEdge) * scaleX,
-            y: (lastRoi.roiY + topEdge) * scaleY,
-          },
-          {
-            x: (lastRoi.roiX + rightEdge) * scaleX,
-            y: (lastRoi.roiY + bottomEdge) * scaleY,
-          },
-          {
-            x: (lastRoi.roiX + leftEdge) * scaleX,
-            y: (lastRoi.roiY + bottomEdge) * scaleY,
-          },
-        ];
-        return {
-          score: Math.round(Math.min(100, rectScore)),
-          found: true,
-          aspectRatio: detectedAspect,
-          quad,
-          leftEdge,
-          rightEdge,
-          topEdge,
-          bottomEdge,
-        };
+        return n / (w * h);
       }
-
-      async function detectFaceInPhotoZone(
-        video,
-        roiX,
-        roiY,
-        roiW,
-        roiH,
-        isCard,
-      ) {
-        if (!faceReady) return 0;
-        try {
-          const photoFrac = isCard ? 0.32 : 0.28;
-          const pzW = Math.round(roiW * photoFrac),
-            pzH = roiH;
-          const pzCanvas = document.createElement("canvas");
-          pzCanvas.width = Math.max(pzW, 80);
-          pzCanvas.height = Math.max(pzH, 100);
-          pzCanvas
-            .getContext("2d")
-            .drawImage(
-              video,
-              roiX,
-              roiY,
-              pzW,
-              pzH,
-              0,
-              0,
-              pzCanvas.width,
-              pzCanvas.height,
-            );
-          const det = await faceapi.detectSingleFace(
-            pzCanvas,
-            new faceapi.TinyFaceDetectorOptions({
-              inputSize: 160,
-              scoreThreshold: 0.35,
-            }),
-          );
-          if (!det) return 0;
-          const conf = det.score || 0.5;
-          const fillRatio =
-            (det.box.width * det.box.height) /
-            (pzCanvas.width * pzCanvas.height);
-          return Math.round(
-            conf * (fillRatio > 0.15 && fillRatio < 0.85 ? 1 : 0.3) * 100,
-          );
-        } catch (e) {
-          return 0;
-        }
-      }
-
-      function measureTextBandDensity(gray, w, h) {
-        const textStartX = Math.floor(w * 0.35),
-          textW = w - textStartX;
-        if (textW <= 0) return 0;
-        let sum = 0,
-          cnt2 = 0;
-        for (let y = 0; y < h; y++)
-          for (let x = textStartX; x < w; x++) {
-            sum += gray[y * w + x];
-            cnt2++;
-          }
-        const mean = sum / cnt2,
-          textThresh = mean * 0.85;
-        let textScore = 0;
-        const rowStep = Math.max(1, Math.floor(h / Math.min(h, 60)));
-        let scoredRows = 0;
-        for (let y = Math.floor(h * 0.1); y < h * 0.9; y += rowStep) {
-          let runs = 0,
-            inRun = false,
-            darkPixels = 0;
-          for (let x = textStartX; x < w; x++) {
-            const isDark = gray[y * w + x] < textThresh;
-            if (isDark) {
-              darkPixels++;
-              if (!inRun) {
-                runs++;
-                inRun = true;
-              }
-            } else {
-              inRun = false;
-            }
-          }
-          const darkRatio = darkPixels / textW;
-          if (runs >= 3 && runs <= 60 && darkRatio > 0.03 && darkRatio < 0.4)
-            textScore++;
-          scoredRows++;
-        }
-        return scoredRows > 0
-          ? Math.min(100, (textScore / scoredRows) * 200)
-          : 0;
-      }
-
-      function detectHeaderStripe(imgData, w, h) {
-        const d = imgData.data;
-        const topEnd = Math.floor(h * 0.15),
-          midStart = Math.floor(h * 0.25),
-          midEnd = Math.floor(h * 0.65);
-        let topR = 0,
-          topG = 0,
-          topB = 0,
-          topCnt = 0,
-          midR = 0,
-          midG = 0,
-          midB = 0,
-          midCnt = 0;
-        const xStep = Math.max(1, Math.floor(w / 40));
-        for (let y = 0; y < topEnd; y++)
-          for (let x = 0; x < w; x += xStep) {
-            const i = (y * w + x) * 4;
-            topR += d[i];
-            topG += d[i + 1];
-            topB += d[i + 2];
-            topCnt++;
-          }
-        for (let y = midStart; y < midEnd; y++)
-          for (let x = 0; x < w; x += xStep) {
-            const i = (y * w + x) * 4;
-            midR += d[i];
-            midG += d[i + 1];
-            midB += d[i + 2];
-            midCnt++;
-          }
-        if (!topCnt || !midCnt) return 0;
-        topR /= topCnt;
-        topG /= topCnt;
-        topB /= topCnt;
-        midR /= midCnt;
-        midG /= midCnt;
-        midB /= midCnt;
-        const colourDiff = Math.sqrt(
-          (topR - midR) ** 2 + (topG - midG) ** 2 + (topB - midB) ** 2,
-        );
-        const topLum = 0.299 * topR + 0.587 * topG + 0.114 * topB,
-          midLum = 0.299 * midR + 0.587 * midG + 0.114 * midB;
-        let stripeScore = 0;
-        if (colourDiff > 25) stripeScore += 50;
-        if (colourDiff > 50) stripeScore += 20;
-        if (midLum - topLum > 40) stripeScore += 30;
-        if (topLum < 100 && midLum > 150) stripeScore += 20;
-        if (topG > topR * 1.15 && topG > topB * 1.1) stripeScore += 15;
-        return Math.min(100, stripeScore);
+      function brightness(gray) {
+        let s = 0;
+        for (let i = 0; i < gray.length; i++) s += gray[i];
+        return s / gray.length;
       }
 
       /* ================================================================
-         IMAGE PREPROCESSING
+         OCR PREPROCESSING
       ================================================================ */
       function preprocessOCR(ctx, w, h) {
         const im = ctx.getImageData(0, 0, w, h),
@@ -2191,7 +2067,7 @@
       }
 
       /* ================================================================
-         DOCUMENT TEXT PARSERS (unchanged)
+         DOCUMENT TEXT PARSERS
       ================================================================ */
       function parseDocumentText(text) {
         if (window.documentType === "book") {
@@ -2199,15 +2075,6 @@
             .split("\n")
             .map((l) => l.trim().replace(/\s+/g, ""))
             .filter(Boolean);
-          const longest = lines.reduce((max, l) => Math.max(max, l.length), 0);
-          dbg(
-            "dbgParser",
-            "book: scanning " +
-              lines.length +
-              " lines, longest=" +
-              longest +
-              "ch",
-          );
           for (let i = 0; i < lines.length - 1; i++) {
             const a = lines[i],
               b = lines[i + 1];
@@ -2218,18 +2085,12 @@
               b.length <= 48 &&
               (a.startsWith("P") || (a.match(/</g) || []).length > 4)
             ) {
-              dbg(
-                "dbgParser",
-                "passport MRZ ✓ (" + a.length + "+" + b.length + "ch)",
-              );
               return parsePassportMRZ(a, b);
             }
           }
-          dbg("dbgParser", "book: no MRZ matched — hard fail");
           return {};
         }
-        dbg("dbgParser", "card: SA ID parser");
-        return parseSouthAfricanID(text);
+        return parseSouthAfricanSmartID(text);
       }
 
       function parsePassportMRZ(l1, l2) {
@@ -2244,8 +2105,8 @@
         }
         l1 = sanitise(l1);
         l2 = sanitise(l2);
-        const D2A = { 0: "O", 1: "I", 5: "S", 8: "B", 6: "G", 2: "Z" },
-          A2D = { O: "0", I: "1", S: "5", B: "8", G: "6", Z: "2" };
+        const D2A = { 0: "O", 1: "I", 5: "S", 8: "B", 6: "G", 2: "Z" };
+        const A2D = { O: "0", I: "1", S: "5", B: "8", G: "6", Z: "2" };
         const fa = (s) =>
           s
             .split("")
@@ -2256,19 +2117,21 @@
             .split("")
             .map((c) => A2D[c] || c)
             .join("");
+
         const issuingCountry = fa(l1.slice(2, 5)).replace(/</g, "");
         const nameField = l1.slice(5);
-        const rawPassNo = l2.slice(0, 9),
-          chkPassNo = fd(l2.charAt(9));
+        const rawPassNo = l2.slice(0, 9);
+        const chkPassNo = fd(l2.charAt(9));
         const nationality = fa(l2.slice(10, 13)).replace(/</g, "");
-        const rawDob = fd(l2.slice(13, 19)),
-          chkDob = fd(l2.charAt(19));
+        const rawDob = fd(l2.slice(13, 19));
+        const chkDob = fd(l2.charAt(19));
         const rawSex = fa(l2.charAt(20));
-        const rawExpiry = fd(l2.slice(21, 27)),
-          chkExpiry = fd(l2.charAt(27));
-        const rawPersonal = l2.slice(28, 42),
-          chkPersonal = fd(l2.charAt(42)),
-          chkComp = fd(l2.charAt(43));
+        const rawExpiry = fd(l2.slice(21, 27));
+        const chkExpiry = fd(l2.charAt(27));
+        const rawPersonal = l2.slice(28, 42);
+        const chkPersonal = fd(l2.charAt(42));
+        const chkComp = fd(l2.charAt(43));
+
         function chk(str) {
           const W = [7, 3, 1];
           let t = 0;
@@ -2283,9 +2146,9 @@
           }
           return String(t % 10);
         }
-        const passOk = chk(rawPassNo) === chkPassNo,
-          dobOk = chk(rawDob) === chkDob,
-          expOk = chk(rawExpiry) === chkExpiry;
+        const passOk = chk(rawPassNo) === chkPassNo;
+        const dobOk = chk(rawDob) === chkDob;
+        const expOk = chk(rawExpiry) === chkExpiry;
         const personalOk =
           rawPersonal.replace(/</g, "") === "" ||
           chk(rawPersonal) === chkPersonal;
@@ -2295,6 +2158,7 @@
         const passed = [passOk, dobOk, expOk, personalOk, compOk].filter(
           Boolean,
         ).length;
+
         const nameParts = nameField.split("<<");
         const surname = (nameParts[0] || "").replace(/</g, " ").trim();
         const firstNames = nameParts
@@ -2302,6 +2166,7 @@
           .join(" ")
           .replace(/</g, " ")
           .trim();
+
         function toISO(yymmdd, future) {
           if (!/^\d{6}$/.test(yymmdd)) return "";
           const yy = yymmdd.slice(0, 2),
@@ -2317,8 +2182,8 @@
               : "19";
           return `${cent}${yy}-${mm}-${dd}`;
         }
-        const dobISO = toISO(rawDob, false),
-          expiryISO = toISO(rawExpiry, true);
+        const dobISO = toISO(rawDob, false);
+        const expiryISO = toISO(rawExpiry, true);
         const dobYear = dobISO ? parseInt(dobISO.slice(0, 4)) : 0;
         const age = dobYear > 1900 ? new Date().getFullYear() - dobYear : null;
         const gender =
@@ -2339,6 +2204,7 @@
           nationality &&
           issuingCountry !== nationality &&
           nationality !== "XXX";
+
         return {
           isPassport: true,
           docType: fa(l1.slice(0, 1)),
@@ -2356,6 +2222,7 @@
           personalNumber,
           mrzLine1: l1,
           mrzLine2: l2,
+          countryMismatch,
           checks: {
             passport: passOk,
             dob: dobOk,
@@ -2365,33 +2232,45 @@
             passed,
             integrityPct: Math.round((passed / 5) * 100),
           },
-          countryMismatch,
         };
       }
 
-      function parseSouthAfricanID(text) {
+      function parseSouthAfricanSmartID(text) {
         if (!text) return {};
         const lines = text
           .split("\n")
           .map((l) => l.trim())
           .filter((l) => l.length > 0);
         const flat = lines.join(" ");
+
         let idNumber = null;
-        const candidates = flat.match(/\b\d[\d\s\-]{11,18}\d\b/g) || [];
+        const candidates = flat.match(/\b\d{13}\b/g) || [];
         for (const raw of candidates) {
-          const digits = raw.replace(/[\s\-]/g, "");
-          if (digits.length === 13 && luhn13(digits)) {
-            idNumber = digits;
+          if (saLuhn13(raw)) {
+            idNumber = raw;
             break;
           }
         }
+
+        if (!idNumber) {
+          const fuzzy = flat.match(/\b\d[\d\s\-]{11,15}\d\b/g) || [];
+          for (const raw of fuzzy) {
+            const digits = raw.replace(/[\s\-]/g, "");
+            if (digits.length === 13 && saLuhn13(digits)) {
+              idNumber = digits;
+              break;
+            }
+          }
+        }
         if (!idNumber) return {};
+
         const yy = idNumber.slice(0, 2),
           mm = idNumber.slice(2, 4),
           dd = idNumber.slice(4, 6);
-        const century =
-          parseInt(yy, 10) <= new Date().getFullYear() % 100 ? "20" : "19";
-        const dobISO = `${century}${yy}-${mm}-${dd}`;
+        const cy = new Date().getFullYear();
+        const yyi = parseInt(yy, 10);
+        const fullYear = yyi <= cy % 100 ? 2000 + yyi : 1900 + yyi;
+        const dobISO = `${fullYear}-${mm}-${dd}`;
         const dob = new Date(dobISO);
         let age = null;
         if (!isNaN(dob.getTime())) {
@@ -2406,10 +2285,11 @@
         const gender = genderCode >= 5000 ? "M" : "F";
         const citizenship =
           idNumber.charAt(10) === "0" ? "SA CITIZEN" : "PERMANENT RESIDENT";
+
+        const SKIP =
+          /^(SOUTH|AFRICA|REPUBLIC|NATIONAL|IDENTITY|DOCUMENT|IDENTITEITSDOKUMENT|SURNAME|VAN|NAMES|VOORNAME|DOB|GEBOORTEDATUM|GENDER|GESLAG|NATIONALITY|NASIONALITEIT|STATUS|CITIZENSHIP|IDNO|IDENTITEITSNOMMER|CARD|SMART)/i;
         let surname = "",
           firstNames = "";
-        const SKIP =
-          /^(SOUTH|AFRICA|REPUBLIC|NATIONAL|IDENTITY|DOCUMENT|IDENTITEITSDOKUMENT|SURNAME|VAN|NAMES|VOORNAME|DOB|GEBOORTEDATUM|GENDER|GESLAG|NATIONALITY|NASIONALITEIT|STATUS|CITIZENSHIP|IDNO|IDENTITEITSNOMMER|CARD)/i;
         for (let i = 0; i < lines.length; i++) {
           const cur = lines[i];
           if (/SURNAME|VAN/i.test(cur) && !surname) {
@@ -2448,29 +2328,6 @@
             }
           }
         }
-        if (!surname)
-          for (let i = 0; i < lines.length; i++) {
-            if (/SOUTH\s+AFRICA/i.test(lines[i]) && i > 0) {
-              const p = lines[i - 1].trim();
-              if (/^[A-Z\s\-']{2,}$/.test(p) && !SKIP.test(p)) {
-                surname = p;
-                if (i + 1 < lines.length && !firstNames) {
-                  const pf = lines[i + 1].trim();
-                  if (/^[A-Z\s\-']{2,}$/.test(pf) && !SKIP.test(pf))
-                    firstNames = pf;
-                }
-                break;
-              }
-            }
-          }
-        if (!surname || !firstNames) {
-          const cl = lines.filter(
-            (l) => /^[A-Z\s\-']{3,}$/.test(l) && !SKIP.test(l) && !/\d/.test(l),
-          );
-          if (!surname && cl.length > 0) surname = cl[0];
-          if (!firstNames && cl.length > 1)
-            firstNames = cl.find((l) => l !== surname) || "";
-        }
         return {
           idNumber,
           surname: surname.toUpperCase(),
@@ -2484,109 +2341,30 @@
         };
       }
 
-      function luhn13(num) {
-        let sum = 0;
-        for (let i = 0; i < 13; i++) {
-          let d = +num[i];
-          if (i % 2 === 1) {
-            d *= 2;
-            if (d > 9) d -= 9;
-          }
-          sum += d;
-        }
-        return sum % 10 === 0;
-      }
-
       /* ================================================================
-         IMAGE HELPERS
-      ================================================================ */
-      function toGray(imgData) {
-        const d = imgData.data,
-          len = d.length / 4,
-          g = new Uint8Array(len);
-        for (let i = 0; i < len; i++)
-          g[i] = Math.round(
-            0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2],
-          );
-        return g;
-      }
-      function edgeDensity(g, w, h) {
-        let n = 0;
-        for (let y = 1; y < h - 1; y++)
-          for (let x = 1; x < w - 1; x++) {
-            const tl = g[(y - 1) * w + (x - 1)],
-              t = g[(y - 1) * w + x],
-              tr = g[(y - 1) * w + (x + 1)],
-              l = g[y * w + (x - 1)],
-              r = g[y * w + (x + 1)],
-              bl = g[(y + 1) * w + (x - 1)],
-              b = g[(y + 1) * w + x],
-              br = g[(y + 1) * w + (x + 1)];
-            if (
-              Math.sqrt(
-                (-tl - 2 * l - bl + tr + 2 * r + br) ** 2 +
-                  (-tl - 2 * t - tr + bl + 2 * b + br) ** 2,
-              ) > 30
-            )
-              n++;
-          }
-        return n / (w * h);
-      }
-      function sharpness(g, w, h) {
-        let s = 0,
-          s2 = 0,
-          n = 0;
-        for (let y = 1; y < h - 1; y++)
-          for (let x = 1; x < w - 1; x++) {
-            const i = y * w + x,
-              v = 4 * g[i] - g[i - 1] - g[i + 1] - g[i - w] - g[i + w];
-            s += v;
-            s2 += v * v;
-            n++;
-          }
-        return n ? s2 / n - (s / n) ** 2 : 0;
-      }
-      function brightness(g) {
-        let s = 0;
-        for (let i = 0; i < g.length; i++) s += g[i];
-        return s / g.length;
-      }
-
-      /* ================================================================
-         STEP 4 — Selfie (unchanged)
+         STEP 4 — Selfie
       ================================================================ */
       function prewarmSelfieCamera() {
         if (selfieStreamReady) return;
-        selfieStreamReady = (async () => {
-          try {
-            return await navigator.mediaDevices.getUserMedia({
-              video: {
-                facingMode: { ideal: "user" },
-                width: { ideal: 1280 },
-                height: { ideal: 960 },
-              },
-              audio: false,
-            });
-          } catch {
-            return await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: false,
-            });
-          }
-        })();
-        selfieStreamReady.catch(() => {
-          selfieStreamReady = null;
-        });
+        selfieStreamReady = requestCamera("user")
+          .then((stream) => {
+            selfieStream = stream;
+            return stream;
+          })
+          .catch(() => {
+            selfieStreamReady = null;
+            selfieStream = null;
+          });
       }
 
       async function startSelfieCamera() {
         const video = el("selfieVideo"),
           loader = el("selfieLoading"),
-          fLoad = el("faceLoading"),
-          err = el("selfieError"),
+          fLoad = el("faceLoading");
+        const err = el("selfieError"),
           retry = el("btnRetrySelfie");
-        err.style.display = "none";
-        retry.style.display = "none";
+        err.style.display = retry.style.display = "none";
+
         if (!faceReady) {
           fLoad.classList.remove("hidden");
           fLoad.style.display = "flex";
@@ -2598,32 +2376,15 @@
             }
           }, 200);
         }
-        const streamPromise =
-          selfieStreamReady ||
-          (async () => {
-            try {
-              return await navigator.mediaDevices.getUserMedia({
-                video: {
-                  facingMode: { ideal: "user" },
-                  width: { ideal: 1280 },
-                  height: { ideal: 960 },
-                },
-                audio: false,
-              });
-            } catch {
-              return await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: false,
-              });
-            }
-          })();
+
         const spinnerTimer = setTimeout(() => {
-          loader.classList.remove("hidden");
           loader.style.display = "flex";
           setFb("selfieFeedback", "Starting camera…");
         }, 80);
         try {
-          const stream = await streamPromise;
+          const stream = selfieStreamReady
+            ? await selfieStreamReady
+            : await requestCamera("user");
           clearTimeout(spinnerTimer);
           selfieStreamReady = null;
           selfieStream = stream;
@@ -2631,16 +2392,15 @@
           await video.play();
           loader.style.display = "none";
           resizeSelfieCanvas();
-        } catch (e) {
+        } catch {
           clearTimeout(spinnerTimer);
           selfieStreamReady = null;
-          loader.style.display = "none";
-          fLoad.style.display = "none";
+          loader.style.display = fLoad.style.display = "none";
           err.textContent =
-            "Camera access denied or unavailable. Allow camera permissions and try again.";
+            "Camera access denied. Please allow permissions and try again.";
           err.style.display = "block";
           retry.style.display = "flex";
-          setFb("selfieFeedback", "Camera error", "bad");
+          setFb("selfieFeedback", "Camera unavailable", "bad");
         }
       }
 
@@ -2654,8 +2414,8 @@
       }
       function retrySelfie() {
         selfieStreamReady = null;
-        el("selfieError").style.display = "none";
-        el("btnRetrySelfie").style.display = "none";
+        el("selfieError").style.display = el("btnRetrySelfie").style.display =
+          "none";
         startSelfieCamera();
       }
       function resizeSelfieCanvas() {
@@ -2684,19 +2444,22 @@
             ovalRy = ovalRx * 1.35,
             ovalCx = cw / 2,
             ovalCy = ch / 2;
-          ctx.fillStyle = "rgba(0,0,0,0.35)";
+
+          ctx.fillStyle = "rgba(0,0,0,0.38)";
           ctx.beginPath();
           ctx.rect(0, 0, cw, ch);
           ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
           ctx.fill("evenodd");
+
           let ovalColor = "rgba(255,255,255,0.85)",
             ovalDash = true,
-            ovalWidth = 2.5,
-            msg = "Position your face in the oval",
+            ovalWidth = 2.5;
+          let msg = "Position your face in the oval",
             cls = "bad",
             fillInside = false;
+
           if (!faceReady) {
-            msg = "Loading face detection…";
+            msg = "Preparing…";
             cls = null;
           } else {
             let det;
@@ -2705,33 +2468,30 @@
                 video,
                 new faceapi.TinyFaceDetectorOptions(),
               );
-            } catch (e) {}
+            } catch {}
             if (det) {
               const box = det.box;
-              const fw2 = box.width / video.videoWidth,
-                fcx = (box.x + box.width / 2) / video.videoWidth,
-                fcy = (box.y + box.height / 2) / video.videoHeight;
+              const fw2 = box.width / video.videoWidth;
+              const fcx = (box.x + box.width / 2) / video.videoWidth;
+              const fcy = (box.y + box.height / 2) / video.videoHeight;
               const off = Math.max(Math.abs(fcx - 0.5), Math.abs(fcy - 0.5));
               dbg("dbgFaceD", "true");
               if (fw2 < 0.25) {
-                msg = "Face too small — move closer";
+                msg = "Move closer";
                 cls = "warn";
                 ovalColor = "rgba(194,124,0,0.9)";
-                ovalDash = true;
               } else if (fw2 > 0.55) {
-                msg = "Face too large — move away";
+                msg = "Move back";
                 cls = "warn";
                 ovalColor = "rgba(194,124,0,0.9)";
-                ovalDash = true;
               } else if (off > 0.1) {
-                msg = "Centre your face in the oval";
+                msg = "Centre your face";
                 cls = "warn";
                 ovalColor = "rgba(194,124,0,0.9)";
-                ovalDash = true;
               } else {
-                msg = "Good — ready to capture";
+                msg = "Ready ✓";
                 cls = "ok";
-                ovalColor = "rgba(26,138,74,0.95)";
+                ovalColor = "rgba(74,222,128,0.95)";
                 ovalDash = false;
                 ovalWidth = 3;
                 fillInside = true;
@@ -2742,6 +2502,7 @@
               el("btnCaptureSelfie").disabled = true;
             }
           }
+
           ctx.setLineDash(ovalDash ? [10, 7] : []);
           ctx.strokeStyle = ovalColor;
           ctx.lineWidth = ovalWidth;
@@ -2750,7 +2511,7 @@
           ctx.stroke();
           ctx.setLineDash([]);
           if (fillInside) {
-            ctx.fillStyle = "rgba(26,138,74,0.12)";
+            ctx.fillStyle = "rgba(74,222,128,0.1)";
             ctx.beginPath();
             ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
             ctx.fill();
@@ -2782,11 +2543,12 @@
         cancelRaf(selfieRafId);
         selfieRafId = null;
         stopSelfieCam();
+
         const canvas = el("selfieCanvas"),
           ctx = canvas.getContext("2d");
         const cw = canvas.width,
-          ch = canvas.height,
-          ovalRx = cw * 0.38,
+          ch = canvas.height;
+        const ovalRx = cw * 0.38,
           ovalRy = ovalRx * 1.35,
           ovalCx = cw / 2,
           ovalCy = ch / 2;
@@ -2797,12 +2559,12 @@
         ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
         ctx.fill("evenodd");
         ctx.setLineDash([]);
-        ctx.strokeStyle = "rgba(26,138,74,1)";
+        ctx.strokeStyle = "rgba(74,222,128,1)";
         ctx.lineWidth = 4;
         ctx.beginPath();
         ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
         ctx.stroke();
-        ctx.fillStyle = "rgba(26,138,74,0.2)";
+        ctx.fillStyle = "rgba(74,222,128,0.18)";
         ctx.beginPath();
         ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
         ctx.fill();
@@ -2810,25 +2572,26 @@
         ctx.lineWidth = 4;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
-        ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(ovalCx - 24, ovalCy);
         ctx.lineTo(ovalCx - 6, ovalCy + 18);
         ctx.lineTo(ovalCx + 28, ovalCy - 20);
         ctx.stroke();
+
         setFb("selfieFeedback", "Selfie captured ✓", "ok");
         el("btnCaptureSelfie").disabled = true;
-        setTimeout(() => goStep(5), 900);
+        setTimeout(() => goStep(5), 700);
       }
 
       /* ================================================================
-         STEP 5 — Results (unchanged)
+         STEP 5 — Results
       ================================================================ */
       async function performVerification() {
         el("resultsLoading").style.display = "flex";
         el("resultsError").style.display = "none";
         el("resultsCard").style.display = "none";
         el("resultsActions").style.display = "none";
+
         if (
           !window.API_BASE_URL ||
           window.API_BASE_URL === "https://your-api.com/verify"
@@ -2836,12 +2599,15 @@
           displayResults({
             status: "REVIEW",
             id_number_valid: !!(
-              window.extractedIDData && window.extractedIDData.idNumber
+              window.extractedIDData &&
+              window.extractedIDData.idNumber &&
+              window.extractedIDData._idValid
             ),
             extracted_data: {},
           });
           return;
         }
+
         try {
           const fd = new FormData();
           fd.append("id_image", window.capturedIDBlob, "id.jpg");
@@ -2851,28 +2617,28 @@
             headers: { Authorization: "Bearer " + window.AUTH_TOKEN },
             body: fd,
           });
-          if (!resp.ok)
-            throw new Error("HTTP " + resp.status + " " + resp.statusText);
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
           displayResults(await resp.json());
         } catch (err) {
           el("resultsLoading").style.display = "none";
           el("resultsError").textContent =
-            "Verification failed: " + err.message + ". Restart and try again.";
+            "Verification could not be completed. Please restart and try again.";
           el("resultsError").style.display = "block";
           el("resultsActions").style.display = "flex";
         }
       }
 
       function buildField(label, value, id) {
-        const safeId = id ? ` id="${id}"` : "";
-        const safeVal = value != null && value !== "" ? esc(String(value)) : "";
-        return `<div class="field-row"><div class="field-label">${esc(label)}</div><input class="field-input" type="text" value="${safeVal}" placeholder="Not extracted"${safeId}></div>`;
+        const sid = id ? ` id="${id}"` : "";
+        const safeV = value != null && value !== "" ? esc(String(value)) : "";
+        return `<div class="field-row"><div class="field-label">${esc(label)}</div><input class="field-input" type="text" value="${safeV}" placeholder="Not extracted"${sid}></div>`;
       }
 
       function displayResults(data) {
         el("resultsLoading").style.display = "none";
         el("resultsCard").style.display = "block";
         el("resultsActions").style.display = "flex";
+
         const status = (
           data.status ||
           data.overall_decision ||
@@ -2887,6 +2653,7 @@
             : status === "FAIL"
               ? "badge-fail"
               : "badge-review");
+
         el("scoreAuth").textContent =
           data.authenticity_score != null
             ? data.authenticity_score.toFixed(2)
@@ -2907,6 +2674,7 @@
             : data.id_number_valid === false
               ? "No"
               : "--";
+
         const api = data.extracted_data || {},
           ocr = window.extractedIDData || {},
           isPassport = ocr.isPassport || false;
@@ -2915,8 +2683,7 @@
           : "ID number valid";
         el("rowExpiredWarning").style.display =
           isPassport && ocr.documentExpired ? "block" : "none";
-        el("rowCountryMismatch").style.display =
-          isPassport && ocr.countryMismatch ? "block" : "none";
+
         const fieldsEl = el("extractedFields");
         let html = "";
         if (isPassport) {
@@ -2959,7 +2726,7 @@
           );
           if (ocr.personalNumber)
             html += buildField(
-              "Personal / National ID",
+              "Personal number",
               ocr.personalNumber,
               "fPersonalNumber",
             );
@@ -3001,17 +2768,18 @@
         fieldsEl.innerHTML = html;
         el("extractedTitle").style.display =
           html.trim().length > 0 ? "block" : "none";
+
         const mrzSection = el("mrzIntegritySection");
         if (isPassport && ocr.checks) {
           const c = ocr.checks;
-          const checkRow = (label, ok) =>
+          const cr = (label, ok) =>
             `<div class="score-row"><span class="score-label">${label}</span><span class="score-val" style="color:${ok ? "var(--green)" : "#c0392b"}">${ok ? "✓ Pass" : "✗ Fail"}</span></div>`;
           el("mrzIntegrityBody").innerHTML =
-            checkRow("Passport number check", c.passport) +
-            checkRow("Date of birth check", c.dob) +
-            checkRow("Expiry date check", c.expiry) +
-            checkRow("Personal number check", c.personal) +
-            checkRow("Composite check", c.composite) +
+            cr("Passport number check", c.passport) +
+            cr("Date of birth check", c.dob) +
+            cr("Expiry date check", c.expiry) +
+            cr("Personal number check", c.personal) +
+            cr("Composite check", c.composite) +
             `<div class="score-row"><span class="score-label">Overall integrity</span><span class="score-val">${c.integrityPct}%</span></div>`;
           if (ocr.mrzLine1)
             el("mrzIntegrityBody").innerHTML +=
@@ -3021,6 +2789,7 @@
         } else {
           mrzSection.style.display = "none";
         }
+
         const fails = data.failure_reasons || [];
         el("failList").style.display = fails.length ? "block" : "none";
         el("failItems").innerHTML = fails
@@ -3043,13 +2812,15 @@
         idRafId = null;
         cancelRaf(selfieRafId);
         selfieRafId = null;
-        lastFaceInIdScore = 0;
-        faceInIdPending = false;
-        lastFaceInIdTs = 0;
-        liveOcrPending = false;
-        liveOcrLastTs = 0;
-        liveOcrAttempts = 0;
-        liveOcrFoundId = false;
+        isCaptureInProgress = false;
+        stableStartMs = null;
+        fallbackCount = 0;
+        prevFrameGray = null;
+        lastFaceZoneScore = 0;
+        faceZonePending = false;
+        lastFaceZoneTs = 0;
+        _lastFbMsg = "";
+        _lastFbCls = "";
         document
           .querySelectorAll(".doc-card")
           .forEach((c) => c.classList.remove("selected"));
@@ -3057,9 +2828,9 @@
         el("btnCaptureID").disabled = true;
         el("btnCaptureID").style.display = "none";
         el("btnCaptureSelfie").disabled = true;
-        el("detectRing").classList.remove("visible");
-        el("idHud").classList.remove("visible");
-        el("ocrPulse").classList.remove("visible");
+        el("retryNotice").classList.remove("visible");
+        el("gateBanner").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
         document
           .querySelectorAll(".step")
           .forEach((s) => s.classList.remove("active"));
@@ -3083,43 +2854,42 @@
         d.textContent = t;
         return d.innerHTML;
       }
+      function showIdError(msg) {
+        el("idError").textContent = msg;
+        el("idError").style.display = "block";
+      }
+
       function setFb(id, msg, cls) {
         const e = el(id);
         e.textContent = msg;
         e.classList.remove("ok", "warn", "bad");
         if (cls) e.classList.add(cls);
       }
+
       function dbg(id, v) {
         const e = el(id);
         if (e) e.textContent = v;
       }
-      function setHud(id, val, isGood) {
-        const e = el(id);
-        if (!e) return;
-        e.textContent = typeof val === "number" ? val.toFixed(0) : val;
-        e.className = "hud-v " + (isGood ? "pass" : "fail");
-      }
 
+      /* ── Debug panel — tap 5× ── */
       let tapCount = 0,
         tapTimer = null;
-      document.addEventListener("click", handleTap);
-      document.addEventListener("touchstart", handleTap, { passive: true });
-      function handleTap() {
-        tapCount++;
-        if (tapCount >= 5) {
-          const panel = el("debugPanel");
-          panel.classList.toggle("visible");
-          debugVisible = panel.classList.contains("visible");
-          if (debugVisible && currentStep === 3)
-            el("idHud").classList.add("visible");
-          else el("idHud").classList.remove("visible");
-          tapCount = 0;
+      const isTouchDevice = "ontouchstart" in window;
+      document.addEventListener(
+        isTouchDevice ? "touchstart" : "click",
+        () => {
+          tapCount++;
+          if (tapCount >= 5) {
+            el("debugPanel").classList.toggle("visible");
+            tapCount = 0;
+            if (tapTimer) clearTimeout(tapTimer);
+            return;
+          }
           if (tapTimer) clearTimeout(tapTimer);
-          return;
-        }
-        if (tapTimer) clearTimeout(tapTimer);
-        tapTimer = setTimeout(() => (tapCount = 0), 2000);
-      }
+          tapTimer = setTimeout(() => (tapCount = 0), 2000);
+        },
+        { passive: true },
+      );
 
       window.addEventListener("resize", () => {
         if (currentStep === 3) resizeIdCanvas();
