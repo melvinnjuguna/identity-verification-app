@@ -39,7 +39,6 @@
         --shadow: 0 2px 14px rgba(0, 0, 0, 0.07);
         --shadow-lg: 0 8px 36px rgba(0, 0, 0, 0.11);
       }
-
       *,
       *::before,
       *::after {
@@ -58,7 +57,6 @@
         overflow-x: hidden;
         -webkit-font-smoothing: antialiased;
       }
-
       .app {
         width: 100%;
         max-width: 480px;
@@ -73,8 +71,6 @@
           padding: 0 20px 32px;
         }
       }
-
-      /* ── STEP BAR ── */
       .step-bar {
         display: none;
         align-items: center;
@@ -106,8 +102,6 @@
         color: var(--border);
         font-size: 10px;
       }
-
-      /* ── STEP PANELS ── */
       .step {
         display: none;
         flex-direction: column;
@@ -144,8 +138,6 @@
         overflow: hidden;
         height: 100vh;
       }
-
-      /* ── TYPOGRAPHY ── */
       .hero-title {
         font-size: 28px;
         font-weight: 700;
@@ -171,8 +163,6 @@
         color: var(--ink-mid);
         margin-bottom: 14px;
       }
-
-      /* ── GUIDE CARDS ── */
       .guide-list {
         display: flex;
         flex-direction: column;
@@ -220,8 +210,6 @@
         color: var(--ink-mid);
         line-height: 1.5;
       }
-
-      /* ── DOC TYPE CARDS ── */
       .doc-grid {
         display: flex;
         flex-direction: column;
@@ -265,8 +253,6 @@
         font-size: 12px;
         color: var(--ink-mid);
       }
-
-      /* ── BUTTONS ── */
       .btn {
         background: var(--red);
         color: var(--white);
@@ -315,8 +301,6 @@
       .btn-row .btn {
         flex: 1;
       }
-
-      /* ── CAMERA ── */
       .cam-wrap {
         position: relative;
         width: 100%;
@@ -351,8 +335,6 @@
       .cam-overlay.hidden {
         display: none;
       }
-
-      /* ── GATE BANNER ── single in-frame indicator, priority 1 ── */
       .gate-banner {
         position: absolute;
         top: 10px;
@@ -373,8 +355,6 @@
       .gate-banner.visible {
         display: block;
       }
-
-      /* ── CAPTURE RING ── priority 2, mutually exclusive with banner ── */
       .capture-ring-wrap {
         position: absolute;
         bottom: 14px;
@@ -415,8 +395,6 @@
         letter-spacing: 0.05em;
         text-transform: uppercase;
       }
-
-      /* ── FEEDBACK BAR ── always visible below camera, priority 3 ── */
       .feedback {
         background: rgba(15, 15, 15, 0.82);
         color: #fff;
@@ -443,8 +421,6 @@
       .feedback.bad {
         background: rgba(15, 15, 15, 0.82);
       }
-
-      /* ── ERROR BOX ── */
       .err-box {
         background: #fdecea;
         border: 1px solid #f5c6cb;
@@ -454,8 +430,6 @@
         font-size: 13px;
         margin-bottom: 10px;
       }
-
-      /* ── SPINNER ── */
       .spinner {
         width: 36px;
         height: 36px;
@@ -473,8 +447,6 @@
           transform: rotate(360deg);
         }
       }
-
-      /* ── RESULTS ── */
       .results-card {
         background: var(--white);
         border-radius: var(--radius-lg);
@@ -574,8 +546,6 @@
         text-align: center;
         margin-top: 8px;
       }
-
-      /* ── RETRY NOTICE ── replaces the old ocr-gate-box ── */
       .retry-notice {
         background: var(--white);
         border: 1px solid var(--border);
@@ -591,8 +561,6 @@
       .retry-notice.visible {
         display: block;
       }
-
-      /* ── DEBUG PANEL ── */
       #debugPanel {
         display: none;
         position: fixed;
@@ -639,7 +607,6 @@
   </head>
   <body>
     <div class="app">
-      <!-- STEP BAR -->
       <nav class="step-bar" id="stepBar">
         <span class="step-pip" data-step="1">Start</span
         ><span class="step-sep">›</span>
@@ -652,7 +619,7 @@
         <span class="step-pip" data-step="5">Results</span>
       </nav>
 
-      <!-- ══ STEP 1 — Intro ══ -->
+      <!-- STEP 1 -->
       <div class="step active" id="step1">
         <div style="padding-top: 24px">
           <h1 class="hero-title">Identity Verification</h1>
@@ -756,7 +723,7 @@
         </p>
       </div>
 
-      <!-- ══ STEP 2 — Document type ══ -->
+      <!-- STEP 2 -->
       <div class="step" id="step2">
         <div style="padding-top: 18px">
           <h2 class="section-title">Select document type</h2>
@@ -786,7 +753,7 @@
         </button>
       </div>
 
-      <!-- ══ STEP 3 — ID capture ══ -->
+      <!-- STEP 3 -->
       <div class="step" id="step3">
         <div style="padding-top: 18px">
           <h2 class="section-title" id="step3Title">ID Document</h2>
@@ -803,11 +770,7 @@
             muted
           ></video>
           <canvas class="cam-canvas" id="idCanvas"></canvas>
-
-          <!-- Priority 1: gate banner (replaces status pill — single in-frame indicator) -->
           <div class="gate-banner" id="gateBanner"></div>
-
-          <!-- Priority 2: capture ring (mutually exclusive with banner) -->
           <div class="capture-ring-wrap" id="captureRingWrap">
             <svg class="capture-ring-svg" viewBox="0 0 48 48">
               <circle class="capture-ring-track" cx="24" cy="24" r="22" />
@@ -821,22 +784,16 @@
             </svg>
             <span class="capture-ring-label">Hold still</span>
           </div>
-
           <div class="cam-overlay" id="idLoading">
             <div class="spinner"></div>
             <span style="font-size: 13px">Starting camera…</span>
           </div>
         </div>
-
-        <!-- Priority 3: feedback bar — clean user-facing messages only -->
         <div class="feedback" id="idFeedback">Initialising…</div>
-
-        <!-- Retry notice — no technical detail exposed -->
         <div class="retry-notice" id="retryNotice">
           Please ensure your document is fully visible, well lit, and in focus,
           then try again.
         </div>
-
         <div class="err-box" id="idError" style="display: none"></div>
         <button
           class="btn"
@@ -857,7 +814,7 @@
         </button>
       </div>
 
-      <!-- ══ STEP 4 — Selfie ══ -->
+      <!-- STEP 4 -->
       <div class="step" id="step4">
         <div style="padding-top: 18px">
           <h2 class="section-title">Selfie Verification</h2>
@@ -900,7 +857,7 @@
         </button>
       </div>
 
-      <!-- ══ STEP 5 — Results ══ -->
+      <!-- STEP 5 -->
       <div class="step" id="step5">
         <div style="padding-top: 18px">
           <h2 class="section-title">Verification Results</h2>
@@ -958,7 +915,7 @@
       </div>
     </div>
 
-    <!-- DEBUG PANEL — internal only, tap 5× to toggle -->
+    <!-- DEBUG PANEL -->
     <div id="debugPanel">
       <div class="dbg-title">Debug</div>
       <div class="dbg-row">
@@ -1046,22 +1003,14 @@
       const CARD_ASPECT = 1.586;
       const BOOK_ASPECT = 1.42;
       const ASPECT_TOLERANCE = 0.08;
-
-      const GATE_GREEN_MIN = 40;
       const GATE_ASPECT_MIN = 55;
       const GATE_FACE_MIN = 25;
+      const GATE_GREEN_MIN = 20; // SA card green background threshold
       const SCORE_GATE = 75;
-
-      const STABLE_DURATION_MS = 900;
-      const STABLE_DELTA_MAX = 8;
+      const STABLE_DURATION_MS = 3000;
+      const STABLE_DELTA_MAX = 6;
       const FALLBACK_ATTEMPTS = 6;
 
-      const SA_GREEN_H_MIN = 100;
-      const SA_GREEN_H_MAX = 135;
-      const SA_GREEN_S_MIN = 40;
-      const SA_GREEN_V_MIN = 35;
-      const SA_GREEN_H_MIN_BOOK = 90;
-      const SA_GREEN_H_MAX_BOOK = 150;
 
       /* ================================================================
          GLOBAL STATE
@@ -1090,7 +1039,7 @@
       let globalInactivityTimeout = null;
       const INACTIVITY_LIMIT = 60 * 1000;
 
-      /* ── Feedback debounce ── only update DOM when message actually changes ── */
+
       let _lastFbMsg = "";
       let _lastFbCls = "";
 
@@ -1099,6 +1048,7 @@
       ================================================================ */
       let ocrReady = false;
       let faceReady = false;
+      let isPopstate = false;
 
       (async () => {
         try {
@@ -1142,7 +1092,6 @@
           cancelRaf(selfieRafId);
           selfieRafId = null;
         }
-
         document
           .querySelectorAll(".step")
           .forEach((s) => s.classList.remove("active"));
@@ -1150,8 +1099,7 @@
         currentStep = n;
         updateStepBar(n);
         el("stepBar").classList.toggle("visible", n >= 2);
-        if (n <= 3) history.pushState({ step: n }, "");
-
+        if (!isPopstate && n <= 3) history.pushState({ step: n }, "");
         if (n === 2) prewarmIdCamera();
         if (n === 3) initStep3();
         if (n === 4) {
@@ -1232,12 +1180,10 @@
       async function startIdCamera() {
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
-
         const spinnerTimer = setTimeout(() => {
           el("idLoading").style.display = "flex";
           setFb("idFeedback", "Starting camera…");
         }, 350);
-
         try {
           const stream = idStreamReady
             ? await idStreamReady
@@ -1311,6 +1257,8 @@
 
       /* ================================================================
          INACTIVITY TIMER
+         Reset only when composite >= SCORE_GATE — a real document in frame.
+         Ambient scenes score lower and let the timer count down naturally.
       ================================================================ */
       function resetInactivityTimer() {
         if (globalInactivityTimeout) clearTimeout(globalInactivityTimeout);
@@ -1372,19 +1320,19 @@
           ch = el("idCanvas").height;
         const guideW = cw * 0.88;
         const guideH = isCard ? guideW / CARD_ASPECT : guideW / BOOK_ASPECT;
-        const guideX = (cw - guideW) / 2;
-        const guideY = (ch - guideH) / 2;
+        const guideX = (cw - guideW) / 2,
+          guideY = (ch - guideH) / 2;
 
         const scaleX = vw / cw,
           scaleY = vh / ch;
-        const roiX = Math.round(guideX * scaleX);
-        const roiY = Math.round(guideY * scaleY);
-        const roiW = Math.round(guideW * scaleX);
-        const roiH = Math.round(guideH * scaleY);
+        const roiX = Math.round(guideX * scaleX),
+          roiY = Math.round(guideY * scaleY);
+        const roiW = Math.round(guideW * scaleX),
+          roiH = Math.round(guideH * scaleY);
         lastRoi = { roiX, roiY, roiW, roiH };
 
-        const sw = Math.min(roiW, vw - roiX);
-        const sh = Math.min(roiH, vh - roiY);
+        const sw = Math.min(roiW, vw - roiX),
+          sh = Math.min(roiH, vh - roiY);
         if (sw < 20 || sh < 20) return null;
 
         buf.width = sw;
@@ -1403,18 +1351,29 @@
             : 0;
         dbg("dbgAspectSig", sig_aspect.toFixed(0));
 
-        /* Signal 2: SA green header (25pts) */
-        const headerH = Math.round(sh * (isCard ? 0.18 : 0.12));
-        const sig_green = measureSAGreenBand(imgData, sw, headerH, isCard);
+        /* ── Signal 2: SA Smart ID green background (25pts) ──────────────
+           The SA Smart ID card has a distinctive green colour across most
+           of the card face. We measure the proportion of pixels in the
+           green hue range (100–155°) with reasonable saturation and value.
+           Books/passports skip this (open pages are white/cream).
+        ──────────────────────────────────────────────────────────────── */
+        const sig_green = isCard ? measureSAGreen(imgData, sw, sh) : 50;
         dbg("dbgGreen", sig_green.toFixed(0));
 
-        /* Signal 3: Face in photo zone (20pts, throttled 800ms) */
+        /* Signal 3: Face in photo zone — right side (20pts, throttled 800ms) */
         const now = performance.now();
         if (faceReady && !faceZonePending && now - lastFaceZoneTs > 800) {
           faceZonePending = true;
           lastFaceZoneTs = now;
-          const photoW = Math.round(sw * (isCard ? 0.32 : 0.28));
-          detectFaceInZone(video, roiX, roiY, photoW, sh).then((score) => {
+
+          // 1. Calculate the width of the photo zone (35% for card, 28% for book)
+          const photoW = Math.round(sw * (isCard ? 0.35 : 0.28));
+
+          // 2. Shift the starting point (X) to the right edge, then subtract the photo width
+          const photoX = roiX + (sw - photoW);
+
+          // 3. Pass the new right-aligned X coordinate into the detector
+          detectFaceInZone(video, photoX, roiY, photoW, sh).then((score) => {
             lastFaceZoneScore = score;
             faceZonePending = false;
             dbg("dbgFaceZone", score.toFixed(0));
@@ -1427,39 +1386,48 @@
         const sig_sharp = Math.min(100, Math.max(0, (lapVar - 50) / 3.5));
         dbg("dbgSharp", lapVar.toFixed(0));
 
-        /* Signal 5: Quality — brightness + edge density (15pts) */
+        /* Signal 5: Quality — brightness + text zone density (15pts) */
         const bright = brightness(gray);
         const edge = edgeDensity(gray, sw, sh);
+        const sig_textzone = isCard ? measureTextZoneDensity(gray, sw, sh) : 50;
         const sig_quality =
-          (bright >= 80 && bright <= 220 ? 50 : 0) + (edge >= 0.05 ? 50 : 0);
+          (bright >= 80 && bright <= 220 ? 50 : 0) +
+          (sig_textzone >= 15 ? 50 : 0);
         dbg("dbgBright", bright.toFixed(0));
 
         /* Composite */
         const composite = Math.round(
-          sig_aspect * 0.25 +
-            sig_green * 0.25 +
-            sig_face * 0.2 +
+          sig_aspect * 0.4 + // was 0.25
+            sig_face * 0.3 + // was 0.20
             sig_sharp * 0.15 +
             sig_quality * 0.15,
         );
+
         dbg("dbgScore", composite);
 
+        // For book/passport liveOcrPassed is irrelevant — bypass gate
+        const gateLiveOcr = true;
+        dbg("dbgGateLiveOcr", gateLiveOcr ? "✓" : "waiting…");
+
         /* Hard gates */
-        const gateGreen =
-          window.documentType === "card" ? sig_green >= GATE_GREEN_MIN : true; // book/passport open pages are white — green signal not applicable
+        // const gateGreen = isCard ? sig_green >= GATE_GREEN_MIN : true;
+        const gateGreen = true;
         const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
         const gateFace =
           !faceReady || lastFaceZoneTs === 0 || sig_face >= GATE_FACE_MIN;
         const gateAll =
-          gateGreen && gateAspect && gateFace && composite >= SCORE_GATE;
+          gateGreen &&
+          gateAspect &&
+          gateFace &&
+          gateLiveOcr &&
+          composite >= SCORE_GATE;
 
         dbg("dbgGateGreen", gateGreen ? "✓" : "✗ " + sig_green.toFixed(0));
         dbg("dbgGateAspect", gateAspect ? "✓" : "✗ " + sig_aspect.toFixed(0));
         dbg("dbgGateFace", gateFace ? "✓" : "✗ " + sig_face.toFixed(0));
 
-        /* ── USER-FACING FEEDBACK — clean messages only ── */
+        /* User-facing feedback */
         let message, cls;
-
         if (bright < 80) {
           message = "Too dark — move to a brighter area";
           cls = "bad";
@@ -1479,10 +1447,10 @@
               : "Align your document in the frame";
           cls = "warn";
         } else if (!gateGreen && composite < SCORE_GATE) {
-          message = "Show the front of your document";
+          message = "Show the front of your SA ID card";
           cls = "warn";
         } else if (!gateFace && lastFaceZoneTs > 0) {
-          message = "Show the front of your document";
+          message = "Show the photo side of your document";
           cls = "warn";
         } else if (!gateAspect) {
           message =
@@ -1498,14 +1466,12 @@
           cls = "warn";
         }
 
-        /* ── GATE BANNER — only shown when document clearly not matching ──
-           Never reveal what signal failed or how detection works.
-           One neutral message covers all gate failures. */
+        /* Gate banner */
         let gateBannerMsg = null;
         if (!gateGreen && composite < SCORE_GATE) {
-          gateBannerMsg = "Place the front of your document flat in the frame";
+          gateBannerMsg = "Make sure the front of your SA ID card is visible";
         } else if (!gateFace && lastFaceZoneTs > 0) {
-          gateBannerMsg = "Place the front of your document flat in the frame";
+          gateBannerMsg = "Show the photo side of your document";
         }
 
         return {
@@ -1523,6 +1489,7 @@
           gateGreen,
           gateAspect,
           gateFace,
+          gateLiveOcr,
           message,
           cls,
           gateBannerMsg,
@@ -1531,8 +1498,6 @@
 
       /* ================================================================
          REAL-TIME ANALYSIS LOOP
-         Priority: banner (1) → ring (2) → feedback bar (3)
-         Banner and ring are mutually exclusive.
       ================================================================ */
       function startIdAnalysis() {
         const video = el("idVideo");
@@ -1550,11 +1515,11 @@
           const result = analyseFrame(video, buf, bctx);
           if (!result) return;
 
-          if (result.composite >= 40) resetInactivityTimer();
+          // Only reset inactivity timer when we have a genuinely promising frame
+          if (result.composite >= SCORE_GATE) resetInactivityTimer();
 
           drawGuideOverlay(result);
 
-          /* ── FEEDBACK BAR: debounced — only update DOM on change ── */
           if (result.message !== _lastFbMsg || result.cls !== _lastFbCls) {
             setFb("idFeedback", result.message, result.cls);
             _lastFbMsg = result.message;
@@ -1565,24 +1530,20 @@
           const isStableFrame = checkFrameDelta(buf, bctx);
           dbg("dbgDelta", isStableFrame ? "stable" : "moving");
 
-          /* ── PRIORITY 1: Gate banner ── */
           if (result.gateBannerMsg) {
             banner.textContent = result.gateBannerMsg;
             banner.classList.add("visible");
-            updateCaptureRing(0, STABLE_DURATION_MS); /* hide ring */
+            updateCaptureRing(0, STABLE_DURATION_MS);
             stableStartMs = null;
           } else {
             banner.classList.remove("visible");
-
             if (result.gateAll && isStableFrame) {
-              /* ── PRIORITY 2: Capture ring ── */
               if (!stableStartMs) stableStartMs = ts;
               const elapsed = ts - stableStartMs;
               dbg("dbgStableMs", elapsed.toFixed(0));
               updateCaptureRing(elapsed, STABLE_DURATION_MS);
               if (elapsed >= STABLE_DURATION_MS) triggerCapture(video);
             } else {
-              /* ── PRIORITY 3: Nothing in-frame — feedback bar is enough ── */
               if (stableStartMs) {
                 stableStartMs = null;
                 fallbackCount++;
@@ -1600,7 +1561,6 @@
             }
           }
         }
-
         idRafId = requestAnimationFrame(loop);
       }
 
@@ -1653,7 +1613,6 @@
         if (!canvas || !video || !window.documentType) return;
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         const cw = canvas.width,
           ch = canvas.height;
         const isCard = window.documentType === "card";
@@ -1709,7 +1668,6 @@
       async function triggerCapture(videoEl) {
         if (isCaptureInProgress) return;
         isCaptureInProgress = true;
-
         cancelRaf(idRafId);
         idRafId = null;
         el("captureRingWrap").classList.remove("visible");
@@ -1720,7 +1678,6 @@
         const video = videoEl || el("idVideo");
         const vw = video.videoWidth,
           vh = video.videoHeight;
-
         const MAX_LONG = 1920;
         const scale = Math.min(1, MAX_LONG / Math.max(vw, vh));
         const full = document.createElement("canvas");
@@ -1819,7 +1776,6 @@
       ================================================================ */
       function validateExtractedData(parsed) {
         if (!parsed || typeof parsed !== "object") return false;
-
         if (parsed.isPassport) {
           if (!parsed.passportNumber) return false;
           const isSA =
@@ -1893,31 +1849,56 @@
       }
 
       /* ================================================================
-         SA GREEN SIGNAL
+         SIGNAL 2: SA SMART ID GREEN BACKGROUND
+         The SA Smart ID card has a green/teal colour scheme across the
+         card face. We sample the full ROI and measure the proportion of
+         pixels that fall in the green hue band (95–165°) with sufficient
+         saturation and brightness — excluding near-grey and near-black.
+         Normalised to 0–100. A real card in decent light scores 30–70+.
       ================================================================ */
-      function measureSAGreenBand(imgData, w, headerH, isCard) {
+      function measureSAGreen(imgData, w, h) {
         const d = imgData.data;
-        const hMin = isCard ? SA_GREEN_H_MIN : SA_GREEN_H_MIN_BOOK;
-        const hMax = isCard ? SA_GREEN_H_MAX : SA_GREEN_H_MAX_BOOK;
-        let qualifying = 0;
-        const total = w * headerH;
-        if (total < 1) return 0;
-        for (let y = 0; y < headerH; y++) {
+        let qualifying = 0,
+          total = 0;
+        for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             const i = (y * w + x) * 4;
-            const { h, s, v } = rgbToHsv(d[i], d[i + 1], d[i + 2]);
-            if (
-              h >= hMin &&
-              h <= hMax &&
-              s >= SA_GREEN_S_MIN &&
-              v >= SA_GREEN_V_MIN
-            )
-              qualifying++;
+            const { h: hh, s, v } = rgbToHsv(d[i], d[i + 1], d[i + 2]);
+            if (s < 15 || v < 20) continue; // skip near-grey/black/white
+            total++;
+            // SA Smart ID green: teal-green range, reasonably saturated
+            if (hh >= 95 && hh <= 165 && s >= 20 && v >= 25) qualifying++;
           }
         }
-        return Math.min(100, Math.round((qualifying / total / 0.18) * 100));
+        if (total < 50) return 0;
+        // A real SA ID card: roughly 25–50% of non-grey pixels are green
+        // Normalise so 25%+ qualifying = score of 50+
+        return Math.min(100, Math.round((qualifying / total / 0.25) * 50));
       }
 
+      /* ================================================================
+         TEXT ZONE DENSITY — right 65% of card, below top 20%
+      ================================================================ */
+      function measureTextZoneDensity(gray, w, h) {
+        const startX = Math.round(w * 0.35);
+        const startY = Math.round(h * 0.2);
+        let edges = 0,
+          total = 0;
+        for (let y = startY + 1; y < h - 1; y++) {
+          for (let x = startX + 1; x < w - 1; x++) {
+            const i = y * w + x;
+            const gx = -gray[i - 1] + gray[i + 1];
+            const gy = -gray[i - w] + gray[i + w];
+            if (Math.sqrt(gx * gx + gy * gy) > 25) edges++;
+            total++;
+          }
+        }
+        return total ? Math.min(100, Math.round((edges / total) * 1200)) : 0;
+      }
+
+      /* ================================================================
+         COLOUR UTILITY
+      ================================================================ */
       function rgbToHsv(r, g, b) {
         r /= 255;
         g /= 255;
@@ -1935,6 +1916,9 @@
         return { h, s: max === 0 ? 0 : (d / max) * 100, v: max * 100 };
       }
 
+      /* ================================================================
+         FACE IN ZONE DETECTION
+      ================================================================ */
       async function detectFaceInZone(video, roiX, roiY, photoW, roiH) {
         if (!faceReady) return 0;
         try {
@@ -2076,11 +2060,8 @@
       ================================================================ */
       function parseDocumentText(text) {
         if (window.documentType === "book") {
-          // Try 13-digit SA ID number first (green ID book)
           const idResult = parseSouthAfricanSmartID(text);
           if (idResult.idNumber) return idResult;
-
-          // Fall back to MRZ parser (SA passport)
           const lines = text
             .split("\n")
             .map((l) => l.trim().replace(/\s+/g, ""))
@@ -2127,7 +2108,6 @@
             .split("")
             .map((c) => A2D[c] || c)
             .join("");
-
         const issuingCountry = fa(l1.slice(2, 5)).replace(/</g, "");
         const nameField = l1.slice(5);
         const rawPassNo = l2.slice(0, 9);
@@ -2141,7 +2121,6 @@
         const rawPersonal = l2.slice(28, 42);
         const chkPersonal = fd(l2.charAt(42));
         const chkComp = fd(l2.charAt(43));
-
         function chk(str) {
           const W = [7, 3, 1];
           let t = 0;
@@ -2168,7 +2147,6 @@
         const passed = [passOk, dobOk, expOk, personalOk, compOk].filter(
           Boolean,
         ).length;
-
         const nameParts = nameField.split("<<");
         const surname = (nameParts[0] || "").replace(/</g, " ").trim();
         const firstNames = nameParts
@@ -2176,7 +2154,6 @@
           .join(" ")
           .replace(/</g, " ")
           .trim();
-
         function toISO(yymmdd, future) {
           if (!/^\d{6}$/.test(yymmdd)) return "";
           const yy = yymmdd.slice(0, 2),
@@ -2214,7 +2191,6 @@
           nationality &&
           issuingCountry !== nationality &&
           nationality !== "XXX";
-
         return {
           isPassport: true,
           docType: fa(l1.slice(0, 1)),
@@ -2252,7 +2228,6 @@
           .map((l) => l.trim())
           .filter((l) => l.length > 0);
         const flat = lines.join(" ");
-
         let idNumber = null;
         const candidates = flat.match(/\b\d{13}\b/g) || [];
         for (const raw of candidates) {
@@ -2261,7 +2236,6 @@
             break;
           }
         }
-
         if (!idNumber) {
           const fuzzy = flat.match(/\b\d[\d\s\-]{11,15}\d\b/g) || [];
           for (const raw of fuzzy) {
@@ -2273,12 +2247,11 @@
           }
         }
         if (!idNumber) return {};
-
         const yy = idNumber.slice(0, 2),
           mm = idNumber.slice(2, 4),
           dd = idNumber.slice(4, 6);
-        const cy = new Date().getFullYear();
-        const yyi = parseInt(yy, 10);
+        const cy = new Date().getFullYear(),
+          yyi = parseInt(yy, 10);
         const fullYear = yyi <= cy % 100 ? 2000 + yyi : 1900 + yyi;
         const dobISO = `${fullYear}-${mm}-${dd}`;
         const dob = new Date(dobISO);
@@ -2295,7 +2268,6 @@
         const gender = genderCode >= 5000 ? "M" : "F";
         const citizenship =
           idNumber.charAt(10) === "0" ? "SA CITIZEN" : "PERMANENT RESIDENT";
-
         const SKIP =
           /^(SOUTH|AFRICA|REPUBLIC|NATIONAL|IDENTITY|DOCUMENT|IDENTITEITSDOKUMENT|SURNAME|VAN|NAMES|VOORNAME|DOB|GEBOORTEDATUM|GENDER|GESLAG|NATIONALITY|NASIONALITEIT|STATUS|CITIZENSHIP|IDNO|IDENTITEITSNOMMER|CARD|SMART)/i;
         let surname = "",
@@ -2306,13 +2278,9 @@
             const inline = cur
               .replace(/.*(?:SURNAME|VAN)\s*[:\-]?\s*/i, "")
               .trim();
-            if (
-              inline.length > 1 &&
-              !/^\d/.test(inline) &&
-              !SKIP.test(inline)
-            ) {
+            if (inline.length > 1 && !/^\d/.test(inline) && !SKIP.test(inline))
               surname = inline;
-            } else if (i + 1 < lines.length) {
+            else if (i + 1 < lines.length) {
               const nl = lines[i + 1].trim();
               if (!SKIP.test(nl) && /^[A-Z\s\-']{2,}$/.test(nl)) surname = nl;
             }
@@ -2321,13 +2289,9 @@
             const inline = cur
               .replace(/.*(?:NAMES?|VOORNAME|FORENAME)\s*[:\-]?\s*/i, "")
               .trim();
-            if (
-              inline.length > 1 &&
-              !/^\d/.test(inline) &&
-              !SKIP.test(inline)
-            ) {
+            if (inline.length > 1 && !/^\d/.test(inline) && !SKIP.test(inline))
               firstNames = inline;
-            } else if (i + 1 < lines.length) {
+            else if (i + 1 < lines.length) {
               const nl = lines[i + 1].trim();
               if (
                 !SKIP.test(nl) &&
@@ -2374,7 +2338,6 @@
         const err = el("selfieError"),
           retry = el("btnRetrySelfie");
         err.style.display = retry.style.display = "none";
-
         if (!faceReady) {
           fLoad.classList.remove("hidden");
           fLoad.style.display = "flex";
@@ -2386,7 +2349,6 @@
             }
           }, 200);
         }
-
         const spinnerTimer = setTimeout(() => {
           loader.style.display = "flex";
           setFb("selfieFeedback", "Starting camera…");
@@ -2454,20 +2416,17 @@
             ovalRy = ovalRx * 1.35,
             ovalCx = cw / 2,
             ovalCy = ch / 2;
-
           ctx.fillStyle = "rgba(0,0,0,0.38)";
           ctx.beginPath();
           ctx.rect(0, 0, cw, ch);
           ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
           ctx.fill("evenodd");
-
           let ovalColor = "rgba(255,255,255,0.85)",
             ovalDash = true,
             ovalWidth = 2.5;
           let msg = "Position your face in the oval",
             cls = "bad",
             fillInside = false;
-
           if (!faceReady) {
             msg = "Preparing…";
             cls = null;
@@ -2512,7 +2471,6 @@
               el("btnCaptureSelfie").disabled = true;
             }
           }
-
           ctx.setLineDash(ovalDash ? [10, 7] : []);
           ctx.strokeStyle = ovalColor;
           ctx.lineWidth = ovalWidth;
@@ -2553,7 +2511,6 @@
         cancelRaf(selfieRafId);
         selfieRafId = null;
         stopSelfieCam();
-
         const canvas = el("selfieCanvas"),
           ctx = canvas.getContext("2d");
         const cw = canvas.width,
@@ -2587,7 +2544,6 @@
         ctx.lineTo(ovalCx - 6, ovalCy + 18);
         ctx.lineTo(ovalCx + 28, ovalCy - 20);
         ctx.stroke();
-
         setFb("selfieFeedback", "Selfie captured ✓", "ok");
         el("btnCaptureSelfie").disabled = true;
         setTimeout(() => goStep(5), 700);
@@ -2601,7 +2557,6 @@
         el("resultsError").style.display = "none";
         el("resultsCard").style.display = "none";
         el("resultsActions").style.display = "none";
-
         if (
           !window.API_BASE_URL ||
           window.API_BASE_URL === "https://your-api.com/verify"
@@ -2617,7 +2572,6 @@
           });
           return;
         }
-
         try {
           const fd = new FormData();
           fd.append("id_image", window.capturedIDBlob, "id.jpg");
@@ -2629,7 +2583,7 @@
           });
           if (!resp.ok) throw new Error("HTTP " + resp.status);
           displayResults(await resp.json());
-        } catch (err) {
+        } catch {
           el("resultsLoading").style.display = "none";
           el("resultsError").textContent =
             "Verification could not be completed. Please restart and try again.";
@@ -2648,7 +2602,6 @@
         el("resultsLoading").style.display = "none";
         el("resultsCard").style.display = "block";
         el("resultsActions").style.display = "flex";
-
         const status = (
           data.status ||
           data.overall_decision ||
@@ -2663,7 +2616,6 @@
             : status === "FAIL"
               ? "badge-fail"
               : "badge-review");
-
         el("scoreAuth").textContent =
           data.authenticity_score != null
             ? data.authenticity_score.toFixed(2)
@@ -2684,7 +2636,6 @@
             : data.id_number_valid === false
               ? "No"
               : "--";
-
         const api = data.extracted_data || {},
           ocr = window.extractedIDData || {},
           isPassport = ocr.isPassport || false;
@@ -2693,7 +2644,6 @@
           : "ID number valid";
         el("rowExpiredWarning").style.display =
           isPassport && ocr.documentExpired ? "block" : "none";
-
         const fieldsEl = el("extractedFields");
         let html = "";
         if (isPassport) {
@@ -2778,7 +2728,6 @@
         fieldsEl.innerHTML = html;
         el("extractedTitle").style.display =
           html.trim().length > 0 ? "block" : "none";
-
         const mrzSection = el("mrzIntegritySection");
         if (isPassport && ocr.checks) {
           const c = ocr.checks;
@@ -2799,7 +2748,6 @@
         } else {
           mrzSection.style.display = "none";
         }
-
         const fails = data.failure_reasons || [];
         el("failList").style.display = fails.length ? "block" : "none";
         el("failItems").innerHTML = fails
@@ -2868,20 +2816,17 @@
         el("idError").textContent = msg;
         el("idError").style.display = "block";
       }
-
       function setFb(id, msg, cls) {
         const e = el(id);
         e.textContent = msg;
         e.classList.remove("ok", "warn", "bad");
         if (cls) e.classList.add(cls);
       }
-
       function dbg(id, v) {
         const e = el(id);
         if (e) e.textContent = v;
       }
 
-      /* ── Debug panel — tap 5× ── */
       let tapCount = 0,
         tapTimer = null;
       const isTouchDevice = "ontouchstart" in window;
@@ -2902,10 +2847,13 @@
       );
 
       history.replaceState({ step: 1 }, "");
-      // Push a history entry on every step change so the back button works
       window.addEventListener("popstate", (e) => {
         const s = e.state?.step;
-        if (s === 1 || s === 2) goStep(s);
+        if (s === 1 || s === 2 || s === 3) {
+          isPopstate = true;
+          goStep(s);
+          isPopstate = false;
+        }
       });
       window.addEventListener("resize", () => {
         if (currentStep === 3) resizeIdCanvas();
