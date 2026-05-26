@@ -657,8 +657,8 @@
         <div style="padding-top: 24px">
           <h1 class="hero-title">Identity Verification</h1>
           <p class="hero-sub">
-            Have your South African Smart ID card or passport ready before you
-            begin.
+            Have your South African Smart ID card, green ID book, or passport
+            ready before you begin.
           </p>
         </div>
         <div class="guide-list">
@@ -730,8 +730,8 @@
             <div class="guide-text">
               <h4>Accepted Documents</h4>
               <p>
-                South African Smart ID card or SA passport only. Open your
-                passport to the photo page.
+                South African Smart ID card, green ID book, or SA passport. Open
+                booklets to the photo page.
               </p>
             </div>
           </div>
@@ -767,14 +767,17 @@
             <div class="doc-card-icon">🪪</div>
             <div>
               <h3>SA Smart ID Card</h3>
-              <p>South African Smart ID card issued from 2013 onwards</p>
+              <p>South African Smart ID card</p>
             </div>
           </div>
           <div class="doc-card" id="cardTypeBook" onclick="selectDoc('book')">
             <div class="doc-card-icon">📘</div>
             <div>
-              <h3>SA Passport</h3>
-              <p>South African passport — open to the photo and data page</p>
+              <h3>ID Book or Passport</h3>
+              <p>
+                South African green ID book or SA passport — open to the photo
+                page
+              </p>
             </div>
           </div>
         </div>
@@ -1147,6 +1150,7 @@
         currentStep = n;
         updateStepBar(n);
         el("stepBar").classList.toggle("visible", n >= 2);
+        if (n <= 3) history.pushState({ step: n }, "");
 
         if (n === 2) prewarmIdCamera();
         if (n === 3) initStep3();
@@ -1206,10 +1210,10 @@
         const isCard = window.documentType === "card";
         el("step3Title").textContent = isCard
           ? "SA Smart ID Card"
-          : "SA Passport";
+          : "ID Book or Passport";
         el("step3Sub").textContent = isCard
           ? "Hold your phone above the front of your Smart ID card"
-          : "Hold your phone above the photo page of your passport";
+          : "Hold your phone above the photo page of your ID book or passport";
 
         el("idError").style.display = "none";
         el("btnCaptureID").style.display = "none";
@@ -1232,7 +1236,7 @@
         const spinnerTimer = setTimeout(() => {
           el("idLoading").style.display = "flex";
           setFb("idFeedback", "Starting camera…");
-        }, 80);
+        }, 350);
 
         try {
           const stream = idStreamReady
@@ -1441,7 +1445,8 @@
         dbg("dbgScore", composite);
 
         /* Hard gates */
-        const gateGreen = sig_green >= GATE_GREEN_MIN;
+        const gateGreen =
+          window.documentType === "card" ? sig_green >= GATE_GREEN_MIN : true; // book/passport open pages are white — green signal not applicable
         const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
         const gateFace =
           !faceReady || lastFaceZoneTs === 0 || sig_face >= GATE_FACE_MIN;
@@ -2071,6 +2076,11 @@
       ================================================================ */
       function parseDocumentText(text) {
         if (window.documentType === "book") {
+          // Try 13-digit SA ID number first (green ID book)
+          const idResult = parseSouthAfricanSmartID(text);
+          if (idResult.idNumber) return idResult;
+
+          // Fall back to MRZ parser (SA passport)
           const lines = text
             .split("\n")
             .map((l) => l.trim().replace(/\s+/g, ""))
@@ -2891,6 +2901,12 @@
         { passive: true },
       );
 
+      history.replaceState({ step: 1 }, "");
+      // Push a history entry on every step change so the back button works
+      window.addEventListener("popstate", (e) => {
+        const s = e.state?.step;
+        if (s === 1 || s === 2) goStep(s);
+      });
       window.addEventListener("resize", () => {
         if (currentStep === 3) resizeIdCanvas();
         if (currentStep === 4) resizeSelfieCanvas();
