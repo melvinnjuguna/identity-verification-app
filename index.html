@@ -73,6 +73,7 @@
         }
       }
 
+      /* ── Step bar ── */
       .step-bar {
         display: none;
         align-items: center;
@@ -105,6 +106,7 @@
         font-size: 10px;
       }
 
+      /* ── Steps ── */
       .step {
         display: none;
         flex-direction: column;
@@ -162,6 +164,7 @@
         height: auto;
       }
 
+      /* ── Typography ── */
       .hero-title {
         font-size: 24px;
         font-weight: 700;
@@ -188,6 +191,7 @@
         margin-bottom: 14px;
       }
 
+      /* ── Guide cards ── */
       .guide-list {
         display: flex;
         flex-direction: column;
@@ -236,6 +240,7 @@
         line-height: 1.5;
       }
 
+      /* ── Doc selection ── */
       .doc-grid {
         display: flex;
         flex-direction: column;
@@ -280,6 +285,7 @@
         color: var(--ink-mid);
       }
 
+      /* ── Buttons ── */
       .btn {
         background: var(--red);
         color: var(--white);
@@ -329,6 +335,7 @@
         flex: 1;
       }
 
+      /* ── Camera ── */
       .cam-wrap {
         position: relative;
         width: 100%;
@@ -363,11 +370,7 @@
       .cam-overlay.hidden {
         display: none;
       }
-
-      #selfieVideo {
-        transform: scaleX(-1);
-      }
-
+      #selfieVideo,
       #selfieCanvas {
         transform: scaleX(-1);
       }
@@ -392,6 +395,7 @@
         display: block;
       }
 
+      /* ── Capture ring ── */
       .capture-ring-wrap {
         position: absolute;
         bottom: 14px;
@@ -433,6 +437,7 @@
         text-transform: uppercase;
       }
 
+      /* ── Feedback / errors ── */
       .feedback {
         background: rgba(15, 15, 15, 0.82);
         color: #fff;
@@ -459,7 +464,6 @@
       .feedback.bad {
         background: rgba(15, 15, 15, 0.82);
       }
-
       .err-box {
         background: #fdecea;
         border: 1px solid #f5c6cb;
@@ -469,7 +473,23 @@
         font-size: 13px;
         margin-bottom: 10px;
       }
+      .retry-notice {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        font-size: 13px;
+        margin-bottom: 10px;
+        line-height: 1.5;
+        display: none;
+        color: var(--ink-mid);
+        text-align: center;
+      }
+      .retry-notice.visible {
+        display: block;
+      }
 
+      /* ── Spinner ── */
       .spinner {
         width: 36px;
         height: 36px;
@@ -488,6 +508,7 @@
         }
       }
 
+      /* ── Results ── */
       .results-card {
         background: var(--white);
         border-radius: var(--radius-lg);
@@ -524,7 +545,6 @@
         text-transform: uppercase;
         letter-spacing: 0.07em;
       }
-
       .field-row {
         margin-bottom: 9px;
       }
@@ -551,7 +571,6 @@
         border-color: var(--red);
         background: var(--white);
       }
-
       .results-loading {
         display: flex;
         flex-direction: column;
@@ -568,22 +587,7 @@
         margin-top: 8px;
       }
 
-      .retry-notice {
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 14px 16px;
-        font-size: 13px;
-        margin-bottom: 10px;
-        line-height: 1.5;
-        display: none;
-        color: var(--ink-mid);
-        text-align: center;
-      }
-      .retry-notice.visible {
-        display: block;
-      }
-
+      /* ── Debug panel ── */
       #debugPanel {
         display: none;
         position: fixed;
@@ -713,7 +717,7 @@
             <div class="guide-text">
               <h4>Correct Distance</h4>
               <p>
-                Hold your phone 20–30 cm above the document so the entire card
+                Hold your phone 20–30 cm above the document so the entire page
                 fills the frame.
               </p>
             </div>
@@ -755,7 +759,7 @@
 
       <!-- STEP 2 -->
       <div class="step" id="step2">
-        <div style="padding-top: 18px">
+        <div style="padding-top: 12px">
           <h2 class="section-title">Select document type</h2>
           <p class="section-sub">Choose the document you have ready</p>
         </div>
@@ -793,11 +797,18 @@
 
       <!-- STEP 3 -->
       <div class="step" id="step3">
-        <div style="padding-top: 18px">
+        <div style="padding-top: 12px">
           <h2 class="section-title" id="step3Title">ID Document</h2>
           <p class="section-sub" id="step3Sub">
             Capture the front of your document
           </p>
+          <button
+            class="btn btn-ghost"
+            style="margin-bottom: 12px; min-height: 40px; font-size: 13px"
+            onclick="goBackToDocSelect()"
+          >
+            ← Change document type
+          </button>
         </div>
         <div class="cam-wrap" id="idCamWrap">
           <video
@@ -845,7 +856,7 @@
 
       <!-- STEP 4 -->
       <div class="step" id="step4">
-        <div style="padding-top: 18px">
+        <div style="padding-top: 12px">
           <h2 class="section-title">Selfie Verification</h2>
           <p class="section-sub">Position your face within the oval</p>
         </div>
@@ -893,7 +904,7 @@
 
       <!-- STEP 5 -->
       <div class="step" id="step5">
-        <div style="padding-top: 18px">
+        <div style="padding-top: 12px">
           <h2 class="section-title">Confirm Your Details</h2>
           <p class="section-sub">Please confirm your Name and Surname.</p>
         </div>
@@ -920,7 +931,6 @@
             <div id="failItems"></div>
           </div>
         </div>
-
         <label
           style="
             display: flex;
@@ -983,10 +993,6 @@
         ><span class="dbg-v" id="dbgAspectSig">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">Green sig</span
-        ><span class="dbg-v" id="dbgGreen">--</span>
-      </div>
-      <div class="dbg-row">
         <span class="dbg-k">Face zone</span
         ><span class="dbg-v" id="dbgFaceZone">--</span>
       </div>
@@ -1039,8 +1045,8 @@
         ><span class="dbg-v" id="dbgIdValid">--</span>
       </div>
       <div class="dbg-row">
-        <span class="dbg-k">SA country</span
-        ><span class="dbg-v" id="dbgSaCountry">--</span>
+        <span class="dbg-k">Book anchor</span
+        ><span class="dbg-v" id="dbgBookAnchor">--</span>
       </div>
       <div class="dbg-row">
         <span class="dbg-k">Fallbacks</span
@@ -1054,24 +1060,26 @@
 
     <script>
       /* ================================================================
-         CONSTANTS
-      ================================================================ */
+   CONSTANTS
+================================================================ */
       const CARD_ASPECT = 1.586;
       const BOOK_ASPECT = 1.55;
       const PASSPORT_ASPECT = 1.42;
       const ASPECT_TOLERANCE = 0.05;
       const GATE_ASPECT_MIN = 45;
       const GATE_FACE_MIN = 25;
-      const GATE_GREEN_MIN = 20;
       const SCORE_GATE = 58;
       const GATE_MISS_TOLERANCE = 4;
       const BURST_TRIGGER_MS = 800;
       const BURST_FRAME_COUNT = 15;
       const BURST_INTERVAL_MS = 80;
+      const SELFIE_MISS_TOLERANCE = 3;
+      const SELFIE_BURST_TRIGGER_MS = 2500;
+      const INACTIVITY_LIMIT = 60 * 1000;
 
       /* ================================================================
-         GLOBAL STATE
-      ================================================================ */
+   GLOBAL STATE
+================================================================ */
       window.documentType = null;
       window.capturedIDBlob = null;
       window.capturedSelfieBlob = null;
@@ -1087,8 +1095,6 @@
       let selfieGatePassStartMs = null;
       let selfieBurstTriggered = false;
       let selfieMissCount = 0;
-      const SELFIE_MISS_TOLERANCE = 3;
-      const SELFIE_BURST_TRIGGER_MS = 2500;
 
       let fallbackCount = 0;
       let lastFaceZoneScore = 0;
@@ -1098,31 +1104,28 @@
       let selfieStreamReady = null;
       let lastRoi = null;
       let globalInactivityTimeout = null;
-      const INACTIVITY_LIMIT = 60 * 1000;
       let burstTriggered = false;
       let gatePassStartMs = null;
       let smoothedComposite = 0;
       let gateMissCount = 0;
-
-      let _lastFbMsg = "";
-      let _lastFbCls = "";
+      let _lastFbMsg = "",
+        _lastFbCls = "";
       let isPopstate = false;
 
       /* ================================================================
-         EAGER ENGINE INIT
-      ================================================================ */
+   EAGER ENGINE INIT
+================================================================ */
       let ocrReady = false;
       let faceReady = false;
 
       (async () => {
         try {
-          const w = await Tesseract.createWorker("eng", 1, {
+          window._ocrWorker = await Tesseract.createWorker("eng", 1, {
             workerPath:
               "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
             corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
             langPath: "https://tessdata.projectnaptha.com/4.0.0",
           });
-          window._ocrWorker = w;
           ocrReady = true;
           dbg("dbgOcr", "ready ✓");
         } catch {
@@ -1143,8 +1146,8 @@
       })();
 
       /* ================================================================
-         STEP NAVIGATION
-      ================================================================ */
+   STEP NAVIGATION
+================================================================ */
       function goStep(n) {
         if (currentStep === 3) {
           stopIdCam();
@@ -1183,8 +1186,8 @@
       }
 
       /* ================================================================
-         STEP 2
-      ================================================================ */
+   STEP 2
+================================================================ */
       function prewarmIdCamera() {
         if (idStreamReady) return;
         idStreamReady = requestCamera("environment").catch(() => {
@@ -1197,20 +1200,20 @@
         document
           .querySelectorAll(".doc-card")
           .forEach((c) => c.classList.remove("selected"));
-        const idMap = {
+        const map = {
           card: "cardTypeCard",
           book: "cardTypeBook",
           passport: "cardTypePassport",
         };
-        el(idMap[type]).classList.add("selected");
+        el(map[type]).classList.add("selected");
         el("btnContinue").disabled = false;
         dbg("dbgDoc", type);
         prewarmIdCamera();
       }
 
       /* ================================================================
-         STEP 3 — INIT
-      ================================================================ */
+   STEP 3 — INIT
+================================================================ */
       function initStep3() {
         isCaptureInProgress = false;
         burstTriggered = false;
@@ -1241,9 +1244,40 @@
         startIdCamera().then(() => startIdAnalysis());
       }
 
+      function goBackToDocSelect() {
+        stopIdCam();
+        cancelRaf(idRafId);
+        idRafId = null;
+        isCaptureInProgress = false;
+        burstTriggered = false;
+        gatePassStartMs = null;
+        smoothedComposite = 0;
+        gateMissCount = 0;
+        lastFaceZoneScore = 0;
+        faceZonePending = false;
+        lastFaceZoneTs = 0;
+        _lastFbMsg = "";
+        _lastFbCls = "";
+        idStreamReady = null;
+
+        el("idError").style.display = "none";
+        el("btnRetryID").style.display = "none";
+        el("retryNotice").classList.remove("visible");
+        el("gateBanner").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
+        el("step3").classList.remove("step3--error");
+
+        document
+          .querySelectorAll(".step")
+          .forEach((s) => s.classList.remove("active"));
+        el("step2").classList.add("active");
+        currentStep = 2;
+        updateStepBar(2);
+      }
+
       /* ================================================================
-         ID CAMERA
-      ================================================================ */
+   ID CAMERA
+================================================================ */
       async function startIdCamera() {
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
@@ -1280,17 +1314,14 @@
 
       function stopIdCam() {
         clearInactivityTimer();
-        if (idStream) {
-          idStream.getTracks().forEach((t) => t.stop());
-          idStream = null;
-        }
+        [idStream, selfieStream].forEach((s) => {
+          if (s) s.getTracks().forEach((t) => t.stop());
+        });
+        idStream = null;
+        selfieStream = null;
+        selfieStreamReady = null;
         const v = el("idVideo");
         if (v) v.srcObject = null;
-        if (selfieStream) {
-          selfieStream.getTracks().forEach((t) => t.stop());
-          selfieStream = null;
-        }
-        selfieStreamReady = null;
       }
 
       function retryIdCamera() {
@@ -1328,8 +1359,8 @@
       }
 
       /* ================================================================
-         INACTIVITY TIMER
-      ================================================================ */
+   INACTIVITY TIMER
+================================================================ */
       function resetInactivityTimer() {
         if (globalInactivityTimeout) clearTimeout(globalInactivityTimeout);
         globalInactivityTimeout = setTimeout(
@@ -1346,8 +1377,8 @@
       function handleCameraTimeout() {
         cancelRaf(idRafId);
         idRafId = null;
-        cancelRaf(window.selfieRafId);
-        window.selfieRafId = null;
+        cancelRaf(selfieRafId);
+        selfieRafId = null;
         isCaptureInProgress = false;
         window.isSelfieCaptureInProgress = false;
         stopIdCam();
@@ -1357,8 +1388,8 @@
       }
 
       /* ================================================================
-         CAMERA HELPER
-      ================================================================ */
+   CAMERA HELPER
+================================================================ */
       async function requestCamera(facing) {
         try {
           return await navigator.mediaDevices.getUserMedia({
@@ -1378,8 +1409,8 @@
       }
 
       /* ================================================================
-         SA ID DETECTION ENGINE
-      ================================================================ */
+   SA ID DETECTION ENGINE
+================================================================ */
       function analyseFrame(video, buf, bctx) {
         if (!video.videoWidth || video.readyState < 2) return null;
 
@@ -1427,21 +1458,17 @@
             : 0;
         dbg("dbgAspectSig", sig_aspect.toFixed(0));
 
-        /* Signal 2: Green background */
-        const sig_green = isCard ? measureSAGreen(imgData, sw, sh) : 50;
-        dbg("dbgGreen", sig_green.toFixed(0));
-
-        /* Signal 3: Face (throttled 800ms) */
+        /* Signal 2: Face (throttled 800ms) */
         const now = performance.now();
         if (faceReady && !faceZonePending && now - lastFaceZoneTs > 800) {
           faceZonePending = true;
           lastFaceZoneTs = now;
           const photoW = Math.round(sw * (isCard ? 0.35 : 0.28));
           const photoX = isCard
-            ? roiX + (sw - photoW) // card: photo is on the right side
+            ? roiX + (sw - photoW)
             : isBook
-              ? roiX // book: photo is on the left side of open spread
-              : roiX + (sw - photoW); // passport: photo is on the right side (unchanged)
+              ? roiX
+              : roiX + (sw - photoW);
           detectFaceInZone(video, photoX, roiY, photoW, sh).then((score) => {
             lastFaceZoneScore = score;
             faceZonePending = false;
@@ -1450,35 +1477,34 @@
         }
         const sig_face = lastFaceZoneScore;
 
-        /* Signal 4: Sharpness */
+        /* Signal 3: Sharpness */
         const lapVar = laplacianVariance(gray, sw, sh);
         const sig_sharp = Math.min(100, Math.max(0, (lapVar - 50) / 1.7));
         dbg("dbgSharp", lapVar.toFixed(0));
 
-        /* Signal 5: Brightness */
+        /* Signal 4: Brightness */
         const bright = brightness(gray);
         const sig_quality = bright >= 65 && bright <= 225 ? 100 : 0;
         dbg("dbgBright", bright.toFixed(0));
 
         /* Composite */
         const composite = isCard
-  ? Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2)
-  : isBook
-    ? Math.round(sig_sharp * 0.65 + sig_face * 0.1 + sig_aspect * 0.25)
-    : Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2);
+          ? Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2)
+          : isBook
+            ? Math.round(sig_sharp * 0.65 + sig_face * 0.1 + sig_aspect * 0.25)
+            : Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2);
         dbg("dbgScore", composite);
 
         /* Gates */
         const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
         const gateFace =
-  !faceReady ||
-  lastFaceZoneTs === 0 ||
-  sig_face >= GATE_FACE_MIN ||
-  (lastFaceZoneScore > 0 && sig_face >= 10) ||
-  (isBook && sig_sharp >= 55);
+          !faceReady ||
+          lastFaceZoneTs === 0 ||
+          sig_face >= GATE_FACE_MIN ||
+          (lastFaceZoneScore > 0 && sig_face >= 10) ||
+          (isBook && sig_sharp >= 55 && lastFaceZoneTs > 0);
         const gateSharp = sig_sharp >= 45;
         const gateCard = !isCard || (sig_face >= 30 && sig_aspect >= 50);
-
         const gateAll =
           gateCard &&
           gateAspect &&
@@ -1531,20 +1557,18 @@
         }
 
         let gateBannerMsg = null;
-        if (!gateCard && composite < SCORE_GATE) {
+        if (!gateCard && composite < SCORE_GATE)
           gateBannerMsg = isCard
             ? "Make sure the front of your Smart ID card is facing the camera"
             : "Open the booklet fully to the photo page";
-        } else if (!gateFace && lastFaceZoneTs > 0) {
+        else if (!gateFace && lastFaceZoneTs > 0)
           gateBannerMsg = isCard
             ? "The photo side should be facing up and right side up"
             : "Ensure the info and photo page is fully open and upright";
-        }
 
         return {
           composite,
           sig_aspect,
-          sig_green,
           sig_face,
           sig_sharp,
           sig_quality,
@@ -1561,9 +1585,10 @@
           gateBannerMsg,
         };
       }
+
       /* ================================================================
-         REAL-TIME ANALYSIS LOOP
-      ================================================================ */
+   REAL-TIME ANALYSIS LOOP
+================================================================ */
       function startIdAnalysis() {
         const video = el("idVideo");
         const buf = document.createElement("canvas");
@@ -1590,7 +1615,6 @@
               : 0;
 
           drawGuideOverlay(result, ringProgress);
-
           if (result.message !== _lastFbMsg || result.cls !== _lastFbCls) {
             setFb("idFeedback", result.message, result.cls);
             _lastFbMsg = result.message;
@@ -1598,7 +1622,6 @@
           }
 
           const banner = el("gateBanner");
-
           if (result.gateBannerMsg) {
             banner.textContent = result.gateBannerMsg;
             banner.classList.add("visible");
@@ -1608,15 +1631,16 @@
             updateCaptureRing(0, BURST_TRIGGER_MS);
             return;
           }
-
           banner.classList.remove("visible");
+          const burstMs =
+            window.documentType === "book" ? 1500 : BURST_TRIGGER_MS;
 
           if (result.gateAll && smoothedComposite >= 45 && !burstTriggered) {
             gateMissCount = 0;
             if (!gatePassStartMs) gatePassStartMs = ts;
             const elapsed = ts - gatePassStartMs;
-            updateCaptureRing(elapsed, BURST_TRIGGER_MS);
-            if (elapsed >= BURST_TRIGGER_MS) {
+            updateCaptureRing(elapsed, burstMs);
+            if (elapsed >= burstMs) {
               burstTriggered = true;
               gatePassStartMs = null;
               burstCapture(video);
@@ -1631,17 +1655,15 @@
                 dbg("dbgFallback", fallbackCount);
               }
               gateMissCount = 0;
-              updateCaptureRing(0, BURST_TRIGGER_MS);
+              updateCaptureRing(0, burstMs);
             }
           }
         }
-
         idRafId = requestAnimationFrame(loop);
       }
-
       /* ================================================================
-         CAPTURE RING
-      ================================================================ */
+   CAPTURE RING
+================================================================ */
       function updateCaptureRing(elapsed, duration) {
         const wrap = el("captureRingWrap"),
           fill = el("captureRingFill");
@@ -1656,8 +1678,8 @@
       }
 
       /* ================================================================
-         CANVAS GUIDE OVERLAY
-      ================================================================ */
+   CANVAS GUIDE OVERLAY
+================================================================ */
       function drawGuideOverlay(result, ringProgress = 0) {
         const canvas = el("idCanvas"),
           video = el("idVideo");
@@ -1683,11 +1705,11 @@
 
         const fc =
           result && result.gateAll && ringProgress >= 1.0
-            ? "rgba(74,222,128,.95)" // full green — capture firing
+            ? "rgba(74,222,128,.95)"
             : result && result.gateAll
-              ? "rgba(251,191,36,.9)" // amber — gates passed, holding for burst
+              ? "rgba(251,191,36,.9)"
               : result && result.composite >= 40
-                ? "rgba(251,191,36,.5)" // dim amber — partial signal
+                ? "rgba(251,191,36,.5)"
                 : "rgba(255,255,255,.85)";
 
         ctx.setLineDash(
@@ -1713,8 +1735,6 @@
           ctx.lineTo(x, y + dy * cl);
           ctx.stroke();
         });
-
-        // same for the fill tint at the bottom:
         if (result && result.gateAll && ringProgress >= 1.0) {
           ctx.fillStyle = "rgba(74,222,128,.07)";
           ctx.fillRect(fx, fy, fw, fh);
@@ -1722,14 +1742,13 @@
       }
 
       /* ================================================================
-         BURST CAPTURE
-      ================================================================ */
+   BURST CAPTURE
+================================================================ */
       async function burstCapture(videoEl) {
         if (isCaptureInProgress) return;
         isCaptureInProgress = true;
         cancelRaf(idRafId);
         idRafId = null;
-
         el("captureRingWrap").classList.remove("visible");
         el("gateBanner").classList.remove("visible");
         setFb("idFeedback", "Capturing…", "ok");
@@ -1741,16 +1760,13 @@
         for (let i = 0; i < BURST_FRAME_COUNT; i++) {
           await new Promise((r) => setTimeout(r, BURST_INTERVAL_MS));
           if (!videoEl.videoWidth || videoEl.readyState < 2) continue;
-
           const result = analyseFrame(videoEl, buf, bctx);
           if (!result || result.composite < 50) continue;
-
           const frameScore =
             result.sig_sharp * 0.5 +
             result.sig_quality * 0.25 +
             result.sig_face * 0.15 +
             result.sig_aspect * 0.1;
-
           const scale = Math.min(
             1,
             1920 / Math.max(videoEl.videoWidth, videoEl.videoHeight),
@@ -1761,7 +1777,6 @@
           full
             .getContext("2d")
             .drawImage(videoEl, 0, 0, full.width, full.height);
-
           frames.push({
             score: frameScore,
             canvas: full,
@@ -1769,17 +1784,15 @@
           });
         }
 
-        /* Fallback: grab one raw frame if burst was empty */
+        /* Fallback: one raw frame if burst was empty */
         if (frames.length === 0) {
-          const fallback = document.createElement("canvas");
-          fallback.width = Math.round(videoEl.videoWidth * 0.8);
-          fallback.height = Math.round(videoEl.videoHeight * 0.8);
-          fallback
-            .getContext("2d")
-            .drawImage(videoEl, 0, 0, fallback.width, fallback.height);
+          const fb = document.createElement("canvas");
+          fb.width = Math.round(videoEl.videoWidth * 0.8);
+          fb.height = Math.round(videoEl.videoHeight * 0.8);
+          fb.getContext("2d").drawImage(videoEl, 0, 0, fb.width, fb.height);
           frames.push({
             score: 0,
-            canvas: fallback,
+            canvas: fb,
             roi: lastRoi ? { ...lastRoi } : null,
           });
         }
@@ -1818,35 +1831,33 @@
               best.roi,
               videoEl,
             );
-            const zones = await zonalOCR(cardCanvas);
-            dbg("dbgIdNum", zones.idNumber || "none");
-            parsed = parseSouthAfricanSmartID(zones);
+            parsed = parseSouthAfricanSmartID(await zonalOCR(cardCanvas));
+            dbg("dbgIdNum", parsed.idNumber || "none");
           } else if (best.roi) {
             const { roiX, roiY, roiW, roiH } = best.roi;
             const scaleX = best.canvas.width / videoEl.videoWidth;
             const scaleY = best.canvas.height / videoEl.videoHeight;
-            const targetX = Math.round(roiX * scaleX);
-            const targetY = Math.round(roiY * scaleY);
-            const targetW = Math.round(roiW * scaleX);
-            const targetH = Math.round(roiH * scaleY);
+            const tX = Math.round(roiX * scaleX),
+              tY = Math.round(roiY * scaleY);
+            const tW = Math.round(roiW * scaleX),
+              tH = Math.round(roiH * scaleY);
 
             if (window.documentType === "passport") {
-              // Extract only the bottom 20% — that's where MRZ always lives
-              const mrzStripH = Math.round(targetH * 0.2);
-              const mrzStripY = targetY + targetH - mrzStripH;
-              const UP = Math.max(3, Math.ceil(80 / mrzStripH));
+              const mrzH = Math.round(tH * 0.2);
+              const mrzY = tY + tH - mrzH;
+              const UP = Math.max(3, Math.ceil(80 / mrzH));
               const mrzCanvas = document.createElement("canvas");
-              mrzCanvas.width = targetW * UP;
-              mrzCanvas.height = mrzStripH * UP;
+              mrzCanvas.width = tW * UP;
+              mrzCanvas.height = mrzH * UP;
               const mctx = mrzCanvas.getContext("2d");
               mctx.imageSmoothingEnabled = true;
               mctx.imageSmoothingQuality = "high";
               mctx.drawImage(
                 best.canvas,
-                targetX,
-                mrzStripY,
-                targetW,
-                mrzStripH,
+                tX,
+                mrzY,
+                tW,
+                mrzH,
                 0,
                 0,
                 mrzCanvas.width,
@@ -1859,36 +1870,37 @@
                 2.0,
                 true,
               );
-
-              const ocrPromise = window._ocrWorker.recognize(
-                mrzCanvas,
-                {},
-                {
-                  tessedit_pageseg_mode: "6",
-                  tessedit_char_whitelist:
-                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
-                },
-              );
               const timeout = new Promise((_, rej) =>
                 setTimeout(() => rej(new Error("timeout")), 9000),
               );
-              const { data } = await Promise.race([ocrPromise, timeout]);
+              const { data } = await Promise.race([
+                window._ocrWorker.recognize(
+                  mrzCanvas,
+                  {},
+                  {
+                    tessedit_pageseg_mode: "6",
+                    tessedit_char_whitelist:
+                      "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
+                  },
+                ),
+                timeout,
+              ]);
               parsed = extractMRZFromText(data.text || "");
             } else {
-              // Green ID book — full ROI then zonal
-              const UP = Math.max(3, Math.ceil(60 / targetH));
+              /* GREEN ID BOOK */
+              const UP = Math.max(3, Math.ceil(60 / tH));
               const bookCanvas = document.createElement("canvas");
-              bookCanvas.width = targetW * UP;
-              bookCanvas.height = targetH * UP;
+              bookCanvas.width = tW * UP;
+              bookCanvas.height = tH * UP;
               const bctx2 = bookCanvas.getContext("2d");
               bctx2.imageSmoothingEnabled = true;
               bctx2.imageSmoothingQuality = "high";
               bctx2.drawImage(
                 best.canvas,
-                targetX,
-                targetY,
-                targetW,
-                targetH,
+                tX,
+                tY,
+                tW,
+                tH,
                 0,
                 0,
                 bookCanvas.width,
@@ -1896,19 +1908,21 @@
               );
               const zones = await zonalOCRBook(bookCanvas);
               parsed = parseGreenIDBook(zones);
+              dbg("dbgIdNum", parsed.idNumber || "none");
+              dbg("dbgBookAnchor", parsed._bookAnchor || "none");
             }
           }
 
           parsed._idValid = parsed._idValid ?? true;
           parsed._saCountry = parsed._saCountry ?? true;
           dbg("dbgIdValid", parsed._idValid ? "✓" : "✗");
-          dbg("dbgSaCountry", parsed._saCountry ? "✓ SA" : "✗");
         } catch {
           parsed = {};
           dbg("dbgIdNum", "ocr-failed");
         }
 
         window.extractedIDData = parsed;
+
         const validation = validateExtractedData(parsed);
 
         if (!validation.pass) {
@@ -1940,8 +1954,14 @@
       }
 
       /* ================================================================
-         VALIDATION
-      ================================================================ */
+   VALIDATION
+   — Smart ID and Passport paths unchanged.
+   — Green ID Book now requires at least one hard anchor:
+       1. Luhn-valid 13-digit ID number  (strongest)
+       2. "S.A. BURGER" / "S.A. CITIZEN" label found by OCR
+       3. Bilingual field label (VAN/SURNAME or VOORNAAM)
+     One anchor passes; zero anchors = retry.
+================================================================ */
       function validateExtractedData(parsed) {
         if (
           !parsed ||
@@ -1954,6 +1974,7 @@
             reason: "Hold steady — ensure the document is clear and in focus",
           };
         }
+
         if (parsed.isPassport) {
           if (!parsed.passportNumber)
             return {
@@ -1962,16 +1983,6 @@
               reason:
                 "Ensure the bottom two rows of text are fully inside the frame",
             };
-          // const isSA =
-          //   parsed.issuingCountry?.startsWith("ZAF") ||
-          //   parsed.nationality?.startsWith("ZAF");
-          // if (!isSA)
-          //   return {
-          //     pass: false,
-          //     code: "foreign_doc",
-          //     reason: "This does not appear to be a South African passport",
-          //   };
-          // All countries supported — check digits validate integrity instead
           if (!parsed.checks || parsed.checks.passed < 3)
             return {
               pass: false,
@@ -1984,10 +1995,24 @@
           return { pass: true, code: "ok", reason: "" };
         }
 
-        const id = parsed.idNumber;
         if (parsed.isGreenBook) {
+          const hasValidId = parsed.idNumber?.length === 13 && parsed._idValid;
+          const hasCitizenLabel = !!parsed._bookAnchor;
+          if (!hasValidId && !hasCitizenLabel) {
+            return {
+              pass: false,
+              code: "wrong_doc",
+              reason:
+                "This does not appear to be a South African green ID book. Please open to the photo page and try again.",
+            };
+          }
+          // Warn but still pass if ID present but Luhn failed — let user correct in step 5
+          parsed._saCountry = true;
           return { pass: true, code: "ok", reason: "" };
         }
+
+        /* Smart ID */
+        const id = parsed.idNumber;
         if (!id)
           return {
             pass: false,
@@ -2005,30 +2030,14 @@
         return { pass: true, code: "ok", reason: "" };
       }
 
-      // function checkResultsCompleteness() {
-      //   const idVal =
-      //     (el("fIdNumber") || el("fPassportNumber"))?.value?.trim() || "";
-      //   const surnameVal = el("fSurname")?.value?.trim() || "";
-      //   const namesVal = el("fNames")?.value?.trim() || "";
-      //   const btnConfirm = el("btnConfirm");
-      //   const btnRestart = el("btnRestart");
-      //   if (!idVal || (!surnameVal && !namesVal)) {
-      //     btnConfirm.disabled = true;
-      //     btnRestart.style.display = "flex";
-      //   } else {
-      //     btnConfirm.disabled = false;
-      //     btnRestart.style.display = "none";
-      //   }
-      // }
-
       function checkResultsCompleteness() {
         const idVal =
           (el("fIdNumber") || el("fPassportNumber"))?.value?.trim() || "";
         const surnameVal = el("fSurname")?.value?.trim() || "";
         const namesVal = el("fNames")?.value?.trim() || "";
         const confirmed = el("chkConfirm")?.checked || false;
-        const btnConfirm = el("btnConfirm");
-        const btnRestart = el("btnRestart");
+        const btnConfirm = el("btnConfirm"),
+          btnRestart = el("btnRestart");
         if (!idVal || (!surnameVal && !namesVal) || !confirmed) {
           btnConfirm.disabled = true;
           btnRestart.style.display =
@@ -2040,8 +2049,8 @@
       }
 
       /* ================================================================
-         SA LUHN
-      ================================================================ */
+   SA LUHN
+================================================================ */
       function saLuhn13(num) {
         if (!/^\d{13}$/.test(num)) return false;
         let oddStr = "";
@@ -2056,48 +2065,8 @@
       }
 
       /* ================================================================
-         SA GREEN BACKGROUND SIGNAL
-      ================================================================ */
-      function measureSAGreen(imgData, w, h) {
-        const d = imgData.data;
-        let qualifying = 0,
-          total = 0;
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const i = (y * w + x) * 4;
-            const { h: hh, s, v } = rgbToHsv(d[i], d[i + 1], d[i + 2]);
-            if (s < 15 || v < 20) continue;
-            total++;
-            if (hh >= 95 && hh <= 165 && s >= 20 && v >= 25) qualifying++;
-          }
-        }
-        if (total < 50) return 0;
-        return Math.min(100, Math.round((qualifying / total / 0.25) * 50));
-      }
-
-      /* ================================================================
-         COLOUR UTILITY
-      ================================================================ */
-      function rgbToHsv(r, g, b) {
-        r /= 255;
-        g /= 255;
-        b /= 255;
-        const max = Math.max(r, g, b),
-          min = Math.min(r, g, b),
-          d = max - min;
-        let h = 0;
-        if (d !== 0) {
-          if (max === r) h = 60 * (((g - b) / d) % 6);
-          else if (max === g) h = 60 * ((b - r) / d + 2);
-          else h = 60 * ((r - g) / d + 4);
-        }
-        if (h < 0) h += 360;
-        return { h, s: max === 0 ? 0 : (d / max) * 100, v: max * 100 };
-      }
-
-      /* ================================================================
-         FACE IN ZONE DETECTION
-      ================================================================ */
+   FACE IN ZONE DETECTION
+================================================================ */
       async function detectFaceInZone(video, roiX, roiY, photoW, roiH) {
         if (!faceReady) return 0;
         try {
@@ -2134,8 +2103,8 @@
       }
 
       /* ================================================================
-         IMAGE UTILITIES
-      ================================================================ */
+   IMAGE UTILITIES
+================================================================ */
       function toGray(imgData) {
         const d = imgData.data,
           len = d.length / 4,
@@ -2172,12 +2141,11 @@
       }
 
       /* ================================================================
-         OCR PREPROCESSING  (single definition — adaptive binarization)
-      ================================================================ */
+   OCR PREPROCESSING
+================================================================ */
       function preprocessZone(ctx, w, h, sharpAmount = 1.5, binarize = false) {
         const im = ctx.getImageData(0, 0, w, h);
         const d = im.data;
-
         const gray = new Uint8Array(w * h);
         for (let i = 0; i < w * h; i++) {
           const g = Math.round(
@@ -2185,23 +2153,20 @@
           );
           d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = gray[i] = g;
         }
-
         if (binarize) {
           let sumLuma = 0;
           for (let i = 0; i < gray.length; i++) sumLuma += gray[i];
-          const averageLuma = sumLuma / gray.length;
-          const dynamicCutoff = Math.max(95, Math.min(160, averageLuma * 0.86));
+          const avg = sumLuma / gray.length;
+          const cutoff = Math.max(95, Math.min(160, avg * 0.86));
           for (let i = 0; i < w * h; i++) {
-            const val = gray[i] < dynamicCutoff ? 0 : 255;
-            d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = val;
-            gray[i] = val;
+            const val = gray[i] < cutoff ? 0 : 255;
+            d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = gray[i] = val;
           }
         }
-
         for (let y = 1; y < h - 1; y++) {
-          const offset = y * w;
+          const off = y * w;
           for (let x = 1; x < w - 1; x++) {
-            const i = offset + x;
+            const i = off + x;
             const blur = Math.round(
               (gray[i - w - 1] +
                 gray[i - w] * 2 +
@@ -2214,24 +2179,21 @@
                 gray[i + w + 1]) /
                 16,
             );
-            const edgeValue = Math.max(
-              0,
-              Math.min(255, gray[i] + (gray[i] - blur) * sharpAmount),
-            );
-            d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = edgeValue;
+            d[i * 4] =
+              d[i * 4 + 1] =
+              d[i * 4 + 2] =
+                Math.max(
+                  0,
+                  Math.min(255, gray[i] + (gray[i] - blur) * sharpAmount),
+                );
           }
         }
         ctx.putImageData(im, 0, 0);
       }
 
-      /* Full-ROI OCR preprocessing (book path) */
-      function preprocessOCRCanvas(ctx, w, h) {
-        preprocessZone(ctx, w, h, 1.5, false);
-      }
-
       /* ================================================================
-         RECTIFY CARD
-      ================================================================ */
+   RECTIFY CARD
+================================================================ */
       async function rectifyCard(bestCanvas, roi, videoEl) {
         const { roiX, roiY, roiW, roiH } = roi;
         const scaleX = bestCanvas.width / videoEl.videoWidth;
@@ -2246,44 +2208,40 @@
           bestCanvas.height - srcY,
           Math.round(srcW / CARD_ASPECT),
         );
-        const outW = 600;
-        const outH = Math.round(outW / CARD_ASPECT);
-        const cardCanvas = document.createElement("canvas");
-        cardCanvas.width = outW;
-        cardCanvas.height = outH;
-        const ctx = cardCanvas.getContext("2d");
+        const outW = 600,
+          outH = Math.round(outW / CARD_ASPECT);
+        const c = document.createElement("canvas");
+        c.width = outW;
+        c.height = outH;
+        const ctx = c.getContext("2d");
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.drawImage(bestCanvas, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
-        dbg("dbgRectify", "ROI normalized ✓");
-        return cardCanvas;
+        return c;
       }
 
       /* ================================================================
-        ID ZONAL OCR
-      ================================================================ */
+   SMART ID ZONAL OCR
+================================================================ */
       async function zonalOCR(cardCanvas) {
-        const UP = 3;
-        const TEXT_X1 = 0.18;
-        const TEXT_X2 = 0.72;
+        const UP = 3,
+          TEXT_X1 = 0.18,
+          TEXT_X2 = 0.72;
         const zones = [
           { name: "surname", y1: 0.22, y2: 0.32, psm: "7", digits: false },
           { name: "names", y1: 0.35, y2: 0.47, psm: "6", digits: false },
           { name: "idNumber", y1: 0.6, y2: 0.8, psm: "7", digits: true },
         ];
         const results = {};
-
         for (const zone of zones) {
           const srcX = Math.round(cardCanvas.width * TEXT_X1);
           const srcY = Math.round(cardCanvas.height * zone.y1);
           const srcW = Math.round(cardCanvas.width * (TEXT_X2 - TEXT_X1));
           const srcH = Math.round(cardCanvas.height * (zone.y2 - zone.y1));
-
           if (srcW < 10 || srcH < 8) {
             results[zone.name] = "";
             continue;
           }
-
           const c = document.createElement("canvas");
           c.width = srcW * UP;
           c.height = srcH * UP;
@@ -2308,17 +2266,15 @@
             zone.digits ? 1.6 : 0.8,
             !zone.digits,
           );
-
-          const whitelist = zone.digits
-            ? "0123456789"
-            : "ABCDEFGHIJKLMNOPQRSTUVWXYZ -'";
           try {
             const { data } = await window._ocrWorker.recognize(
               c,
               {},
               {
                 tessedit_pageseg_mode: zone.psm,
-                tessedit_char_whitelist: whitelist,
+                tessedit_char_whitelist: zone.digits
+                  ? "0123456789"
+                  : "ABCDEFGHIJKLMNOPQRSTUVWXYZ -'",
               },
             );
             results[zone.name] = data.text.trim();
@@ -2330,26 +2286,77 @@
       }
 
       /* ================================================================
-        ID BOOK ZONAL OCR
-      ================================================================ */
+   GREEN ID BOOK ZONAL OCR
+   Zones cover the right page (data page) of the open booklet.
+   An extra "anchor" zone targets the S.A. BURGER / S.A. CITIZEN
+   label strip that sits directly below the barcode — the single
+   most reliable text identifier unique to this document.
+================================================================ */
       async function zonalOCRBook(bookCanvas) {
         const UP = 3;
-        // Right page occupies roughly the right half
-        // Fields are stacked vertically — we target each label zone
-     const zones = [
-  // ID number spans full width at very top — high priority
-  { name: "idNumber",   y1: 0.02, y2: 0.13, x1: 0.5,  x2: 1.0,  psm: "7", digits: true },
-  // Surname is upper portion of right page, left of coat of arms
-  { name: "surname",    y1: 0.18, y2: 0.30, x1: 0.5,  x2: 0.82, psm: "7", digits: false },
-  // Forenames below surname
-  { name: "names",      y1: 0.32, y2: 0.46, x1: 0.5,  x2: 0.95, psm: "6", digits: false },
-  // DOB is right of photo, lower half
-  { name: "dob",        y1: 0.58, y2: 0.70, x1: 0.72, x2: 1.0,  psm: "7", digits: false },
-  // Date issued below DOB
-  { name: "dateIssued", y1: 0.72, y2: 0.83, x1: 0.72, x2: 1.0,  psm: "7", digits: false },
-];
+        const zones = [
+          // S.A. BURGER / S.A. CITIZEN label — below barcode, white strip, high contrast
+          {
+            name: "citizenLabel",
+            y1: 0.07,
+            y2: 0.14,
+            x1: 0.5,
+            x2: 1.0,
+            psm: "7",
+            digits: false,
+          },
+          // ID number at very top of right page
+          {
+            name: "idNumber",
+            y1: 0.02,
+            y2: 0.13,
+            x1: 0.5,
+            x2: 1.0,
+            psm: "7",
+            digits: true,
+          },
+          // Surname
+          {
+            name: "surname",
+            y1: 0.18,
+            y2: 0.3,
+            x1: 0.5,
+            x2: 0.82,
+            psm: "7",
+            digits: false,
+          },
+          // Forenames
+          {
+            name: "names",
+            y1: 0.32,
+            y2: 0.46,
+            x1: 0.5,
+            x2: 0.95,
+            psm: "6",
+            digits: false,
+          },
+          // Date of birth
+          {
+            name: "dob",
+            y1: 0.58,
+            y2: 0.7,
+            x1: 0.72,
+            x2: 1.0,
+            psm: "7",
+            digits: false,
+          },
+          // Date issued
+          {
+            name: "dateIssued",
+            y1: 0.72,
+            y2: 0.83,
+            x1: 0.72,
+            x2: 1.0,
+            psm: "7",
+            digits: false,
+          },
+        ];
         const results = {};
-
         for (const zone of zones) {
           const srcX = Math.round(bookCanvas.width * zone.x1);
           const srcY = Math.round(bookCanvas.height * zone.y1);
@@ -2359,7 +2366,6 @@
             results[zone.name] = "";
             continue;
           }
-
           const c = document.createElement("canvas");
           c.width = srcW * UP;
           c.height = srcH * UP;
@@ -2378,10 +2384,9 @@
             c.height,
           );
           preprocessZone(ctx, c.width, c.height, zone.digits ? 1.8 : 1.0, true);
-
           const whitelist = zone.digits
             ? "0123456789 -"
-            : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -'";
+            : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -./'";
           try {
             const { data } = await window._ocrWorker.recognize(
               c,
@@ -2400,61 +2405,37 @@
       }
 
       /* ================================================================
-         DOCUMENT TEXT PARSERS
-      ================================================================ */
-      function parseDocumentText(text) {
-        if (!text || typeof text !== "string") return {};
-        const cleanText = text.trim();
-
-        if (window.documentType === "card")
-          return parseSouthAfricanSmartID(cleanText);
-
-        if (window.documentType === "book") {
-          const idResult = parseSouthAfricanSmartID(cleanText);
-          if (idResult && idResult.idNumber && idResult._idValid)
-            return idResult;
-
-          const lines = cleanText
-            .split("\n")
-            .map((l) => l.trim().replace(/\s+/g, ""))
-            .filter(Boolean);
-          for (let i = 0; i < lines.length - 1; i++) {
-            const lineA = lines[i],
-              lineB = lines[i + 1];
-            const isTargetLength =
-              lineA.length >= 38 &&
-              lineA.length <= 48 &&
-              lineB.length >= 38 &&
-              lineB.length <= 48;
-            const isMRZPattern =
-              lineA.startsWith("P") ||
-              lineA.includes("<<") ||
-              (lineA.match(/</g) || []).length > 4;
-            if (isTargetLength && isMRZPattern)
-              return parsePassportMRZ(lineA, lineB);
-          }
-          return { _idValid: false, _saCountry: false };
-        }
-
-        return parseSouthAfricanSmartID(cleanText);
-      }
-
-      /* ================================================================
-         ID BOOK PARSERS
-      ================================================================ */
+   GREEN ID BOOK PARSER
+   _bookAnchor: truthy string = S.A. BURGER/CITIZEN label detected.
+   This is the document-identity proof beyond Luhn.
+================================================================ */
       function parseGreenIDBook(zones) {
-        // Reassemble ID number — strip spaces, dashes
         const rawId = (zones.idNumber || "")
           .replace(/[^0-9]/g, "")
           .slice(0, 13);
-
         const idValid = rawId.length === 13 && saLuhn13(rawId);
-
-        // Clean name fields
         const surname = cleanBookField(zones.surname || "");
         const names = cleanBookField(zones.names || "");
         const dob = cleanDateField(zones.dob || "");
         const dateIssued = cleanDateField(zones.dateIssued || "");
+
+        /* Detect the citizen-label anchor */
+        const labelRaw = (zones.citizenLabel || "").toUpperCase();
+        const anchorHit =
+          /S[\.\s]*A[\.\s]*BURGER|S[\.\s]*A[\.\s]*CITIZEN|BURGER|CITIZEN/.test(
+            labelRaw,
+          )
+            ? labelRaw.trim()
+            : null;
+
+        /* Secondary anchor: bilingual field labels anywhere in OCR text */
+        const allText = Object.values(zones).join(" ").toUpperCase();
+        const bilingualHit =
+          /VAN\/SURNAME|VOORNAAM\/FORENAMES|BINNELANDSE SAKE|HOME AFFAIRS/.test(
+            allText,
+          )
+            ? "bilingual-label"
+            : null;
 
         return {
           idNumber: idValid ? rawId : rawId || "",
@@ -2466,6 +2447,7 @@
           isGreenBook: true,
           _idValid: idValid,
           _saCountry: true,
+          _bookAnchor: anchorHit || bilingualHit || null,
         };
       }
 
@@ -2479,33 +2461,28 @@
           .trim()
           .toUpperCase();
       }
-
       function cleanDateField(raw) {
-        // Match YYYY-MM-DD or YYYYMMDD or DD/MM/YYYY etc
         const m = raw.match(/(\d{4})[-\/\s]?(\d{2})[-\/\s]?(\d{2})/);
         if (m) return `${m[1]}-${m[2]}-${m[3]}`;
         return raw.replace(/[^0-9\-]/g, "").trim();
       }
 
+      /* ================================================================
+   MRZ EXTRACTION
+================================================================ */
       function extractMRZFromText(text) {
         if (!text) return {};
-        // Normalise: uppercase, collapse whitespace within lines
         const lines = text
           .toUpperCase()
           .split("\n")
           .map((l) => l.replace(/\s/g, "").replace(/[^A-Z0-9<]/g, "<"))
           .filter((l) => l.length >= 30);
-
-        // Find two consecutive lines that look like TD3 MRZ (44 chars)
         for (let i = 0; i < lines.length - 1; i++) {
           const a = lines[i].padEnd(44, "<").slice(0, 44);
           const b = lines[i + 1].padEnd(44, "<").slice(0, 44);
-          // Line 1 must start with P, line 2 must have digit-heavy fields
-          if (a.startsWith("P") && /\d{6}/.test(b)) {
+          if (a.startsWith("P") && /\d{6}/.test(b))
             return parsePassportMRZ(a, b);
-          }
         }
-        // Fallback: find any two lines >= 38 chars with MRZ characteristics
         for (let i = 0; i < lines.length - 1; i++) {
           const a = lines[i],
             b = lines[i + 1];
@@ -2513,19 +2490,18 @@
             a.length >= 38 &&
             b.length >= 38 &&
             (a.includes("<<") || (a.match(/</g) || []).length > 3)
-          ) {
+          )
             return parsePassportMRZ(
               a.padEnd(44, "<").slice(0, 44),
               b.padEnd(44, "<").slice(0, 44),
             );
-          }
         }
         return {};
       }
 
       /* ================================================================
-         PARSE PASSPORT MRZ
-      ================================================================ */
+   PARSE PASSPORT MRZ  (unchanged)
+================================================================ */
       function parsePassportMRZ(l1, l2) {
         function sanitise(raw) {
           return raw
@@ -2538,7 +2514,6 @@
         }
         l1 = sanitise(l1);
         l2 = sanitise(l2);
-
         const A2D = { O: "0", I: "1", S: "5", B: "8", G: "6", Z: "2" };
         const D2A = { 0: "O", 1: "I", 5: "S", 8: "B", 6: "G", 2: "Z" };
         const fa = (s) =>
@@ -2551,7 +2526,6 @@
             .split("")
             .map((c) => A2D[c] || c)
             .join("");
-
         let rawPassNo = l1.startsWith("P<ZAF")
           ? "M" + fd(l2.slice(1, 9))
           : l2.slice(0, 9);
@@ -2559,15 +2533,14 @@
         const issuingCountry = fa(l1.slice(2, 5)).replace(/</g, "");
         const nameField = l1.slice(5);
         const nationality = fa(l2.slice(10, 13)).replace(/</g, "");
-        const rawDob = fd(l2.slice(13, 19));
-        const chkDob = fd(l2.charAt(19));
+        const rawDob = fd(l2.slice(13, 19)),
+          chkDob = fd(l2.charAt(19));
         const rawSex = fa(l2.charAt(20));
-        const rawExpiry = fd(l2.slice(21, 27));
-        const chkExpiry = fd(l2.charAt(27));
+        const rawExpiry = fd(l2.slice(21, 27)),
+          chkExpiry = fd(l2.charAt(27));
         let rawPersonal = l2.slice(28, 42);
-        const chkPersonal = fd(l2.charAt(42));
-        const chkComp = fd(l2.charAt(43));
-
+        const chkPersonal = fd(l2.charAt(42)),
+          chkComp = fd(l2.charAt(43));
         function chk(str) {
           const W = [7, 3, 1];
           let t = 0;
@@ -2582,30 +2555,27 @@
           }
           return String(t % 10);
         }
-
-        const passOk = chk(rawPassNo) === chkPassNo;
-        const dobOk = chk(rawDob) === chkDob;
-        const expOk = chk(rawExpiry) === chkExpiry;
-        const personalOk =
-          rawPersonal.replace(/</g, "") === "" ||
-          chk(rawPersonal) === chkPersonal;
+        const passOk = chk(rawPassNo) === chkPassNo,
+          dobOk = chk(rawDob) === chkDob,
+          expOk = chk(rawExpiry) === chkExpiry,
+          personalOk =
+            rawPersonal.replace(/</g, "") === "" ||
+            chk(rawPersonal) === chkPersonal;
         const compStr = l2.slice(0, 10) + l2.slice(13, 20) + l2.slice(21, 43);
         const compOk = chk(compStr) === chkComp;
         const passed = [passOk, dobOk, expOk, personalOk, compOk].filter(
           Boolean,
         ).length;
-
         const nameParts = nameField.split("<<");
         const surname = (nameParts[0] || "").replace(/</g, " ").trim();
         const names = nameParts.slice(1).join(" ").replace(/</g, " ").trim();
-
         function toISO(yymmdd, future) {
           if (!/^\d{6}$/.test(yymmdd)) return "";
           const yy = yymmdd.slice(0, 2),
             mm = yymmdd.slice(2, 4),
             dd = yymmdd.slice(4, 6);
-          const cy = new Date().getFullYear() % 100;
-          const yyNum = parseInt(yy, 10);
+          const cy = new Date().getFullYear() % 100,
+            yyNum = parseInt(yy, 10);
           const cent = future
             ? yyNum <= cy + 15
               ? "20"
@@ -2615,25 +2585,15 @@
               : "19";
           return `${cent}${yy}-${mm}-${dd}`;
         }
-
-        const dobISO = toISO(rawDob, false);
-        const expiryISO = toISO(rawExpiry, true);
+        const dobISO = toISO(rawDob, false),
+          expiryISO = toISO(rawExpiry, true);
         let age = null;
         if (dobISO) {
-          const birthDate = new Date(dobISO),
-            today = new Date();
-          age = today.getFullYear() - birthDate.getFullYear();
-          if (
-            today <
-            new Date(
-              today.getFullYear(),
-              birthDate.getMonth(),
-              birthDate.getDate(),
-            )
-          )
-            age--;
+          const b = new Date(dobISO),
+            t = new Date();
+          age = t.getFullYear() - b.getFullYear();
+          if (t < new Date(t.getFullYear(), b.getMonth(), b.getDate())) age--;
         }
-
         const gender =
           rawSex === "M"
             ? "M"
@@ -2647,7 +2607,6 @@
         const documentExpired = expiryISO
           ? new Date(expiryISO) < new Date(new Date().toDateString())
           : false;
-
         return {
           isPassport: true,
           docType: fa(l1.slice(0, 1)),
@@ -2678,8 +2637,8 @@
       }
 
       /* ================================================================
-         NAME NOISE STRIPPING
-      ================================================================ */
+   PARSE SA SMART ID
+================================================================ */
       const SA_ID_LABEL_NOISE = new Set([
         "SURNAME",
         "SURMAME",
@@ -2734,15 +2693,11 @@
           .trim();
       }
 
-      /* ================================================================
-         PARSE SA SMART ID
-      ================================================================ */
       function parseSouthAfricanSmartID(input) {
         const isZonal = input !== null && typeof input === "object";
         let rawSurname = "",
           rawNames = "",
           rawIdNumber = "";
-
         if (isZonal) {
           rawSurname = (input.surname || "").trim();
           rawNames = (input.names || "").trim();
@@ -2772,42 +2727,37 @@
             }
           }
         }
-
         function cleanName(raw) {
           if (!raw) return "";
-          const initialClean = raw
+          const init = raw
             .replace(
               /^(SURNAME|SURMAME|NAMES?|REPUBLIC|SOUTH|AFRICA)\s*[:\-]*\s*/i,
               "",
             )
             .trim();
-          const stripped = stripNameNoise(initialClean);
+          const stripped = stripNameNoise(init);
           const tokens = stripped
             .toUpperCase()
             .split(/\s+/)
             .filter((t) => t.length >= 2);
-          const nonNoise = tokens.filter(
+          return tokens.filter(
             (t) => !SA_ID_LABEL_NOISE.has(t) && !/^\d+$/.test(t),
-          );
-          return nonNoise.length > 0 ? stripped : "";
+          ).length > 0
+            ? stripped
+            : "";
         }
-
         const surname = cleanName(rawSurname);
         const names = cleanName(rawNames);
         const idNumber = rawIdNumber.replace(/[^0-9]/g, "").slice(0, 13);
-
-        if (!idNumber || idNumber.length !== 13 || !saLuhn13(idNumber)) {
+        if (!idNumber || idNumber.length !== 13 || !saLuhn13(idNumber))
           return { _idValid: false, _saCountry: false };
-        }
-
-        const yy = idNumber.slice(0, 2);
-        const mm = idNumber.slice(2, 4);
-        const dd = idNumber.slice(4, 6);
-        const cy = new Date().getFullYear();
-        const yyi = parseInt(yy, 10);
+        const yy = idNumber.slice(0, 2),
+          mm = idNumber.slice(2, 4),
+          dd = idNumber.slice(4, 6);
+        const cy = new Date().getFullYear(),
+          yyi = parseInt(yy, 10);
         const fullYear = yyi <= cy % 100 ? 2000 + yyi : 1900 + yyi;
         const dobISO = `${fullYear}-${mm}-${dd}`;
-
         const dob = new Date(dobISO);
         let age = null;
         if (!isNaN(dob.getTime())) {
@@ -2818,21 +2768,17 @@
           )
             age--;
         }
-
         const genderCode = parseInt(idNumber.slice(6, 10), 10);
-        const gender = genderCode >= 5000 ? "M" : "F";
-        const citizenship =
-          idNumber.charAt(10) === "0" ? "SA CITIZEN" : "PERMANENT RESIDENT";
-
         return {
           idNumber,
           surname,
           names,
           dobISO,
           age,
-          gender,
+          gender: genderCode >= 5000 ? "M" : "F",
           nationality: "RSA",
-          citizenship,
+          citizenship:
+            idNumber.charAt(10) === "0" ? "SA CITIZEN" : "PERMANENT RESIDENT",
           isPassport: false,
           _idValid: true,
           _saCountry: true,
@@ -2840,8 +2786,8 @@
       }
 
       /* ================================================================
-         STEP 4 — SELFIE
-      ================================================================ */
+   STEP 4 — SELFIE
+================================================================ */
       function prewarmSelfieCamera() {
         if (selfieStreamReady) return;
         selfieStreamReady = requestCamera("user")
@@ -2856,13 +2802,12 @@
       }
 
       async function startSelfieCamera() {
-        const video = el("selfieVideo");
-        const loader = el("selfieLoading");
-        const fLoad = el("faceLoading");
-        const err = el("selfieError");
-        const retry = el("btnRetrySelfie");
+        const video = el("selfieVideo"),
+          loader = el("selfieLoading"),
+          fLoad = el("faceLoading"),
+          err = el("selfieError"),
+          retry = el("btnRetrySelfie");
         err.style.display = retry.style.display = "none";
-
         if (!faceReady) {
           fLoad.classList.remove("hidden");
           fLoad.style.display = "flex";
@@ -2874,7 +2819,6 @@
             }
           }, 200);
         }
-
         const spinnerTimer = setTimeout(() => {
           loader.style.display = "flex";
           setFb("selfieFeedback", "Starting camera…");
@@ -2931,8 +2875,8 @@
       }
 
       function startSelfieAnalysis() {
-        const video = el("selfieVideo");
-        const canvas = el("selfieCanvas");
+        const video = el("selfieVideo"),
+          canvas = el("selfieCanvas");
         const ctx = canvas.getContext("2d");
         let lastTs = 0;
 
@@ -2950,7 +2894,6 @@
             selfieRafId = requestAnimationFrame(loop);
             return;
           }
-
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           const cw = canvas.width,
             ch = canvas.height;
@@ -2990,7 +2933,6 @@
               const fcy = (box.y + box.height / 2) / video.videoHeight;
               const off = Math.max(Math.abs(fcx - 0.5), Math.abs(fcy - 0.5));
               dbg("dbgFaceD", "true");
-
               if (fw2 < 0.25) {
                 msg = "Move closer";
                 cls = "warn";
@@ -3006,32 +2948,20 @@
               } else {
                 selfieMissCount = 0;
                 gatePass = true;
-                const selfieElapsed = selfieGatePassStartMs
+                const elapsed = selfieGatePassStartMs
                   ? ts - selfieGatePassStartMs
                   : 0;
-                const selfieProgress = Math.min(
-                  selfieElapsed / SELFIE_BURST_TRIGGER_MS,
-                  1.0,
-                );
-                if (selfieProgress >= 1.0) {
-                  msg = "Hold still…";
-                  cls = "ok";
-                  ovalColor = "rgba(74,222,128,0.95)";
-                  ovalDash = false;
-                  ovalWidth = 3;
-                } else if (selfieProgress > 0) {
-                  msg = "Hold still…";
-                  cls = "ok";
-                  ovalColor = "rgba(251,191,36,0.9)"; // amber while holding
-                  ovalDash = false;
-                  ovalWidth = 2.5;
-                } else {
-                  msg = "Hold still…";
-                  cls = "ok";
-                  ovalColor = "rgba(74,222,128,0.95)";
-                  ovalDash = false;
-                  ovalWidth = 3;
-                }
+                const prog = Math.min(elapsed / SELFIE_BURST_TRIGGER_MS, 1.0);
+                msg = "Hold still…";
+                cls = "ok";
+                ovalColor =
+                  prog >= 1.0
+                    ? "rgba(74,222,128,0.95)"
+                    : prog > 0
+                      ? "rgba(251,191,36,0.9)"
+                      : "rgba(74,222,128,0.95)";
+                ovalDash = false;
+                ovalWidth = prog >= 1.0 ? 3 : 2.5;
               }
             } else {
               dbg("dbgFaceD", "false");
@@ -3076,17 +3006,14 @@
               return;
             }
           } else if (!selfieBurstTriggered && !gatePass) {
-            // selfieMissCount already incremented in the face detection block above
             if (selfieMissCount >= SELFIE_MISS_TOLERANCE) {
               selfieMissCount = 0;
               if (selfieGatePassStartMs) selfieGatePassStartMs = null;
               updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
             }
           }
-
           selfieRafId = requestAnimationFrame(loop);
         }
-
         selfieRafId = requestAnimationFrame(loop);
       }
 
@@ -3110,7 +3037,6 @@
         cancelRaf(selfieRafId);
         selfieRafId = null;
         updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
-
         const video = el("selfieVideo");
         const scale = Math.min(
           1,
@@ -3124,7 +3050,6 @@
         captureCtx.scale(-1, 1);
         captureCtx.drawImage(video, 0, 0, c.width, c.height);
         stopSelfieCam();
-
         let q = 0.85,
           blob;
         while (q >= 0.4) {
@@ -3133,7 +3058,6 @@
           q -= 0.05;
         }
         window.capturedSelfieBlob = blob;
-
         const canvas = el("selfieCanvas"),
           ctx = canvas.getContext("2d");
         const cw = canvas.width,
@@ -3142,7 +3066,6 @@
           ovalRy = ovalRx * 1.35,
           ovalCx = cw / 2,
           ovalCy = ch / 2;
-
         ctx.clearRect(0, 0, cw, ch);
         ctx.fillStyle = "rgba(0,0,0,0.5)";
         ctx.beginPath();
@@ -3159,15 +3082,14 @@
         ctx.beginPath();
         ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
         ctx.fill();
-
         setFb("selfieFeedback", "Selfie captured ✓", "ok");
         window.isSelfieCaptureInProgress = false;
         setTimeout(() => goStep(5), 700);
       }
 
       /* ================================================================
-         STEP 5 — RESULTS
-      ================================================================ */
+   STEP 5 — RESULTS
+================================================================ */
       async function performVerification() {
         el("resultsLoading").style.display = "flex";
         el("resultsError").style.display = "none";
@@ -3181,9 +3103,8 @@
           displayResults({
             status: "REVIEW",
             id_number_valid: !!(
-              window.extractedIDData &&
-              window.extractedIDData.idNumber &&
-              window.extractedIDData._idValid
+              window.extractedIDData?.idNumber &&
+              window.extractedIDData?._idValid
             ),
             extracted_data: {},
           });
@@ -3221,17 +3142,12 @@
         el("resultsLoading").style.display = "none";
         el("resultsCard").style.display = "block";
         el("resultsActions").style.display = "flex";
-
-        const api = data.extracted_data || {};
-        const ocr = window.extractedIDData || {};
+        const api = data.extracted_data || {},
+          ocr = window.extractedIDData || {};
         const isPassport = ocr.isPassport || false;
-
         el("rowExpiredWarning").style.display =
           isPassport && ocr.documentExpired ? "block" : "none";
-
-        const fieldsEl = el("extractedFields");
         let html = "";
-
         if (isPassport) {
           html += buildField(
             "Passport number",
@@ -3266,21 +3182,17 @@
           if (window.documentType === "book") {
             html += buildField("Date of birth", api.dob || ocr.dobISO, "fDob");
             html += buildField("Date issued", ocr.dateIssued, "fDateIssued");
-            // Always show a notice for green book
             html =
               `<div class="err-box" style="background:#fff8e1;border-color:#ffe082;color:#7a5500;margin-bottom:12px;">
-      ✏️ OCR on green ID books can be imperfect. Please review and correct any fields below.
-    </div>` + html;
+        ✏️ OCR on green ID books can be imperfect. Please review and correct any fields below.
+      </div>` + html;
           }
         }
-
-        fieldsEl.innerHTML = html;
-
+        el("extractedFields").innerHTML = html;
         ["fIdNumber", "fPassportNumber", "fSurname", "fNames"].forEach((id) => {
           const input = el(id);
           if (input) input.addEventListener("input", checkResultsCompleteness);
         });
-
         checkResultsCompleteness();
 
         const mrzSection = el("mrzIntegritySection");
@@ -3351,7 +3263,6 @@
         _lastFbCls = "";
         selfieGatePassStartMs = null;
         selfieBurstTriggered = false;
-
         document
           .querySelectorAll(".doc-card")
           .forEach((c) => c.classList.remove("selected"));
@@ -3369,14 +3280,12 @@
       }
 
       /* ================================================================
-         UTILITIES
-      ================================================================ */
-      function el(id) {
-        return document.getElementById(id);
-      }
-      function cancelRaf(id) {
+   UTILITIES
+================================================================ */
+      const el = (id) => document.getElementById(id);
+      const cancelRaf = (id) => {
         if (id) cancelAnimationFrame(id);
-      }
+      };
       function esc(t) {
         const d = document.createElement("div");
         d.textContent = t;
@@ -3398,8 +3307,8 @@
       }
 
       /* ================================================================
-         DEBUG PANEL TOGGLE (5 taps)
-      ================================================================ */
+   DEBUG PANEL TOGGLE (5 taps)
+================================================================ */
       let tapCount = 0,
         tapTimer = null;
       const isTouchDevice = "ontouchstart" in window;
@@ -3420,8 +3329,8 @@
       );
 
       /* ================================================================
-         HISTORY & RESIZE
-      ================================================================ */
+   HISTORY & RESIZE
+================================================================ */
       history.replaceState({ step: 1 }, "");
       window.addEventListener("popstate", (e) => {
         const s = e.state?.step;
