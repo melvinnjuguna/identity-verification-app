@@ -364,6 +364,13 @@
         display: none;
       }
 
+      #selfieVideo {
+        transform: scaleX(-1);
+      }
+
+      #selfieCanvas {
+        transform: scaleX(-1);
+      }
       .gate-banner {
         position: absolute;
         top: 10px;
@@ -1524,8 +1531,12 @@
           dbg("dbgSmoothed", Math.round(smoothedComposite));
 
           if (result.composite >= SCORE_GATE) resetInactivityTimer();
+          const ringProgress =
+            gatePassStartMs && result.gateAll
+              ? Math.min((ts - gatePassStartMs) / BURST_TRIGGER_MS, 1.0)
+              : 0;
 
-          drawGuideOverlay(result);
+          drawGuideOverlay(result, ringProgress);
 
           if (result.message !== _lastFbMsg || result.cls !== _lastFbCls) {
             setFb("idFeedback", result.message, result.cls);
@@ -1594,7 +1605,7 @@
       /* ================================================================
          CANVAS GUIDE OVERLAY
       ================================================================ */
-      function drawGuideOverlay(result) {
+      function drawGuideOverlay(result, ringProgress = 0) {
         const canvas = el("idCanvas"),
           video = el("idVideo");
         if (!canvas || !video || !window.documentType) return;
@@ -1615,13 +1626,15 @@
         ctx.fill("evenodd");
 
         const fc =
-          result && result.gateAll
-            ? "rgba(74,222,128,.95)"
-            : result && result.composite >= 40
-              ? "rgba(251,191,36,.9)"
-              : "rgba(255,255,255,.85)";
+          result && result.gateAll && ringProgress >= 1.0
+            ? "rgba(74,222,128,.95)" // full green — capture firing
+            : result && result.gateAll
+              ? "rgba(251,191,36,.9)" // amber — gates passed, holding for burst
+              : result && result.composite >= 40
+                ? "rgba(251,191,36,.5)" // dim amber — partial signal
+                : "rgba(255,255,255,.85)";
 
-        ctx.setLineDash(result && result.gateAll ? [] : [10, 8]);
+        ctx.setLineDash(result && result.gateAll && ringProgress >= 1.0 ? [] : [10, 8]);
         ctx.strokeStyle = fc;
         ctx.lineWidth = 2.5;
         ctx.strokeRect(fx, fy, fw, fh);
@@ -1643,7 +1656,8 @@
           ctx.stroke();
         });
 
-        if (result && result.gateAll) {
+        // same for the fill tint at the bottom:
+        if (result && result.gateAll && ringProgress >= 1.0) {
           ctx.fillStyle = "rgba(74,222,128,.07)";
           ctx.fillRect(fx, fy, fw, fh);
         }
@@ -2132,13 +2146,13 @@
       ================================================================ */
       async function zonalOCR(cardCanvas) {
         const UP = 3;
-       const TEXT_X1 = 0.18;
-const TEXT_X2 = 0.72;
-const zones = [
-  { name: "surname", y1: 0.22, y2: 0.32, psm: "7", digits: false },
-  { name: "names",   y1: 0.35, y2: 0.47, psm: "6", digits: false },
-  { name: "idNumber", y1: 0.60, y2: 0.80, psm: "7", digits: true },
-];
+        const TEXT_X1 = 0.18;
+        const TEXT_X2 = 0.72;
+        const zones = [
+          { name: "surname", y1: 0.22, y2: 0.32, psm: "7", digits: false },
+          { name: "names", y1: 0.35, y2: 0.47, psm: "6", digits: false },
+          { name: "idNumber", y1: 0.6, y2: 0.8, psm: "7", digits: true },
+        ];
         const results = {};
 
         for (const zone of zones) {
@@ -2802,7 +2816,10 @@ const zones = [
         const c = document.createElement("canvas");
         c.width = Math.round(video.videoWidth * scale);
         c.height = Math.round(video.videoHeight * scale);
-        c.getContext("2d").drawImage(video, 0, 0, c.width, c.height);
+        const captureCtx = c.getContext("2d");
+        captureCtx.translate(c.width, 0);
+        captureCtx.scale(-1, 1);
+        captureCtx.drawImage(video, 0, 0, c.width, c.height);
         stopSelfieCam();
 
         let q = 0.85,
