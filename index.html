@@ -1051,7 +1051,9 @@
 
       let selfieGatePassStartMs = null;
       let selfieBurstTriggered = false;
-      const SELFIE_BURST_TRIGGER_MS = 1200;
+      let selfieMissCount = 0;
+      const SELFIE_MISS_TOLERANCE = 3;
+      const SELFIE_BURST_TRIGGER_MS = 2500;
 
       let fallbackCount = 0;
       let lastFaceZoneScore = 0;
@@ -1349,7 +1351,10 @@
         const cw = el("idCanvas").width,
           ch = el("idCanvas").height;
         const guideW = cw * 0.88;
-        const guideH = isCard ? guideW / CARD_ASPECT : guideW / BOOK_ASPECT;
+        const guideH = Math.min(
+          isCard ? guideW / CARD_ASPECT : guideW / BOOK_ASPECT,
+          ch * 0.92,
+        );
         const guideX = (cw - guideW) / 2,
           guideY = (ch - guideH) / 2;
 
@@ -1615,7 +1620,10 @@
           ch = canvas.height;
         const isCard = window.documentType === "card";
         const fw = cw * 0.88;
-        const fh = isCard ? fw / CARD_ASPECT : fw / BOOK_ASPECT;
+        const fh = Math.min(
+          isCard ? fw / CARD_ASPECT : fw / BOOK_ASPECT,
+          ch * 0.92,
+        );
         const fx = (cw - fw) / 2,
           fy = (ch - fh) / 2;
 
@@ -1634,7 +1642,9 @@
                 ? "rgba(251,191,36,.5)" // dim amber — partial signal
                 : "rgba(255,255,255,.85)";
 
-        ctx.setLineDash(result && result.gateAll && ringProgress >= 1.0 ? [] : [10, 8]);
+        ctx.setLineDash(
+          result && result.gateAll && ringProgress >= 1.0 ? [] : [10, 8],
+        );
         ctx.strokeStyle = fc;
         ctx.lineWidth = 2.5;
         ctx.strokeRect(fx, fy, fw, fh);
@@ -2126,7 +2136,7 @@
         );
         const srcH = Math.min(
           bestCanvas.height - srcY,
-          Math.round(roiH * scaleY),
+          Math.round(srcW / CARD_ASPECT),
         );
         const outW = 600;
         const outH = Math.round(outW / CARD_ASPECT);
@@ -2643,6 +2653,7 @@
         selfieStreamReady = null;
         selfieGatePassStartMs = null;
         selfieBurstTriggered = false;
+        selfieMissCount = 0;
         el("selfieError").style.display = el("btnRetrySelfie").style.display =
           "none";
         startSelfieCamera();
@@ -2731,18 +2742,44 @@
                 cls = "warn";
                 ovalColor = "rgba(194,124,0,0.9)";
               } else {
-                msg = "Hold still…";
-                cls = "ok";
-                ovalColor = "rgba(74,222,128,0.95)";
-                ovalDash = false;
-                ovalWidth = 3;
+                selfieMissCount = 0;
                 gatePass = true;
+                const selfieElapsed = selfieGatePassStartMs
+                  ? ts - selfieGatePassStartMs
+                  : 0;
+                const selfieProgress = Math.min(
+                  selfieElapsed / SELFIE_BURST_TRIGGER_MS,
+                  1.0,
+                );
+                if (selfieProgress >= 1.0) {
+                  msg = "Hold still…";
+                  cls = "ok";
+                  ovalColor = "rgba(74,222,128,0.95)";
+                  ovalDash = false;
+                  ovalWidth = 3;
+                } else if (selfieProgress > 0) {
+                  msg = "Hold still…";
+                  cls = "ok";
+                  ovalColor = "rgba(251,191,36,0.9)"; // amber while holding
+                  ovalDash = false;
+                  ovalWidth = 2.5;
+                } else {
+                  msg = "Hold still…";
+                  cls = "ok";
+                  ovalColor = "rgba(74,222,128,0.95)";
+                  ovalDash = false;
+                  ovalWidth = 3;
+                }
               }
             } else {
               dbg("dbgFaceD", "false");
-              selfieGatePassStartMs = null;
-              selfieBurstTriggered = false;
-              updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
+              selfieMissCount++;
+              if (selfieMissCount >= SELFIE_MISS_TOLERANCE) {
+                selfieMissCount = 0;
+                selfieGatePassStartMs = null;
+                selfieBurstTriggered = false;
+                updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
+              }
             }
           }
 
@@ -2777,8 +2814,12 @@
               return;
             }
           } else if (!selfieBurstTriggered && !gatePass) {
-            if (selfieGatePassStartMs) selfieGatePassStartMs = null;
-            updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
+            // selfieMissCount already incremented in the face detection block above
+            if (selfieMissCount >= SELFIE_MISS_TOLERANCE) {
+              selfieMissCount = 0;
+              if (selfieGatePassStartMs) selfieGatePassStartMs = null;
+              updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
+            }
           }
 
           selfieRafId = requestAnimationFrame(loop);
@@ -2856,15 +2897,6 @@
         ctx.beginPath();
         ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
         ctx.fill();
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 4;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.beginPath();
-        ctx.moveTo(ovalCx - 24, ovalCy);
-        ctx.lineTo(ovalCx - 6, ovalCy + 18);
-        ctx.lineTo(ovalCx + 28, ovalCy - 20);
-        ctx.stroke();
 
         setFb("selfieFeedback", "Selfie captured ✓", "ok");
         window.isSelfieCaptureInProgress = false;
