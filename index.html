@@ -770,11 +770,19 @@
           <div class="doc-card" id="cardTypeBook" onclick="selectDoc('book')">
             <div class="doc-card-icon">📘</div>
             <div>
-              <h3>ID Book or Passport</h3>
-              <p>
-                South African green ID book or SA passport — open to the photo
-                page
-              </p>
+              <h3>Green ID Book</h3>
+              <p>South African green ID book — open to the photo page</p>
+            </div>
+          </div>
+          <div
+            class="doc-card"
+            id="cardTypePassport"
+            onclick="selectDoc('passport')"
+          >
+            <div class="doc-card-icon">📕</div>
+            <div>
+              <h3>Passport</h3>
+              <p>Passport — open to the photo page</p>
             </div>
           </div>
         </div>
@@ -912,6 +920,32 @@
             <div id="failItems"></div>
           </div>
         </div>
+
+        <label
+          style="
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--ink-mid);
+            margin-top: 10px;
+            cursor: pointer;
+          "
+        >
+          <input
+            type="checkbox"
+            id="chkConfirm"
+            onchange="checkResultsCompleteness()"
+            style="
+              margin-top: 2px;
+              accent-color: var(--red);
+              width: 16px;
+              height: 16px;
+              flex-shrink: 0;
+            "
+          />
+          I confirm that the details above are correct and belong to me.
+        </label>
         <div class="btn-row" id="resultsActions" style="display: none">
           <button
             class="btn"
@@ -1023,7 +1057,8 @@
          CONSTANTS
       ================================================================ */
       const CARD_ASPECT = 1.586;
-      const BOOK_ASPECT = 1.42;
+      const BOOK_ASPECT = 1.55;
+      const PASSPORT_ASPECT = 1.42;
       const ASPECT_TOLERANCE = 0.05;
       const GATE_ASPECT_MIN = 45;
       const GATE_FACE_MIN = 25;
@@ -1162,9 +1197,12 @@
         document
           .querySelectorAll(".doc-card")
           .forEach((c) => c.classList.remove("selected"));
-        el(type === "card" ? "cardTypeCard" : "cardTypeBook").classList.add(
-          "selected",
-        );
+        const idMap = {
+          card: "cardTypeCard",
+          book: "cardTypeBook",
+          passport: "cardTypePassport",
+        };
+        el(idMap[type]).classList.add("selected");
         el("btnContinue").disabled = false;
         dbg("dbgDoc", type);
         prewarmIdCamera();
@@ -1348,13 +1386,16 @@
         const vw = video.videoWidth,
           vh = video.videoHeight;
         const isCard = window.documentType === "card";
+        const isBook = window.documentType === "book";
         const cw = el("idCanvas").width,
           ch = el("idCanvas").height;
         const guideW = cw * 0.88;
-        const guideH = Math.min(
-          isCard ? guideW / CARD_ASPECT : guideW / BOOK_ASPECT,
-          ch * 0.92,
-        );
+        const targetAspect = isCard
+          ? CARD_ASPECT
+          : isBook
+            ? BOOK_ASPECT
+            : PASSPORT_ASPECT;
+        const guideH = Math.min(guideW / targetAspect, ch * 0.92);
         const guideX = (cw - guideW) / 2,
           guideY = (ch - guideH) / 2;
 
@@ -1377,12 +1418,12 @@
         const gray = toGray(imgData);
 
         /* Signal 1: Aspect ratio */
-        const targetAspect = isCard ? CARD_ASPECT : BOOK_ASPECT;
         const actualAspect = sw / sh;
+        const effectiveTolerance = isCard ? ASPECT_TOLERANCE : 0.12;
         const aspectDiff = Math.abs(actualAspect - targetAspect) / targetAspect;
         const sig_aspect =
-          aspectDiff <= ASPECT_TOLERANCE
-            ? Math.round((1 - aspectDiff / ASPECT_TOLERANCE) * 100)
+          aspectDiff <= effectiveTolerance
+            ? Math.round((1 - aspectDiff / effectiveTolerance) * 100)
             : 0;
         dbg("dbgAspectSig", sig_aspect.toFixed(0));
 
@@ -1396,7 +1437,11 @@
           faceZonePending = true;
           lastFaceZoneTs = now;
           const photoW = Math.round(sw * (isCard ? 0.35 : 0.28));
-          const photoX = roiX + (sw - photoW);
+          const photoX = isCard
+            ? roiX + (sw - photoW) // card: photo is on the right side
+            : isBook
+              ? roiX // book: photo is on the left side of open spread
+              : roiX + (sw - photoW); // passport: photo is on the right side (unchanged)
           detectFaceInZone(video, photoX, roiY, photoW, sh).then((score) => {
             lastFaceZoneScore = score;
             faceZonePending = false;
@@ -1416,18 +1461,21 @@
         dbg("dbgBright", bright.toFixed(0));
 
         /* Composite */
-        const composite = Math.round(
-          sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2,
-        );
+        const composite = isCard
+  ? Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2)
+  : isBook
+    ? Math.round(sig_sharp * 0.65 + sig_face * 0.1 + sig_aspect * 0.25)
+    : Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2);
         dbg("dbgScore", composite);
 
         /* Gates */
         const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
         const gateFace =
-          !faceReady ||
-          lastFaceZoneTs === 0 ||
-          sig_face >= GATE_FACE_MIN ||
-          (lastFaceZoneScore > 0 && sig_face >= 10);
+  !faceReady ||
+  lastFaceZoneTs === 0 ||
+  sig_face >= GATE_FACE_MIN ||
+  (lastFaceZoneScore > 0 && sig_face >= 10) ||
+  (isBook && sig_sharp >= 55);
         const gateSharp = sig_sharp >= 45;
         const gateCard = !isCard || (sig_face >= 30 && sig_aspect >= 50);
 
@@ -1781,37 +1829,74 @@
             const targetY = Math.round(roiY * scaleY);
             const targetW = Math.round(roiW * scaleX);
             const targetH = Math.round(roiH * scaleY);
-            const UP = Math.max(3, Math.ceil(60 / targetH));
 
-            const ocrCanvas = document.createElement("canvas");
-            ocrCanvas.width = targetW * UP;
-            ocrCanvas.height = targetH * UP;
-            const octx = ocrCanvas.getContext("2d");
-            octx.imageSmoothingEnabled = true;
-            octx.imageSmoothingQuality = "high";
-            octx.drawImage(
-              best.canvas,
-              targetX,
-              targetY,
-              targetW,
-              targetH,
-              0,
-              0,
-              ocrCanvas.width,
-              ocrCanvas.height,
-            );
-            preprocessOCRCanvas(octx, ocrCanvas.width, ocrCanvas.height);
+            if (window.documentType === "passport") {
+              // Extract only the bottom 20% — that's where MRZ always lives
+              const mrzStripH = Math.round(targetH * 0.2);
+              const mrzStripY = targetY + targetH - mrzStripH;
+              const UP = Math.max(3, Math.ceil(80 / mrzStripH));
+              const mrzCanvas = document.createElement("canvas");
+              mrzCanvas.width = targetW * UP;
+              mrzCanvas.height = mrzStripH * UP;
+              const mctx = mrzCanvas.getContext("2d");
+              mctx.imageSmoothingEnabled = true;
+              mctx.imageSmoothingQuality = "high";
+              mctx.drawImage(
+                best.canvas,
+                targetX,
+                mrzStripY,
+                targetW,
+                mrzStripH,
+                0,
+                0,
+                mrzCanvas.width,
+                mrzCanvas.height,
+              );
+              preprocessZone(
+                mctx,
+                mrzCanvas.width,
+                mrzCanvas.height,
+                2.0,
+                true,
+              );
 
-            const ocrPromise = window._ocrWorker.recognize(
-              ocrCanvas,
-              {},
-              { tessedit_pageseg_mode: "6" },
-            );
-            const timeout = new Promise((_, rej) =>
-              setTimeout(() => rej(new Error("timeout")), 9000),
-            );
-            const { data } = await Promise.race([ocrPromise, timeout]);
-            parsed = parseDocumentText(data.text || "");
+              const ocrPromise = window._ocrWorker.recognize(
+                mrzCanvas,
+                {},
+                {
+                  tessedit_pageseg_mode: "6",
+                  tessedit_char_whitelist:
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
+                },
+              );
+              const timeout = new Promise((_, rej) =>
+                setTimeout(() => rej(new Error("timeout")), 9000),
+              );
+              const { data } = await Promise.race([ocrPromise, timeout]);
+              parsed = extractMRZFromText(data.text || "");
+            } else {
+              // Green ID book — full ROI then zonal
+              const UP = Math.max(3, Math.ceil(60 / targetH));
+              const bookCanvas = document.createElement("canvas");
+              bookCanvas.width = targetW * UP;
+              bookCanvas.height = targetH * UP;
+              const bctx2 = bookCanvas.getContext("2d");
+              bctx2.imageSmoothingEnabled = true;
+              bctx2.imageSmoothingQuality = "high";
+              bctx2.drawImage(
+                best.canvas,
+                targetX,
+                targetY,
+                targetW,
+                targetH,
+                0,
+                0,
+                bookCanvas.width,
+                bookCanvas.height,
+              );
+              const zones = await zonalOCRBook(bookCanvas);
+              parsed = parseGreenIDBook(zones);
+            }
           }
 
           parsed._idValid = parsed._idValid ?? true;
@@ -1877,15 +1962,16 @@
               reason:
                 "Ensure the bottom two rows of text are fully inside the frame",
             };
-          const isSA =
-            parsed.issuingCountry?.startsWith("ZAF") ||
-            parsed.nationality?.startsWith("ZAF");
-          if (!isSA)
-            return {
-              pass: false,
-              code: "foreign_doc",
-              reason: "This does not appear to be a South African passport",
-            };
+          // const isSA =
+          //   parsed.issuingCountry?.startsWith("ZAF") ||
+          //   parsed.nationality?.startsWith("ZAF");
+          // if (!isSA)
+          //   return {
+          //     pass: false,
+          //     code: "foreign_doc",
+          //     reason: "This does not appear to be a South African passport",
+          //   };
+          // All countries supported — check digits validate integrity instead
           if (!parsed.checks || parsed.checks.passed < 3)
             return {
               pass: false,
@@ -1897,7 +1983,11 @@
           parsed._saCountry = true;
           return { pass: true, code: "ok", reason: "" };
         }
+
         const id = parsed.idNumber;
+        if (parsed.isGreenBook) {
+          return { pass: true, code: "ok", reason: "" };
+        }
         if (!id)
           return {
             pass: false,
@@ -1915,16 +2005,34 @@
         return { pass: true, code: "ok", reason: "" };
       }
 
+      // function checkResultsCompleteness() {
+      //   const idVal =
+      //     (el("fIdNumber") || el("fPassportNumber"))?.value?.trim() || "";
+      //   const surnameVal = el("fSurname")?.value?.trim() || "";
+      //   const namesVal = el("fNames")?.value?.trim() || "";
+      //   const btnConfirm = el("btnConfirm");
+      //   const btnRestart = el("btnRestart");
+      //   if (!idVal || (!surnameVal && !namesVal)) {
+      //     btnConfirm.disabled = true;
+      //     btnRestart.style.display = "flex";
+      //   } else {
+      //     btnConfirm.disabled = false;
+      //     btnRestart.style.display = "none";
+      //   }
+      // }
+
       function checkResultsCompleteness() {
         const idVal =
           (el("fIdNumber") || el("fPassportNumber"))?.value?.trim() || "";
         const surnameVal = el("fSurname")?.value?.trim() || "";
         const namesVal = el("fNames")?.value?.trim() || "";
+        const confirmed = el("chkConfirm")?.checked || false;
         const btnConfirm = el("btnConfirm");
         const btnRestart = el("btnRestart");
-        if (!idVal || (!surnameVal && !namesVal)) {
+        if (!idVal || (!surnameVal && !namesVal) || !confirmed) {
           btnConfirm.disabled = true;
-          btnRestart.style.display = "flex";
+          btnRestart.style.display =
+            !idVal || (!surnameVal && !namesVal) ? "flex" : "none";
         } else {
           btnConfirm.disabled = false;
           btnRestart.style.display = "none";
@@ -2152,7 +2260,7 @@
       }
 
       /* ================================================================
-         ZONAL OCR
+        ID ZONAL OCR
       ================================================================ */
       async function zonalOCR(cardCanvas) {
         const UP = 3;
@@ -2222,6 +2330,76 @@
       }
 
       /* ================================================================
+        ID BOOK ZONAL OCR
+      ================================================================ */
+      async function zonalOCRBook(bookCanvas) {
+        const UP = 3;
+        // Right page occupies roughly the right half
+        // Fields are stacked vertically — we target each label zone
+     const zones = [
+  // ID number spans full width at very top — high priority
+  { name: "idNumber",   y1: 0.02, y2: 0.13, x1: 0.5,  x2: 1.0,  psm: "7", digits: true },
+  // Surname is upper portion of right page, left of coat of arms
+  { name: "surname",    y1: 0.18, y2: 0.30, x1: 0.5,  x2: 0.82, psm: "7", digits: false },
+  // Forenames below surname
+  { name: "names",      y1: 0.32, y2: 0.46, x1: 0.5,  x2: 0.95, psm: "6", digits: false },
+  // DOB is right of photo, lower half
+  { name: "dob",        y1: 0.58, y2: 0.70, x1: 0.72, x2: 1.0,  psm: "7", digits: false },
+  // Date issued below DOB
+  { name: "dateIssued", y1: 0.72, y2: 0.83, x1: 0.72, x2: 1.0,  psm: "7", digits: false },
+];
+        const results = {};
+
+        for (const zone of zones) {
+          const srcX = Math.round(bookCanvas.width * zone.x1);
+          const srcY = Math.round(bookCanvas.height * zone.y1);
+          const srcW = Math.round(bookCanvas.width * (zone.x2 - zone.x1));
+          const srcH = Math.round(bookCanvas.height * (zone.y2 - zone.y1));
+          if (srcW < 10 || srcH < 8) {
+            results[zone.name] = "";
+            continue;
+          }
+
+          const c = document.createElement("canvas");
+          c.width = srcW * UP;
+          c.height = srcH * UP;
+          const ctx = c.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(
+            bookCanvas,
+            srcX,
+            srcY,
+            srcW,
+            srcH,
+            0,
+            0,
+            c.width,
+            c.height,
+          );
+          preprocessZone(ctx, c.width, c.height, zone.digits ? 1.8 : 1.0, true);
+
+          const whitelist = zone.digits
+            ? "0123456789 -"
+            : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -'";
+          try {
+            const { data } = await window._ocrWorker.recognize(
+              c,
+              {},
+              {
+                tessedit_pageseg_mode: zone.psm,
+                tessedit_char_whitelist: whitelist,
+              },
+            );
+            results[zone.name] = data.text.trim();
+          } catch {
+            results[zone.name] = "";
+          }
+        }
+        return results;
+      }
+
+      /* ================================================================
          DOCUMENT TEXT PARSERS
       ================================================================ */
       function parseDocumentText(text) {
@@ -2259,6 +2437,90 @@
         }
 
         return parseSouthAfricanSmartID(cleanText);
+      }
+
+      /* ================================================================
+         ID BOOK PARSERS
+      ================================================================ */
+      function parseGreenIDBook(zones) {
+        // Reassemble ID number — strip spaces, dashes
+        const rawId = (zones.idNumber || "")
+          .replace(/[^0-9]/g, "")
+          .slice(0, 13);
+
+        const idValid = rawId.length === 13 && saLuhn13(rawId);
+
+        // Clean name fields
+        const surname = cleanBookField(zones.surname || "");
+        const names = cleanBookField(zones.names || "");
+        const dob = cleanDateField(zones.dob || "");
+        const dateIssued = cleanDateField(zones.dateIssued || "");
+
+        return {
+          idNumber: idValid ? rawId : rawId || "",
+          surname,
+          names,
+          dobISO: dob,
+          dateIssued,
+          isPassport: false,
+          isGreenBook: true,
+          _idValid: idValid,
+          _saCountry: true,
+        };
+      }
+
+      function cleanBookField(raw) {
+        return raw
+          .replace(
+            /^(VAN\/SURNAME|SURNAME|VOORNAME\/FORENAMES|FORENAMES|NAMES?)\s*[:\-]*/i,
+            "",
+          )
+          .replace(/[^A-Za-z\s'\-]/g, "")
+          .trim()
+          .toUpperCase();
+      }
+
+      function cleanDateField(raw) {
+        // Match YYYY-MM-DD or YYYYMMDD or DD/MM/YYYY etc
+        const m = raw.match(/(\d{4})[-\/\s]?(\d{2})[-\/\s]?(\d{2})/);
+        if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+        return raw.replace(/[^0-9\-]/g, "").trim();
+      }
+
+      function extractMRZFromText(text) {
+        if (!text) return {};
+        // Normalise: uppercase, collapse whitespace within lines
+        const lines = text
+          .toUpperCase()
+          .split("\n")
+          .map((l) => l.replace(/\s/g, "").replace(/[^A-Z0-9<]/g, "<"))
+          .filter((l) => l.length >= 30);
+
+        // Find two consecutive lines that look like TD3 MRZ (44 chars)
+        for (let i = 0; i < lines.length - 1; i++) {
+          const a = lines[i].padEnd(44, "<").slice(0, 44);
+          const b = lines[i + 1].padEnd(44, "<").slice(0, 44);
+          // Line 1 must start with P, line 2 must have digit-heavy fields
+          if (a.startsWith("P") && /\d{6}/.test(b)) {
+            return parsePassportMRZ(a, b);
+          }
+        }
+        // Fallback: find any two lines >= 38 chars with MRZ characteristics
+        for (let i = 0; i < lines.length - 1; i++) {
+          const a = lines[i],
+            b = lines[i + 1];
+          if (
+            a.length >= 38 &&
+            b.length >= 38 &&
+            (a.includes("<<") || (a.match(/</g) || []).length > 3)
+          ) {
+            return parsePassportMRZ(
+              a.padEnd(44, "<").slice(0, 44),
+              b.padEnd(44, "<").slice(0, 44),
+            );
+          }
+        }
+        return {};
       }
 
       /* ================================================================
@@ -3001,6 +3263,15 @@
             api.names || ocr.names,
             "fNames",
           );
+          if (window.documentType === "book") {
+            html += buildField("Date of birth", api.dob || ocr.dobISO, "fDob");
+            html += buildField("Date issued", ocr.dateIssued, "fDateIssued");
+            // Always show a notice for green book
+            html =
+              `<div class="err-box" style="background:#fff8e1;border-color:#ffe082;color:#7a5500;margin-bottom:12px;">
+      ✏️ OCR on green ID books can be imperfect. Please review and correct any fields below.
+    </div>` + html;
+          }
         }
 
         fieldsEl.innerHTML = html;
