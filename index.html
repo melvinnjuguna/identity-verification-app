@@ -1463,17 +1463,29 @@
         if (faceReady && !faceZonePending && now - lastFaceZoneTs > 800) {
           faceZonePending = true;
           lastFaceZoneTs = now;
-          const photoW = Math.round(sw * (isCard ? 0.35 : 0.28));
-          const photoX = isCard
-            ? roiX + (sw - photoW)
-            : isBook
-              ? roiX
-              : roiX + (sw - photoW);
-          detectFaceInZone(video, photoX, roiY, photoW, sh).then((score) => {
-            lastFaceZoneScore = score;
-            faceZonePending = false;
-            dbg("dbgFaceZone", score.toFixed(0));
-          });
+
+          let photoX, photoW, photoY, photoH;
+          if (isCard) {
+            // Smart ID: photo on the right side
+            photoW = Math.round(sw * 0.35);
+            photoX = roiX + (sw - photoW);
+            photoY = roiY;
+            photoH = sh;
+          } else {
+            // Book & passport: search the entire right half, full height
+            photoW = Math.round(sw * 0.5);
+            photoX = roiX + Math.round(sw * 0.5);
+            photoY = roiY;
+            photoH = sh;
+          }
+
+          detectFaceInZone(video, photoX, photoY, photoW, photoH).then(
+            (score) => {
+              lastFaceZoneScore = score;
+              faceZonePending = false;
+              dbg("dbgFaceZone", score.toFixed(0));
+            },
+          );
         }
         const sig_face = lastFaceZoneScore;
 
@@ -1491,20 +1503,26 @@
         const composite = isCard
           ? Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2)
           : isBook
-            ? Math.round(sig_sharp * 0.65 + sig_face * 0.1 + sig_aspect * 0.25)
+            ? Math.round(sig_sharp * 0.55 + sig_face * 0.2 + sig_aspect * 0.25)
             : Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2);
         dbg("dbgScore", composite);
 
         /* Gates */
         const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
-        const gateFace =
-          !faceReady ||
-          lastFaceZoneTs === 0 ||
-          sig_face >= GATE_FACE_MIN ||
-          (lastFaceZoneScore > 0 && sig_face >= 10) ||
-          (isBook && sig_sharp >= 55 && lastFaceZoneTs > 0);
+
+        // Card: enforce face+aspect. Book/passport: gateCard always passes — probe does the real work
+        const gateCard = isCard ? sig_face >= 30 && sig_aspect >= 50 : true;
+
+        // Face gate: strict for card, very lenient for book (probe is the identity check)
+        // const gateFace = isCard
+        //   ? (!faceReady || lastFaceZoneTs === 0 || sig_face >= GATE_FACE_MIN)
+        //   : (!faceReady || lastFaceZoneTs === 0 || sig_face >= 3);
+
+        const gateFace = isCard
+          ? !faceReady || lastFaceZoneTs === 0 || sig_face >= GATE_FACE_MIN
+          : true;
+
         const gateSharp = sig_sharp >= 45;
-        const gateCard = !isCard || (sig_face >= 30 && sig_aspect >= 50);
         const gateAll =
           gateCard &&
           gateAspect &&
@@ -1538,15 +1556,11 @@
             ? "Move closer and hold your card steady"
             : "Move closer and hold the document steady";
           cls = "warn";
-        } else if (!gateCard && composite < SCORE_GATE) {
-          message = isCard
-            ? "Make sure the front of your Smart ID card is facing up"
-            : "Open to the photo page and make sure it is facing up";
+        } else if (!gateCard) {
+          message = "Make sure the front of your Smart ID card is facing up";
           cls = "warn";
-        } else if (!gateFace && lastFaceZoneTs > 0) {
-          message = isCard
-            ? "Flip the card over — the photo side should face the camera"
-            : "Open to the photo page and make sure it is right side up";
+        } else if (!gateFace && lastFaceZoneTs > 0 && isCard) {
+          message = "Flip the card — the photo side should face the camera";
           cls = "warn";
         } else if (gateAll) {
           message = "Scanning, please hold still…";
@@ -1557,14 +1571,12 @@
         }
 
         let gateBannerMsg = null;
-        if (!gateCard && composite < SCORE_GATE)
-          gateBannerMsg = isCard
-            ? "Make sure the front of your Smart ID card is facing the camera"
-            : "Open the booklet fully to the photo page";
-        else if (!gateFace && lastFaceZoneTs > 0)
-          gateBannerMsg = isCard
-            ? "The photo side should be facing up and right side up"
-            : "Ensure the info and photo page is fully open and upright";
+        if (!gateCard)
+          gateBannerMsg =
+            "Make sure the front of your Smart ID card is facing the camera";
+        else if (!gateFace && lastFaceZoneTs > 0 && isCard)
+          gateBannerMsg =
+            "The photo side should be facing up and right side up";
 
         return {
           composite,
@@ -2309,10 +2321,10 @@
           {
             name: "idNumber",
             y1: 0.02,
-            y2: 0.13,
+            y2: 0.16,
             x1: 0.5,
             x2: 1.0,
-            psm: "7",
+            psm: "6",
             digits: true,
           },
           // Surname
@@ -2333,26 +2345,6 @@
             x1: 0.5,
             x2: 0.95,
             psm: "6",
-            digits: false,
-          },
-          // Date of birth
-          {
-            name: "dob",
-            y1: 0.58,
-            y2: 0.7,
-            x1: 0.72,
-            x2: 1.0,
-            psm: "7",
-            digits: false,
-          },
-          // Date issued
-          {
-            name: "dateIssued",
-            y1: 0.72,
-            y2: 0.83,
-            x1: 0.72,
-            x2: 1.0,
-            psm: "7",
             digits: false,
           },
         ];
@@ -2410,28 +2402,75 @@
    This is the document-identity proof beyond Luhn.
 ================================================================ */
       function parseGreenIDBook(zones) {
-        const rawId = (zones.idNumber || "")
-          .replace(/[^0-9]/g, "")
-          .slice(0, 13);
-        const idValid = rawId.length === 13 && saLuhn13(rawId);
+        const rawDigits = (zones.idNumber || "").replace(/[^0-9]/g, "");
+
+        // Sliding window — barcode bleed often prepends/appends a stray digit.
+        // Try every 13-digit window and take the first that passes Luhn.
+        let rawId = "";
+        let idValid = false;
+        for (let start = 0; start <= rawDigits.length - 13; start++) {
+          const candidate = rawDigits.slice(start, start + 13);
+          if (saLuhn13(candidate)) {
+            rawId = candidate;
+            idValid = true;
+            break;
+          }
+        }
+        // Fall back to first 13 digits if no window passed Luhn
+        if (!idValid) rawId = rawDigits.slice(0, 13);
+
         const surname = cleanBookField(zones.surname || "");
         const names = cleanBookField(zones.names || "");
-        const dob = cleanDateField(zones.dob || "");
-        const dateIssued = cleanDateField(zones.dateIssued || "");
 
-        /* Detect the citizen-label anchor */
+        // Derive from ID number — no OCR needed for these fields
+        let dobISO = "",
+          age = null,
+          gender = "",
+          citizenship = "";
+        if (idValid) {
+          const yy = rawId.slice(0, 2);
+          const mm = rawId.slice(2, 4);
+          const dd = rawId.slice(4, 6);
+          const cy = new Date().getFullYear();
+          const yyi = parseInt(yy, 10);
+          const fullYear = yyi <= cy % 100 ? 2000 + yyi : 1900 + yyi;
+          dobISO = `${fullYear}-${mm}-${dd}`;
+          const dob = new Date(dobISO);
+          if (!isNaN(dob.getTime())) {
+            const today = new Date();
+            age = today.getFullYear() - dob.getFullYear();
+            if (
+              today <
+              new Date(today.getFullYear(), dob.getMonth(), dob.getDate())
+            )
+              age--;
+          }
+          const genderCode = parseInt(rawId.slice(6, 10), 10);
+          gender = genderCode >= 5000 ? "M" : "F";
+          citizenship =
+            rawId.charAt(10) === "0" ? "SA CITIZEN" : "PERMANENT RESIDENT";
+        }
+
+        // Anchor: citizen label strip below barcode
         const labelRaw = (zones.citizenLabel || "").toUpperCase();
-        const anchorHit =
-          /S[\.\s]*A[\.\s]*BURGER|S[\.\s]*A[\.\s]*CITIZEN|BURGER|CITIZEN/.test(
-            labelRaw,
-          )
-            ? labelRaw.trim()
-            : null;
+        const anchorHit = /BURGER|CITIZEN|S\.?A\.?\s*(BURGER|CITIZEN)/.test(
+          labelRaw,
+        )
+          ? labelRaw.trim()
+          : null;
 
-        /* Secondary anchor: bilingual field labels anywhere in OCR text */
+        // Anchor: barcode zone sometimes contains the label text
+        const idZoneText = (zones.idNumber || "").toUpperCase();
+        const barcodeAreaHit = /BURGER|CITIZEN|S\.?A\.?B|S\.?A\.?C/.test(
+          idZoneText,
+        )
+          ? "barcode-area"
+          : null;
+
+        // Anchor: bilingual field labels unique to this document
         const allText = Object.values(zones).join(" ").toUpperCase();
         const bilingualHit =
-          /VAN\/SURNAME|VOORNAAM\/FORENAMES|BINNELANDSE SAKE|HOME AFFAIRS/.test(
+          /VAN\/SURNAME|VOORNAAM|BINNELANDSE|HOME AFFAIRS|GEBOORTEDATUM/.test(
             allText,
           )
             ? "bilingual-label"
@@ -2441,13 +2480,15 @@
           idNumber: idValid ? rawId : rawId || "",
           surname,
           names,
-          dobISO: dob,
-          dateIssued,
+          dobISO,
+          age,
+          gender,
+          citizenship,
           isPassport: false,
           isGreenBook: true,
           _idValid: idValid,
           _saCountry: true,
-          _bookAnchor: anchorHit || bilingualHit || null,
+          _bookAnchor: anchorHit || barcodeAreaHit || bilingualHit || null,
         };
       }
 
@@ -3180,19 +3221,23 @@
             "fNames",
           );
           if (window.documentType === "book") {
-            html += buildField("Date of birth", api.dob || ocr.dobISO, "fDob");
-            html += buildField("Date issued", ocr.dateIssued, "fDateIssued");
+            html += buildField("Date of birth", ocr.dobISO, "fDob");
+            html += buildField("Gender", ocr.gender, "fGender");
+            html += buildField("Citizenship", ocr.citizenship, "fCitizenship");
             html =
               `<div class="err-box" style="background:#fff8e1;border-color:#ffe082;color:#7a5500;margin-bottom:12px;">
-        ✏️ OCR on green ID books can be imperfect. Please review and correct any fields below.
-      </div>` + html;
+      ✏️ Please review and correct your surname and forenames if needed.
+    </div>` + html;
           }
         }
         el("extractedFields").innerHTML = html;
-        ["fIdNumber", "fPassportNumber", "fSurname", "fNames"].forEach((id) => {
-          const input = el(id);
-          if (input) input.addEventListener("input", checkResultsCompleteness);
-        });
+        ["fIdNumber", "fPassportNumber", "fSurname", "fNames", "fDob"].forEach(
+          (id) => {
+            const input = el(id);
+            if (input)
+              input.addEventListener("input", checkResultsCompleteness);
+          },
+        );
         checkResultsCompleteness();
 
         const mrzSection = el("mrzIntegritySection");
