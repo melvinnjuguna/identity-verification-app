@@ -375,26 +375,6 @@
       #selfieCanvas {
         transform: scaleX(-1);
       }
-      .gate-banner {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        right: 10px;
-        background: rgba(15, 15, 15, 0.82);
-        color: #fff;
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 13px;
-        font-weight: 600;
-        text-align: center;
-        z-index: 30;
-        display: none;
-        backdrop-filter: blur(4px);
-        letter-spacing: 0.01em;
-      }
-      .gate-banner.visible {
-        display: block;
-      }
 
       /* ── Capture ring ── */
       .capture-ring-wrap {
@@ -581,6 +561,63 @@
         color: var(--ink-mid);
         font-size: 13px;
       }
+
+      /* ── Field validation states ── */
+      .field-row {
+        position: relative;
+      }
+      .field-error {
+        font-size: 11px;
+        color: #c0392b;
+        margin-top: 4px;
+        min-height: 0;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition:
+          max-height 0.18s ease,
+          opacity 0.18s ease;
+        padding-left: 2px;
+      }
+      .field-error.visible {
+        max-height: 32px;
+        opacity: 1;
+      }
+      .field-input.error {
+        border-color: #c0392b;
+        background: #fff8f8;
+      }
+      .field-input.warn {
+        border-color: var(--amber);
+        background: #fffbf0;
+      }
+      .field-warn {
+        font-size: 11px;
+        color: var(--amber);
+        margin-top: 4px;
+        min-height: 0;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition:
+          max-height 0.18s ease,
+          opacity 0.18s ease;
+        padding-left: 2px;
+      }
+      .field-warn.visible {
+        max-height: 32px;
+        opacity: 1;
+      }
+      .field-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  padding: 9px 11px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  opacity: 0.7;
+}
       .cam-note {
         font-size: 11px;
         color: var(--ink-light);
@@ -820,7 +857,7 @@
             muted
           ></video>
           <canvas class="cam-canvas" id="idCanvas"></canvas>
-          <div class="gate-banner" id="gateBanner"></div>
+          <!-- <div class="gate-banner" id="gateBanner"></div> -->
           <div class="capture-ring-wrap" id="captureRingWrap">
             <svg class="capture-ring-svg" viewBox="0 0 48 48">
               <circle class="capture-ring-track" cx="24" cy="24" r="22" />
@@ -906,9 +943,9 @@
       <!-- STEP 5 -->
       <div class="step" id="step5">
         <div style="padding-top: 12px">
-          <h2 class="section-title">Review your Details</h2>
+          <h2 class="section-title">Your Details</h2>
           <p class="section-sub">
-            Check the information below and correct anything that looks wrong.
+            Please enter your details exactly as they appear on your document.
           </p>
         </div>
         <div class="results-loading" id="resultsLoading">
@@ -1106,6 +1143,7 @@
       let idStreamReady = null;
       let selfieStreamReady = null;
       let lastRoi = null;
+      let lastFullRoi = null;
       let globalInactivityTimeout = null;
       let burstTriggered = false;
       let gatePassStartMs = null;
@@ -1248,7 +1286,7 @@
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
         el("retryNotice").classList.remove("visible");
-        el("gateBanner").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
 
         startIdCamera().then(() => startIdAnalysis());
@@ -1273,7 +1311,7 @@
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
         el("retryNotice").classList.remove("visible");
-        el("gateBanner").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
         el("step3").classList.remove("step3--error");
 
@@ -1351,7 +1389,7 @@
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
         el("retryNotice").classList.remove("visible");
-        el("gateBanner").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
         cancelRaf(idRafId);
         idRafId = null;
@@ -1428,10 +1466,11 @@
           vh = video.videoHeight;
         const isCard = window.documentType === "card";
         const isBook = window.documentType === "book";
+        const isPassport = window.documentType === "passport";
         const cw = el("idCanvas").width,
           ch = el("idCanvas").height;
 
-        const guideW = cw * 0.88;
+        const guideW = isCard ? cw * 0.88 : cw * 0.92;
         const targetAspect = isCard
           ? CARD_ASPECT
           : isBook
@@ -1469,6 +1508,12 @@
           roiW = Math.round(roiW * 0.5); // Target just the right data page width
         }
 
+        lastFullRoi = {
+          roiX: Math.round(guideX * scaleX),
+          roiY: Math.round(guideY * scaleY),
+          roiW: Math.round(guideW * scaleX),
+          roiH: Math.round(guideH * scaleY),
+        };
         lastRoi = { roiX, roiY, roiW, roiH };
 
         const sw = Math.min(roiW, vw - roiX),
@@ -1589,9 +1634,9 @@
           cls = "warn";
         }
 
-        let gateBannerMsg = !gateCard
-          ? "Make sure the photo page is open and fully visible"
-          : null;
+        // let gateBannerMsg = !gateCard
+        //   ? "Make sure the photo page is open and fully visible"
+        //   : null;
 
         return {
           composite,
@@ -1609,7 +1654,7 @@
           gateSharp,
           message,
           cls,
-          gateBannerMsg,
+          // gateBannerMsg,
         };
       }
 
@@ -1654,17 +1699,17 @@
             _lastFbCls = result.cls;
           }
 
-          const banner = el("gateBanner");
-          if (result.gateBannerMsg) {
-            banner.textContent = result.gateBannerMsg;
-            banner.classList.add("visible");
-            gatePassStartMs = null;
-            burstTriggered = false;
-            gateMissCount = 0;
-            updateCaptureRing(0, burstMs); // FIXED: Synchronized duration variable pass
-            return;
-          }
-          banner.classList.remove("visible");
+          // const banner = el("gateBanner");
+          // if (result.gateBannerMsg) {
+          //   banner.textContent = result.gateBannerMsg;
+          //   banner.classList.add("visible");
+          //   gatePassStartMs = null;
+          //   burstTriggered = false;
+          //   gateMissCount = 0;
+          //   updateCaptureRing(0, burstMs); // FIXED: Synchronized duration variable pass
+          //   return;
+          // }
+          // banner.classList.remove("visible");
 
           if (result.gateAll && smoothedComposite >= 45 && !burstTriggered) {
             gateMissCount = 0;
@@ -1722,11 +1767,16 @@
         const cw = canvas.width,
           ch = canvas.height;
         const isCard = window.documentType === "card";
-        const fw = cw * 0.88;
-        const fh = Math.min(
-          isCard ? fw / CARD_ASPECT : fw / BOOK_ASPECT,
-          ch * 0.92,
-        );
+        const isPassport = window.documentType === "passport";
+
+        // Card gets compact frame. Book and passport get larger frame.
+        const fw = isCard ? cw * 0.88 : cw * 0.92;
+        const targetAspect = isCard
+          ? CARD_ASPECT
+          : isPassport
+            ? PASSPORT_ASPECT
+            : BOOK_ASPECT;
+        const fh = Math.min(fw / targetAspect, ch * 0.92);
         const fx = (cw - fw) / 2,
           fy = (ch - fh) / 2;
 
@@ -1791,7 +1841,7 @@
         cancelRaf(idRafId);
         idRafId = null;
         el("captureRingWrap").classList.remove("visible");
-        el("gateBanner").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         setFb("idFeedback", "Scanning…", "ok");
 
         const buf = document.createElement("canvas");
@@ -1822,6 +1872,7 @@
             score: frameScore,
             canvas: full,
             roi: lastRoi ? { ...lastRoi } : null,
+            fullRoi: lastFullRoi ? { ...lastFullRoi } : null,
           });
         }
 
@@ -1835,6 +1886,7 @@
             score: 0,
             canvas: fb,
             roi: lastRoi ? { ...lastRoi } : null,
+            fullRoi: lastFullRoi ? { ...lastFullRoi } : null,
           });
         }
 
@@ -1875,60 +1927,13 @@
             parsed = parseSouthAfricanSmartID(await zonalOCR(cardCanvas));
             dbg("dbgIdNum", parsed.idNumber || "none");
           } else if (best.roi) {
-            const { roiX, roiY, roiW, roiH } = best.roi;
-            const scaleX = best.canvas.width / videoEl.videoWidth;
-            const scaleY = best.canvas.height / videoEl.videoHeight;
-            const tX = Math.round(roiX * scaleX),
-              tY = Math.round(roiY * scaleY);
-            const tW = Math.round(roiW * scaleX),
-              tH = Math.round(roiH * scaleY);
-
             if (window.documentType === "passport") {
-              const mrzH = Math.round(tH * 0.2);
-              const mrzY = tY + tH - mrzH;
-              const UP = Math.max(3, Math.ceil(80 / mrzH));
-              const mrzCanvas = document.createElement("canvas");
-              mrzCanvas.width = tW * UP;
-              mrzCanvas.height = mrzH * UP;
-              const mctx = mrzCanvas.getContext("2d");
-              mctx.imageSmoothingEnabled = true;
-              mctx.imageSmoothingQuality = "high";
-              mctx.drawImage(
-                best.canvas,
-                tX,
-                mrzY,
-                tW,
-                mrzH,
-                0,
-                0,
-                mrzCanvas.width,
-                mrzCanvas.height,
-              );
-              preprocessZone(
-                mctx,
-                mrzCanvas.width,
-                mrzCanvas.height,
-                2.0,
-                true,
-              );
-              const timeout = new Promise((_, rej) =>
-                setTimeout(() => rej(new Error("timeout")), 9000),
-              );
-              const { data } = await Promise.race([
-                window._ocrWorker.recognize(
-                  mrzCanvas,
-                  {},
-                  {
-                    tessedit_pageseg_mode: "6",
-                    tessedit_char_whitelist:
-                      "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
-                  },
-                ),
-                timeout,
-              ]);
-              parsed = extractMRZFromText(data.text || "");
+              // Full-page OCR — no coordinate splitting, no double-scale bug
+              // lastFullRoi holds the complete guide frame in video coordinates
+              parsed = await ocrPassport(best.canvas, best.fullRoi, videoEl);
+              dbg("dbgIdNum", parsed.passportNumber || "none");
             } else {
-              /* GREEN ID BOOK - DIRECT RIGHT HALF EXTRACTION */
+              /* GREEN ID BOOK - DIRECT RIGHT HALF EXTRACTION — UNTOUCHED */
               const { roiX, roiY, roiW, roiH } = best.roi;
               const UP = Math.max(3, Math.ceil(60 / roiH));
 
@@ -2104,22 +2109,185 @@
         return { pass: true, code: "ok", reason: "" };
       }
 
-      function checkResultsCompleteness() {
-        const idVal =
-          (el("fIdNumber") || el("fPassportNumber"))?.value?.trim() || "";
-        const surnameVal = el("fSurname")?.value?.trim() || "";
-        const namesVal = el("fNames")?.value?.trim() || "";
-        const confirmed = el("chkConfirm")?.checked || false;
-        const btnConfirm = el("btnConfirm"),
-          btnRestart = el("btnRestart");
-        if (!idVal || (!surnameVal && !namesVal) || !confirmed) {
-          btnConfirm.disabled = true;
-          btnRestart.style.display =
-            !idVal || (!surnameVal && !namesVal) ? "flex" : "none";
+      // function checkResultsCompleteness() {
+      //   const idVal =
+      //     (el("fIdNumber") || el("fPassportNumber"))?.value?.trim() || "";
+      //   const surnameVal = el("fSurname")?.value?.trim() || "";
+      //   const namesVal = el("fNames")?.value?.trim() || "";
+      //   const confirmed = el("chkConfirm")?.checked || false;
+      //   const btnConfirm = el("btnConfirm"),
+      //     btnRestart = el("btnRestart");
+      //   if (!idVal || (!surnameVal && !namesVal) || !confirmed) {
+      //     btnConfirm.disabled = true;
+      //     btnRestart.style.display =
+      //       !idVal || (!surnameVal && !namesVal) ? "flex" : "none";
+      //   } else {
+      //     btnConfirm.disabled = false;
+      //     btnRestart.style.display = "none";
+      //   }
+      // }
+
+      /* ── Field validation state machine ── */
+      const _fieldState = {}; // tracks whether each field has been touched
+
+      function setFieldError(id, msg) {
+        const input = el(id);
+        const errEl = el(id + "__err");
+        const warnEl = el(id + "__warn");
+        if (!input || !errEl) return;
+        input.classList.remove("warn");
+        if (msg) {
+          input.classList.add("error");
+          errEl.textContent = msg;
+          errEl.classList.add("visible");
+          if (warnEl) warnEl.classList.remove("visible");
         } else {
-          btnConfirm.disabled = false;
-          btnRestart.style.display = "none";
+          input.classList.remove("error");
+          errEl.textContent = "";
+          errEl.classList.remove("visible");
         }
+      }
+
+      function setFieldWarn(id, msg) {
+        const input = el(id);
+        const warnEl = el(id + "__warn");
+        const errEl = el(id + "__err");
+        if (!input || !warnEl) return;
+        // Only show warn if there's no active error
+        if (errEl && errEl.classList.contains("visible")) return;
+        if (msg) {
+          input.classList.add("warn");
+          warnEl.textContent = msg;
+          warnEl.classList.add("visible");
+        } else {
+          input.classList.remove("warn");
+          warnEl.textContent = "";
+          warnEl.classList.remove("visible");
+        }
+      }
+
+      function validateIdField(fieldId, touched) {
+        const val = el(fieldId)?.value?.trim() || "";
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+
+        if (!val) {
+          if (touched) setFieldError(fieldId, "This field is required");
+          return false;
+        }
+
+        if (isPassport) {
+          const formatOk = /^[A-Z0-9]{6,9}$/i.test(val);
+          if (!formatOk) {
+            if (touched)
+              setFieldError(
+                fieldId,
+                "Enter a valid passport number (6–9 characters)",
+              );
+            return false;
+          }
+          setFieldError(fieldId, null);
+          // Silent match check
+          const ocrPassNo = (ocr.passportNumber || "").replace(/</g, "").trim();
+          if (ocrPassNo && val.toUpperCase() !== ocrPassNo.toUpperCase()) {
+            setFieldWarn(
+              fieldId,
+              "This doesn't match what we read — please double-check",
+            );
+          } else {
+            setFieldWarn(fieldId, null);
+          }
+          return true;
+        } else {
+          if (!/^\d{13}$/.test(val)) {
+            if (touched)
+              setFieldError(fieldId, "ID number must be exactly 13 digits");
+            return false;
+          }
+          if (!saLuhn13(val)) {
+            if (touched)
+              setFieldError(
+                fieldId,
+                "Please check your ID number — the format isn't valid",
+              );
+            return false;
+          }
+          setFieldError(fieldId, null);
+          // Silent match check
+          const ocrId = (ocr.idNumber || "").trim();
+          if (ocrId && ocrId.length === 13 && ocr._idValid && val !== ocrId) {
+            setFieldWarn(
+              fieldId,
+              "This doesn't match what we read — please double-check",
+            );
+          } else {
+            setFieldWarn(fieldId, null);
+          }
+          return true;
+        }
+      }
+
+      function validateNameField(fieldId, label, touched) {
+        const val = el(fieldId)?.value?.trim() || "";
+        if (!val) {
+          if (touched) setFieldError(fieldId, `${label} is required`);
+          return false;
+        }
+        if (val.length < 2) {
+          if (touched) setFieldError(fieldId, `${label} seems too short`);
+          return false;
+        }
+        setFieldError(fieldId, null);
+        setFieldWarn(fieldId, null);
+        return true;
+      }
+
+      function checkResultsCompleteness() {
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+        const confirmed = el("chkConfirm")?.checked || false;
+
+        const idFieldId = isPassport ? "fPassportNumber" : "fIdNumber";
+
+        // Only validate fields that have been touched
+        const idOk = validateIdField(idFieldId, !!_fieldState[idFieldId]);
+        const surOk = validateNameField(
+          "fSurname",
+          "Surname",
+          !!_fieldState["fSurname"],
+        );
+        const namOk = validateNameField(
+          "fNames",
+          isPassport ? "Given name(s)" : "Full names",
+          !!_fieldState["fNames"],
+        );
+
+        el("btnConfirm").disabled = !(idOk && surOk && namOk && confirmed);
+      }
+
+      function bindFieldValidation() {
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+        const idFieldId = isPassport ? "fPassportNumber" : "fIdNumber";
+
+        [idFieldId, "fSurname", "fNames"].forEach((id) => {
+          const input = el(id);
+          if (!input) return;
+
+          // On blur: mark as touched, run full validation
+          input.addEventListener("blur", () => {
+            _fieldState[id] = true;
+            checkResultsCompleteness();
+          });
+
+          // On input: if already touched (error recovery) re-validate immediately
+          input.addEventListener("input", () => {
+            if (_fieldState[id]) checkResultsCompleteness();
+          });
+        });
+
+        // Checkbox also re-evaluates button state
+        el("chkConfirm")?.addEventListener("change", checkResultsCompleteness);
       }
 
       /* ================================================================
@@ -2436,63 +2604,78 @@
    _bookAnchor: truthy string = S.A. BURGER/CITIZEN label detected.
    This is the document-identity proof beyond Luhn.
 ================================================================ */
-      function parseGreenIDBook(zones) {
-        const rawDigits = (zones.idNumber || "").replace(/[^0-9]/g, "");
+     function parseGreenIDBook(zones) {
+  const rawDigits = (zones.idNumber || "").replace(/[^0-9]/g, "");
 
-        // Sliding window — barcode bleed often prepends/appends a stray digit.
-        // Try every 13-digit window and take the first that passes Luhn.
-        let rawId = "";
-        let idValid = false;
-        for (let start = 0; start <= rawDigits.length - 13; start++) {
-          const candidate = rawDigits.slice(start, start + 13);
-          if (saLuhn13(candidate)) {
-            rawId = candidate;
-            idValid = true;
-            break;
-          }
-        }
-        // Fall back to first 13 digits if no window passed Luhn
-        if (!idValid) rawId = rawDigits.slice(0, 13);
+  // Sliding window — barcode bleed often prepends/appends a stray digit.
+  // Try every 13-digit window and take the first that passes Luhn.
+  let rawId = "";
+  let idValid = false;
+  for (let start = 0; start <= rawDigits.length - 13; start++) {
+    const candidate = rawDigits.slice(start, start + 13);
+    if (saLuhn13(candidate)) {
+      rawId = candidate;
+      idValid = true;
+      break;
+    }
+  }
+  // Fall back to first 13 digits if no window passed Luhn
+  if (!idValid) rawId = rawDigits.slice(0, 13);
 
-        const surname = cleanBookField(zones.surname || "");
-        const names = cleanBookField(zones.names || "");
+  const surname = cleanBookField(zones.surname || "");
+  const names = cleanBookField(zones.names || "");
 
-        // Anchor: citizen label strip below barcode
-        const labelRaw = (zones.citizenLabel || "").toUpperCase();
-        const anchorHit = /BURGER|CITIZEN|S\.?A\.?\s*(BURGER|CITIZEN)/.test(
-          labelRaw,
-        )
-          ? labelRaw.trim()
-          : null;
+  // Reuse Smart ID parser to derive DOB, gender, citizenship, age — single source of truth
+  let dobISO = "";
+  let gender = "";
+  let citizenship = "";
+  let age = null;
 
-        // Anchor: barcode zone sometimes contains the label text
-        const idZoneText = (zones.idNumber || "").toUpperCase();
-        const barcodeAreaHit = /BURGER|CITIZEN|S\.?A\.?B|S\.?A\.?C/.test(
-          idZoneText,
-        )
-          ? "barcode-area"
-          : null;
+  if (idValid && rawId.length === 13) {
+    const derived = parseSouthAfricanSmartID({ idNumber: rawId, surname: "", names: "" });
+    if (derived._idValid) {
+      dobISO = derived.dobISO || "";
+      gender = derived.gender || "";
+      citizenship = derived.citizenship || "";
+      age = derived.age ?? null;
+    }
+  }
 
-        // Anchor: bilingual field labels unique to this document
-        const allText = Object.values(zones).join(" ").toUpperCase();
-        const bilingualHit =
-          /VAN\/SURNAME|VOORNAAM|BINNELANDSE|HOME AFFAIRS|GEBOORTEDATUM/.test(
-            allText,
-          )
-            ? "bilingual-label"
-            : null;
+  // Anchor: citizen label strip below barcode
+  const labelRaw = (zones.citizenLabel || "").toUpperCase();
+  const anchorHit = /BURGER|CITIZEN|S\.?A\.?\s*(BURGER|CITIZEN)/.test(labelRaw)
+    ? labelRaw.trim()
+    : null;
 
-        return {
-          idNumber: idValid ? rawId : rawId || "",
-          surname,
-          names,
-          isPassport: false,
-          isGreenBook: true,
-          _idValid: idValid,
-          _saCountry: true,
-          _bookAnchor: anchorHit || barcodeAreaHit || bilingualHit || null,
-        };
-      }
+  // Anchor: barcode zone sometimes contains the label text
+  const idZoneText = (zones.idNumber || "").toUpperCase();
+  const barcodeAreaHit = /BURGER|CITIZEN|S\.?A\.?B|S\.?A\.?C/.test(idZoneText)
+    ? "barcode-area"
+    : null;
+
+  // Anchor: bilingual field labels unique to this document
+  const allText = Object.values(zones).join(" ").toUpperCase();
+  const bilingualHit =
+    /VAN\/SURNAME|VOORNAAM|BINNELANDSE|HOME AFFAIRS|GEBOORTEDATUM/.test(allText)
+      ? "bilingual-label"
+      : null;
+
+  return {
+    idNumber: idValid ? rawId : rawId || "",
+    surname,
+    names,
+    dobISO,
+    gender,
+    citizenship,
+    age,
+    isPassport: false,
+    isGreenBook: true,
+    _idValid: idValid,
+    _saCountry: true,
+    _bookAnchor: anchorHit || barcodeAreaHit || bilingualHit || null,
+  };
+}
+
 
       function cleanBookField(raw) {
         return raw
@@ -2503,6 +2686,87 @@
           .replace(/[^A-Za-z\s'\-]/g, "")
           .trim()
           .toUpperCase();
+      }
+
+      /* ================================================================
+   PASSPORT FULL-PAGE OCR
+   Uses the full guide-frame ROI from best.canvas.
+   No coordinate splitting — guide frame ensures quality,
+   Tesseract + extractMRZFromText find the MRZ by pattern.
+   Works for any ICAO Doc 9303 compliant passport globally.
+================================================================ */
+      async function ocrPassport(bestCanvas, fullRoi, videoEl) {
+        if (!fullRoi) return {};
+
+        const { roiX, roiY, roiW, roiH } = fullRoi;
+        const scaleX = bestCanvas.width / videoEl.videoWidth;
+        const scaleY = bestCanvas.height / videoEl.videoHeight;
+
+        const srcX = Math.max(0, Math.round(roiX * scaleX));
+        const srcY = Math.max(0, Math.round(roiY * scaleY));
+        const srcW = Math.min(
+          bestCanvas.width - srcX,
+          Math.round(roiW * scaleX),
+        );
+        const srcH = Math.min(
+          bestCanvas.height - srcY,
+          Math.round(roiH * scaleY),
+        );
+
+        if (srcW < 20 || srcH < 20) return {};
+
+        // Target at least 200px height for reliable MRZ reading
+        const UP = Math.max(2, Math.ceil(200 / srcH));
+        const passportCanvas = document.createElement("canvas");
+        passportCanvas.width = srcW * UP;
+        passportCanvas.height = srcH * UP;
+
+        const ctx = passportCanvas.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(
+          bestCanvas,
+          srcX,
+          srcY,
+          srcW,
+          srcH,
+          0,
+          0,
+          passportCanvas.width,
+          passportCanvas.height,
+        );
+
+        // Sharpen but do not binarize the full page —
+        // binarizing hurts name/bio text quality above the MRZ
+        preprocessZone(
+          ctx,
+          passportCanvas.width,
+          passportCanvas.height,
+          1.8,
+          false,
+        );
+
+        const timeout = new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("ocr-timeout")), 12000),
+        );
+
+        try {
+          const { data } = await Promise.race([
+            window._ocrWorker.recognize(
+              passportCanvas,
+              {},
+              {
+                tessedit_pageseg_mode: "6",
+                tessedit_char_whitelist:
+                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
+              },
+            ),
+            timeout,
+          ]);
+          return extractMRZFromText(data.text || "");
+        } catch {
+          return {};
+        }
       }
 
       /* ================================================================
@@ -2564,9 +2828,7 @@
             .split("")
             .map((c) => A2D[c] || c)
             .join("");
-        let rawPassNo = l1.startsWith("P<ZAF")
-          ? "M" + fd(l2.slice(1, 9))
-          : l2.slice(0, 9);
+        let rawPassNo = l2.slice(0, 9);
         const chkPassNo = fd(l2.charAt(9));
         const issuingCountry = fa(l1.slice(2, 5)).replace(/</g, "");
         const nameField = l1.slice(5);
@@ -3134,169 +3396,418 @@
         el("resultsCard").style.display = "none";
         el("resultsActions").style.display = "none";
 
+        // OCR is already done by burstCapture — extractedIDData is already populated.
+        // performVerification now only transitions the UI to the input form.
+        // Submission happens in confirmResults when the user clicks Confirm & Submit.
+        el("resultsLoading").style.display = "none";
+        displayResults({});
+      }
+
+      // function buildField(label, value, id) {
+      //   const sid = id ? ` id="${id}"` : "";
+      //   const safeV = value != null && value !== "" ? esc(String(value)) : "";
+      //   return `<div class="field-row"><div class="field-label">${esc(label)}</div><input class="field-input" type="text" value="${safeV}" placeholder="Not extracted"${sid}></div>`;
+      // }
+      
+
+      function buildPrefilledField(label, id, value, placeholder, inputmode) {
+  const im = inputmode ? ` inputmode="${inputmode}"` : "";
+  const safeV = value != null && value !== "" ? esc(String(value)) : "";
+  return `
+    <div class="field-row">
+      <div class="field-label">${esc(label)}</div>
+      <input class="field-input" type="text" value="${safeV}"
+        placeholder="${esc(placeholder)}" id="${esc(id)}"${im}
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="field-error" id="${esc(id)}__err"></div>
+      <div class="field-warn" id="${esc(id)}__warn"></div>
+    </div>`;
+}
+
+      // function buildEmptyField(label, id, placeholder, inputmode) {
+      //   const im = inputmode ? ` inputmode="${inputmode}"` : "";
+      //   return `<div class="field-row"><div class="field-label">${esc(label)}</div><input class="field-input" type="text" value="" placeholder="${esc(placeholder)}" id="${esc(id)}"${im} autocomplete="off" autocorrect="off" spellcheck="false"></div>`;
+      // }
+
+      function buildReadonlyField(label, value) {
+  if (!value) return "";
+  return `
+    <div class="field-row">
+      <div class="field-label">${esc(label)}</div>
+      <div class="field-value">${esc(String(value))}</div>
+    </div>`;
+}
+
+      /* ================================================================
+   DISPLAY RESULTS - EDITABLE FORM INJECTION
+================================================================ */
+      // function displayResults(data) {
+      //   el("resultsLoading").style.display = "none";
+      //   el("resultsCard").style.display = "block";
+      //   el("resultsActions").style.display = "flex";
+
+      //   const api = data.extracted_data || {},
+      //     ocr = window.extractedIDData || {};
+      //   const isPassport = ocr.isPassport || false;
+
+      //   el("rowExpiredWarning").style.display =
+      //     isPassport && ocr.documentExpired ? "block" : "none";
+
+      //   let html = "";
+
+      //   if (isPassport) {
+      //     html += buildField(
+      //       "Passport number",
+      //       api.passport_number || ocr.passportNumber || "",
+      //       "fPassportNumber",
+      //     );
+      //     html += buildField(
+      //       "Surname",
+      //       api.surname || ocr.surname || "",
+      //       "fSurname",
+      //     );
+      //     html += buildField(
+      //       "Given name(s)",
+      //       api.names || ocr.names || "",
+      //       "fNames",
+      //     );
+      //     html += buildField(
+      //       "Date of birth",
+      //       api.dob || ocr.dobISO || "",
+      //       "fDob",
+      //     );
+      //     html += buildField(
+      //       "Gender",
+      //       api.gender || ocr.gender || "",
+      //       "fGender",
+      //     );
+      //     html += buildField(
+      //       "Nationality",
+      //       api.nationality || ocr.nationality || "",
+      //       "fNationality",
+      //     );
+      //     html += buildField(
+      //       "Issuing country",
+      //       api.issuing_country || ocr.issuingCountry || "",
+      //       "fIssuingCountry",
+      //     );
+      //     html += buildField(
+      //       "Expiry date",
+      //       api.expiry_date || ocr.expiryISO || "",
+      //       "fExpiry",
+      //     );
+      //     if (ocr.personalNumber)
+      //       html += buildField(
+      //         "Personal number",
+      //         ocr.personalNumber,
+      //         "fPersonalNumber",
+      //       );
+      //   } else {
+      //     const isBook = window.documentType === "book";
+
+      //     // 1️⃣ POPULATE EDITABLE FIELD VALUES: Pre-fill with scanner data but allow editing
+      //     html += buildField(
+      //       "ID number",
+      //       api.id_number || ocr.idNumber || "",
+      //       "fIdNumber",
+      //     );
+
+      //     // FIXED: Removed the hardcoded 'isBook ? ""' block. Now it injects the OCR data for books!
+      //     html += buildField("Names", api.names || ocr.names || "", "fNames");
+
+      //     html += buildField(
+      //       "Surname",
+      //       api.surname || ocr.surname || "",
+      //       "fSurname",
+      //     );
+
+      //     // 2️⃣ DISPATCH ANCHOR WARNING NOTICE IF BOOK DETECTED
+      //     if (isBook) {
+      //       html =
+      //         `<div class="err-box" style="background:#fff8e1;border-color:#ffe082;color:#7a5500;margin-bottom:12px;padding:10px;border-radius:4px;font-size:14px;">
+      //     <strong>Review Extracted Details:</strong> Please verify or fill in your details below exactly as they appear in your green ID book before proceeding.
+      //   </div>` + html;
+      //     }
+      //   }
+
+      //   el("extractedFields").innerHTML = html;
+
+      //   // 3️⃣ BIND INPUT LISTENERS TO AUTO-VALIDATE SUBMISSIONS ON THE FLY
+      //   ["fIdNumber", "fPassportNumber", "fSurname", "fNames"].forEach((id) => {
+      //     const input = el(id);
+      //     if (input) {
+      //       // Allow real-time interaction tracking
+      //       input.addEventListener("input", checkResultsCompleteness);
+      //     }
+      //   });
+
+      //   checkResultsCompleteness();
+
+      //   // MRZ Integrity checks for Passport flows
+      //   const mrzSection = el("mrzIntegritySection");
+      //   if (isPassport && ocr.checks) {
+      //     const c = ocr.checks;
+      //     const cr = (label, ok) =>
+      //       `<div class="score-row"><span class="score-label">${label}</span><span class="score-val" style="color:${ok ? "var(--green)" : "#c0392b"}">${ok ? "✓ Pass" : "✗ Fail"}</span></div>`;
+      //     el("mrzIntegrityBody").innerHTML =
+      //       cr("Passport number check", c.passport) +
+      //       cr("Date of birth check", c.dob) +
+      //       cr("Expiry date check", c.expiry) +
+      //       cr("Personal number check", c.personal) +
+      //       cr("Composite check", c.composite) +
+      //       `<div class="score-row"><span class="score-label">Overall integrity</span><span class="score-val">${c.integrityPct}%</span></div>`;
+      //     if (ocr.mrzLine1)
+      //       el("mrzIntegrityBody").innerHTML +=
+      //         buildField("MRZ line 1", ocr.mrzLine1) +
+      //         buildField("MRZ line 2", ocr.mrzLine2);
+      //     mrzSection.style.display = "block";
+      //   } else {
+      //     mrzSection.style.display = "none";
+      //   }
+
+      //   const fails = data.failure_reasons || [];
+      //   el("failList").style.display = fails.length ? "block" : "none";
+      //   el("failItems").innerHTML = fails
+      //     .map((f) => `<div class="fail-item">${esc(f)}</div>`)
+      //     .join("");
+      // }
+
+      // function displayResults(data) {
+      //   el("resultsLoading").style.display = "none";
+      //   el("resultsCard").style.display = "block";
+      //   el("resultsActions").style.display = "flex";
+
+      //   const ocr = window.extractedIDData || {};
+      //   const isPassport = ocr.isPassport || false;
+
+      //   // Show expired warning for passport — this is mathematically derived, not OCR noise
+      //   el("rowExpiredWarning").style.display =
+      //     isPassport && ocr.documentExpired ? "block" : "none";
+
+      //   let html = "";
+
+      //   if (isPassport) {
+      //     html += buildEmptyField(
+      //       "Passport number",
+      //       "fPassportNumber",
+      //       "e.g. A12345678",
+      //       "text",
+      //     );
+      //     html += buildEmptyField(
+      //       "Surname",
+      //       "fSurname",
+      //       "As it appears on your passport",
+      //       "text",
+      //     );
+      //     html += buildEmptyField(
+      //       "Given name(s)",
+      //       "fNames",
+      //       "As it appears on your passport",
+      //       "text",
+      //     );
+      //   } else {
+      //     // SA Smart ID card and Green ID book — same fields
+      //     html += buildEmptyField(
+      //       "ID number",
+      //       "fIdNumber",
+      //       "13-digit ID number",
+      //       "numeric",
+      //     );
+      //     html += buildEmptyField(
+      //       "Surname",
+      //       "fSurname",
+      //       "As it appears on your document",
+      //       "text",
+      //     );
+      //     html += buildEmptyField(
+      //       "Full names",
+      //       "fNames",
+      //       "As it appears on your document",
+      //       "text",
+      //     );
+      //   }
+
+      //   el("extractedFields").innerHTML = html;
+
+      //   // Bind live validation on every keystroke
+      //   Object.keys(_fieldState).forEach((k) => delete _fieldState[k]); // reset on each new flow
+      //   bindFieldValidation();
+      //   checkResultsCompleteness();
+
+      //   // Hide MRZ integrity and failure sections — not shown to user
+      //   el("mrzIntegritySection").style.display = "none";
+      //   el("failList").style.display = "none";
+      // }
+
+function displayResults(data) {
+  el("resultsLoading").style.display = "none";
+  el("resultsCard").style.display = "block";
+  el("resultsActions").style.display = "flex";
+
+  const ocr = window.extractedIDData || {};
+  const isPassport = ocr.isPassport || false;
+  const isBook = window.documentType === "book";
+
+  el("rowExpiredWarning").style.display =
+    isPassport && ocr.documentExpired ? "block" : "none";
+
+  let html = "";
+
+  if (isPassport) {
+    html += buildPrefilledField("Passport number", "fPassportNumber",
+      ocr.passportNumber || "", "e.g. A12345678", "text");
+    html += buildPrefilledField("Given name(s)", "fNames",
+      ocr.names || "", "As it appears on your passport", "text");
+    html += buildPrefilledField("Surname", "fSurname",
+      ocr.surname || "", "As it appears on your passport", "text");
+    html += buildReadonlyField("Date of birth", ocr.dobISO || "");
+    html += buildReadonlyField("Gender", ocr.gender || "");
+    html += buildReadonlyField("Nationality", ocr.nationality || "");
+    html += buildReadonlyField("Issuing country", ocr.issuingCountry || "");
+    html += buildReadonlyField("Expiry date", ocr.expiryISO || "");
+
+  } else if (isBook) {
+    html += `<div class="err-box" style="background:#fff8e1;border-color:#ffe082;color:#7a5500;margin-bottom:12px;font-size:13px;">
+      <strong>Please review:</strong> Verify your details below exactly as they appear in your ID book.
+    </div>`;
+    html += buildPrefilledField("ID number", "fIdNumber",
+      ocr.idNumber || "", "13-digit ID number", "numeric");
+    html += buildPrefilledField("Full names", "fNames",
+      ocr.names || "", "As it appears on your document", "text");
+    html += buildPrefilledField("Surname", "fSurname",
+      ocr.surname || "", "As it appears on your document", "text");
+    html += buildReadonlyField("Date of birth", ocr.dobISO || "");
+    html += buildReadonlyField("Gender", ocr.gender || "");
+    html += buildReadonlyField("Citizenship", ocr.citizenship || "");
+
+  } else {
+    html += buildPrefilledField("ID number", "fIdNumber",
+      ocr.idNumber || "", "13-digit ID number", "numeric");
+    html += buildPrefilledField("Full names", "fNames",
+      ocr.names || "", "As it appears on your document", "text");
+    html += buildPrefilledField("Surname", "fSurname",
+      ocr.surname || "", "As it appears on your document", "text");
+    html += buildReadonlyField("Date of birth", ocr.dobISO || "");
+    html += buildReadonlyField("Gender", ocr.gender || "");
+    html += buildReadonlyField("Citizenship", ocr.citizenship || "");
+  }
+
+  el("extractedFields").innerHTML = html;
+
+  Object.keys(_fieldState).forEach((k) => delete _fieldState[k]);
+  bindFieldValidation();
+  checkResultsCompleteness();
+
+  el("mrzIntegritySection").style.display = "none";
+  el("failList").style.display = "none";
+}
+      async function confirmResults() {
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+        const isBook = window.documentType === "book";
+
+        // ── USER DECLARED DATA ──────────────────────────────────────────
+        // What the user typed — authoritative submission, never overridden by OCR
+        const userInput = {
+          document_type: window.documentType,
+          id_number: el("fIdNumber")?.value?.trim() || null,
+          passport_number: el("fPassportNumber")?.value?.trim() || null,
+          surname: el("fSurname")?.value?.trim() || null,
+          names: el("fNames")?.value?.trim() || null,
+        };
+
+        // ── OCR EXTRACTED DATA ──────────────────────────────────────────
+        // Background signal only — sent silently for backend reconciliation
+        // Never used on the frontend to validate or block the user
+        let ocrExtracted = {};
+
+        if (isPassport) {
+          ocrExtracted = {
+            ocr_passport_number: ocr.passportNumber || null,
+            ocr_surname: ocr.surname || null,
+            ocr_names: ocr.names || null,
+            ocr_dob: ocr.dobISO || null,
+            ocr_gender: ocr.gender || null,
+            ocr_nationality: ocr.nationality || null,
+            ocr_issuing_country: ocr.issuingCountry || null,
+            ocr_expiry: ocr.expiryISO || null,
+            ocr_document_expired: ocr.documentExpired ?? null,
+            ocr_mrz_line1: ocr.mrzLine1 || null,
+            ocr_mrz_line2: ocr.mrzLine2 || null,
+            ocr_mrz_integrity_pct: ocr.checks?.integrityPct ?? null,
+            ocr_mrz_checks_passed: ocr.checks?.passed ?? null,
+          };
+        } else {
+          ocrExtracted = {
+            ocr_id_number: ocr.idNumber || null,
+            ocr_surname: ocr.surname || null,
+            ocr_names: ocr.names || null,
+            ocr_dob: ocr.dobISO || null,
+            ocr_gender: ocr.gender || null,
+            ocr_citizenship: ocr.citizenship || null,
+            ocr_id_valid: ocr._idValid ?? null,
+            // Book-specific anchor signal
+            ocr_book_anchor: isBook ? ocr._bookAnchor || null : undefined,
+          };
+          // Remove undefined keys cleanly
+          Object.keys(ocrExtracted).forEach(
+            (k) => ocrExtracted[k] === undefined && delete ocrExtracted[k],
+          );
+        }
+
+        // ── GUARD: no API configured ────────────────────────────────────
         if (
           !window.API_BASE_URL ||
           window.API_BASE_URL === "https://your-api.com/verify"
         ) {
-          displayResults({
-            status: "REVIEW",
-            id_number_valid: !!(
-              window.extractedIDData?.idNumber &&
-              window.extractedIDData?._idValid
-            ),
-            extracted_data: {},
-          });
+          console.log("User input:", userInput);
+          console.log("OCR extracted (silent):", ocrExtracted);
+          alert("Identity submitted. Thank you.");
           return;
         }
-        try {
-          const fd = new FormData();
+
+        // ── BUILD FORM DATA ─────────────────────────────────────────────
+        const fd = new FormData();
+
+        // Images
+        if (window.capturedIDBlob)
           fd.append("id_image", window.capturedIDBlob, "id.jpg");
+        if (window.capturedSelfieBlob)
           fd.append("selfie_image", window.capturedSelfieBlob, "selfie.jpg");
+
+        // User declared — flat fields
+        Object.entries(userInput).forEach(([k, v]) => {
+          if (v !== null) fd.append(k, v);
+        });
+
+        // OCR extracted — sent as a single JSON blob so backend can parse cleanly
+        fd.append("ocr_data", JSON.stringify(ocrExtracted));
+
+        // ── SUBMIT ──────────────────────────────────────────────────────
+        const btnConfirm = el("btnConfirm");
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = "Submitting…";
+
+        try {
           const resp = await fetch(window.API_BASE_URL, {
             method: "POST",
             headers: { Authorization: "Bearer " + window.AUTH_TOKEN },
             body: fd,
           });
+
           if (!resp.ok) throw new Error("HTTP " + resp.status);
-          displayResults(await resp.json());
-        } catch {
-          el("resultsLoading").style.display = "none";
+
+          const result = await resp.json();
+          console.log("Submission result:", result);
+          alert("Identity submitted successfully.");
+        } catch (err) {
+          console.error("Submission failed:", err);
+          btnConfirm.disabled = false;
+          btnConfirm.textContent = "Confirm & Submit";
           el("resultsError").textContent =
-            "Verification could not be completed. Please restart and try again.";
+            "Submission failed. Please check your connection and try again.";
           el("resultsError").style.display = "block";
-          el("resultsActions").style.display = "flex";
-          el("btnConfirm").disabled = true;
-          el("btnRestart").style.display = "flex";
         }
-      }
-
-      function buildField(label, value, id) {
-        const sid = id ? ` id="${id}"` : "";
-        const safeV = value != null && value !== "" ? esc(String(value)) : "";
-        return `<div class="field-row"><div class="field-label">${esc(label)}</div><input class="field-input" type="text" value="${safeV}" placeholder="Not extracted"${sid}></div>`;
-      }
-
-      /* ================================================================
-   DISPLAY RESULTS - EDITABLE FORM INJECTION
-================================================================ */
-      function displayResults(data) {
-        el("resultsLoading").style.display = "none";
-        el("resultsCard").style.display = "block";
-        el("resultsActions").style.display = "flex";
-
-        const api = data.extracted_data || {},
-          ocr = window.extractedIDData || {};
-        const isPassport = ocr.isPassport || false;
-
-        el("rowExpiredWarning").style.display =
-          isPassport && ocr.documentExpired ? "block" : "none";
-
-        let html = "";
-
-        if (isPassport) {
-          html += buildField(
-            "Passport number",
-            api.passport_number || ocr.passportNumber || ocr.idNumber || "",
-            "fPassportNumber",
-          );
-          html += buildField("Surname", api.surname || ocr.surname, "fSurname");
-          html += buildField("Given name(s)", api.names || ocr.names, "fNames");
-          html += buildField(
-            "Expiry date",
-            api.expiry_date || ocr.expiryISO,
-            "fExpiry",
-          );
-          if (ocr.personalNumber)
-            html += buildField(
-              "Personal number",
-              ocr.personalNumber,
-              "fPersonalNumber",
-            );
-        } else {
-          const isBook = window.documentType === "book";
-
-          // 1️⃣ POPULATE EDITABLE FIELD VALUES: Pre-fill with scanner data but allow editing
-          html += buildField(
-            "ID number",
-            api.id_number || ocr.idNumber || "",
-            "fIdNumber",
-          );
-
-          // FIXED: Removed the hardcoded 'isBook ? ""' block. Now it injects the OCR data for books!
-          html += buildField("Names", api.names || ocr.names || "", "fNames");
-
-          html += buildField(
-            "Surname",
-            api.surname || ocr.surname || "",
-            "fSurname",
-          );
-
-          // 2️⃣ DISPATCH ANCHOR WARNING NOTICE IF BOOK DETECTED
-          if (isBook) {
-            html =
-              `<div class="err-box" style="background:#fff8e1;border-color:#ffe082;color:#7a5500;margin-bottom:12px;padding:10px;border-radius:4px;font-size:14px;">
-          <strong>Review Extracted Details:</strong> Please verify or fill in your details below exactly as they appear in your green ID book before proceeding.
-        </div>` + html;
-          }
-        }
-
-        el("extractedFields").innerHTML = html;
-
-        // 3️⃣ BIND INPUT LISTENERS TO AUTO-VALIDATE SUBMISSIONS ON THE FLY
-        ["fIdNumber", "fPassportNumber", "fSurname", "fNames"].forEach((id) => {
-          const input = el(id);
-          if (input) {
-            // Allow real-time interaction tracking
-            input.addEventListener("input", checkResultsCompleteness);
-          }
-        });
-
-        checkResultsCompleteness();
-
-        // MRZ Integrity checks for Passport flows
-        const mrzSection = el("mrzIntegritySection");
-        if (isPassport && ocr.checks) {
-          const c = ocr.checks;
-          const cr = (label, ok) =>
-            `<div class="score-row"><span class="score-label">${label}</span><span class="score-val" style="color:${ok ? "var(--green)" : "#c0392b"}">${ok ? "✓ Pass" : "✗ Fail"}</span></div>`;
-          el("mrzIntegrityBody").innerHTML =
-            cr("Passport number check", c.passport) +
-            cr("Date of birth check", c.dob) +
-            cr("Expiry date check", c.expiry) +
-            cr("Personal number check", c.personal) +
-            cr("Composite check", c.composite) +
-            `<div class="score-row"><span class="score-label">Overall integrity</span><span class="score-val">${c.integrityPct}%</span></div>`;
-          if (ocr.mrzLine1)
-            el("mrzIntegrityBody").innerHTML +=
-              buildField("MRZ line 1", ocr.mrzLine1) +
-              buildField("MRZ line 2", ocr.mrzLine2);
-          mrzSection.style.display = "block";
-        } else {
-          mrzSection.style.display = "none";
-        }
-
-        const fails = data.failure_reasons || [];
-        el("failList").style.display = fails.length ? "block" : "none";
-        el("failItems").innerHTML = fails
-          .map((f) => `<div class="fail-item">${esc(f)}</div>`)
-          .join("");
-      }
-
-      function confirmResults() {
-        const ocr = window.extractedIDData || {};
-        const corrected = {
-          idNumber:
-            el("fIdNumber")?.value ||
-            el("fPassportNumber")?.value ||
-            ocr.idNumber,
-          surname: el("fSurname")?.value || ocr.surname,
-          names: el("fNames")?.value || ocr.names,
-          dob: el("fDob")?.value || ocr.dobISO,
-          gender: el("fGender")?.value || ocr.gender,
-          age: el("fAge")?.value || ocr.age,
-        };
-        console.log("Confirmed data:", corrected);
-        alert("Identity confirmed. Proceeding…");
       }
 
       function restart() {
@@ -3327,7 +3838,7 @@
           .forEach((c) => c.classList.remove("selected"));
         el("btnContinue").disabled = true;
         el("retryNotice").classList.remove("visible");
-        el("gateBanner").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
         document
           .querySelectorAll(".step")
@@ -3337,6 +3848,12 @@
         updateStepBar(2);
         el("stepBar").classList.add("visible");
       }
+
+
+
+
+
+
 
       /* ================================================================
    UTILITIES
