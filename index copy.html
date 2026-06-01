@@ -137,9 +137,6 @@
       #step4.active {
         height: calc(100svh - 56px);
         overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
       }
       .step2-hint {
         margin-bottom: 20px;
@@ -153,26 +150,21 @@
         justify-content: center;
       }
       #step3.step3--error {
-        height: calc(100svh - 56px);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        height: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
       #step3.step3--error #idCamWrap {
-        height: 180px;
-        max-height: 180px;
-        flex-shrink: 0;
+        max-height: 220px;
       }
       #step3.step3--error .cam-video {
         aspect-ratio: unset;
-        height: 180px;
+        height: 220px;
         object-fit: cover;
       }
       #step3.step3--error #idCanvas {
         display: none;
       }
-
       #step5.active {
         height: calc(100svh - 56px);
         overflow-y: auto;
@@ -188,6 +180,10 @@
       body:has(#step4.active) {
         overflow: hidden;
         height: 100svh;
+      }
+      body:has(#step3.step3--error) {
+        overflow: auto;
+        height: auto;
       }
 
       /* ── Typography ── */
@@ -406,22 +402,17 @@
         overflow: hidden;
         background: #111;
         margin-bottom: 10px;
-        height: 52svh;
-        flex-shrink: 0;
       }
       .cam-video {
         width: 100%;
-        height: 100%;
         display: block;
         object-fit: cover;
-        background: #111;
+        aspect-ratio: 3/4;
       }
       .cam-canvas {
         position: absolute;
         inset: 0;
         pointer-events: none;
-        width: 100%;
-        height: 100%;
       }
       .cam-overlay {
         position: absolute;
@@ -824,9 +815,13 @@
               style="height: 24px; object-fit: contain"
             />
           </div>
-          <div style="margin-bottom: 12px">
-            <h2 class="section-title">Verify your Identity</h2>
-          </div>
+             <div style=" margin-bottom: 12px">
+          <h2 class="section-title">Verify your Identity</h2>
+        
+        </div>
+        
+
+         
         </div>
         <div class="guide-list">
           <div class="guide-card">
@@ -881,8 +876,10 @@
             <div class="guide-text">
               <h4>Correct Distance</h4>
               <p>
-                Hold your phone about a forearm’s length away. Adjust so the
-                document fills most of the guide frame.
+                Hold your
+phone about a forearm’s length away.
+Adjust so the document fills most of the
+guide frame.
               </p>
             </div>
           </div>
@@ -1290,9 +1287,9 @@
       const GATE_FACE_MIN = 25;
       const SCORE_GATE = 58;
       const GATE_MISS_TOLERANCE = 4;
-      const BURST_TRIGGER_MS = 2500;
-      const BURST_FRAME_COUNT = 25;
-      const BURST_INTERVAL_MS = 120;
+      const BURST_TRIGGER_MS = 800;
+      const BURST_FRAME_COUNT = 15;
+      const BURST_INTERVAL_MS = 80;
       const SELFIE_MISS_TOLERANCE = 3;
       const SELFIE_BURST_TRIGGER_MS = 2500;
       const INACTIVITY_LIMIT = 60 * 1000;
@@ -1324,14 +1321,6 @@
       let selfieStreamReady = null;
       let lastRoi = null;
       let lastFullRoi = null;
-      let _vt = {
-        scaleX: 1,
-        scaleY: 1,
-        offsetX: 0,
-        offsetY: 0,
-        renderW: 0,
-        renderH: 0,
-      };
       let globalInactivityTimeout = null;
       let burstTriggered = false;
       let gatePassStartMs = null;
@@ -1416,7 +1405,7 @@
 
       /* ================================================================
    STEP 2
-    ================================================================ */
+  ================================================================ */
       function prewarmIdCamera() {
         if (idStreamReady) return;
         idStreamReady = requestCamera("environment").catch(() => {
@@ -1464,6 +1453,7 @@
         _lastFbMsg = "";
         _lastFbCls = "";
 
+        // Handle each document type explicitly
         if (window.documentType === "card") {
           el("step3Title").textContent = "SA Smart ID Card";
         } else if (window.documentType === "book") {
@@ -1477,7 +1467,7 @@
         el("retryNotice").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
 
-        startIdCamera();
+        startIdCamera().then(() => startIdAnalysis());
       }
 
       function goBackToDocSelect() {
@@ -1499,6 +1489,7 @@
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
         el("retryNotice").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
         el("step3").classList.remove("step3--error");
 
@@ -1529,22 +1520,11 @@
           idStream = stream;
           const video = el("idVideo");
           video.srcObject = stream;
-          await new Promise((resolve) => {
-            if (video.videoWidth) resolve();
-            else
-              video.addEventListener("loadedmetadata", resolve, { once: true });
-          });
           await video.play();
           el("idLoading").style.display = "none";
-
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              resizeIdCanvas();
-              setFb("idFeedback", "Position your document in the frame");
-              resetInactivityTimer();
-              startIdAnalysis();
-            });
-          });
+          resizeIdCanvas();
+          setFb("idFeedback", "Position your document in the frame");
+          resetInactivityTimer();
         } catch {
           clearTimeout(spinnerTimer);
           idStreamReady = null;
@@ -1578,97 +1558,30 @@
         smoothedComposite = 0;
         gateMissCount = 0;
         fallbackCount = 0;
-
         lastFaceZoneScore = 0;
         faceZonePending = false;
         lastFaceZoneTs = 0;
-
-        lastRoi = null;
-        lastFullRoi = null;
         _lastFbMsg = "";
         _lastFbCls = "";
-
-        _vt = {
-          scaleX: 1,
-          scaleY: 1,
-          offsetX: 0,
-          offsetY: 0,
-          renderW: 0,
-          renderH: 0,
-        };
-
         el("step3").classList.remove("step3--error");
         el("idError").style.display = "none";
         el("btnRetryID").style.display = "none";
         el("retryNotice").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
-
-        el("idCamWrap").style.height = "";
-        el("idCamWrap").style.maxHeight = "";
-        el("idFeedback").style.display = "";
-
         cancelRaf(idRafId);
         idRafId = null;
         clearInactivityTimer();
-
-        startIdCamera();
-      }
-
-      function updateVideoTransform() {
-        const video = el("idVideo");
-        const canvas = el("idCanvas");
-
-        if (
-          !video ||
-          !canvas ||
-          !video.videoWidth ||
-          !video.videoHeight ||
-          canvas.width < 10 ||
-          canvas.height < 10
-        )
-          return;
-
-        const videoAspect = video.videoWidth / video.videoHeight;
-        const canvasAspect = canvas.width / canvas.height;
-
-        let renderW, renderH, offsetX, offsetY;
-
-        if (videoAspect > canvasAspect) {
-          // Video is wider than canvas — crops left and right edges
-          renderH = canvas.height;
-          renderW = canvas.height * videoAspect;
-          offsetX = (canvas.width - renderW) / 2;
-          offsetY = 0;
-        } else {
-          // Video is taller than canvas — crops top and bottom edges
-          renderW = canvas.width;
-          renderH = canvas.width / videoAspect;
-          offsetX = 0;
-          offsetY = (canvas.height - renderH) / 2;
-        }
-
-        if (renderW < 10 || renderH < 10) return;
-
-        _vt = {
-          scaleX: video.videoWidth / renderW,
-          scaleY: video.videoHeight / renderH,
-          offsetX,
-          offsetY,
-          renderW,
-          renderH,
-        };
+        startIdCamera().then(() => startIdAnalysis());
       }
 
       function resizeIdCanvas() {
         const canvas = el("idCanvas"),
           video = el("idVideo");
         if (!canvas || !video) return;
-
         const r = video.getBoundingClientRect();
-        canvas.width = r.width;
-        canvas.height = r.height;
-
-        updateVideoTransform();
+        canvas.width = r.width || video.videoWidth;
+        canvas.height = r.height || video.videoHeight;
       }
 
       /* ================================================================
@@ -1732,44 +1645,27 @@
         const isCard = window.documentType === "card";
         const isBook = window.documentType === "book";
         const isPassport = window.documentType === "passport";
+        const cw = el("idCanvas").width,
+          ch = el("idCanvas").height;
 
-        // Safeguard: Ensure the transform matrix cache is alive
-        const transform =
-          _vt && _vt.renderW
-            ? _vt
-            : {
-                scaleX: 1,
-                scaleY: 1,
-                offsetX: 0,
-                offsetY: 0,
-                renderW: video.videoWidth,
-                renderH: video.videoHeight,
-              };
-
-        const { scaleX, scaleY, offsetX, offsetY, renderW, renderH } =
-          transform;
-
-        const guideW = isCard ? renderW * 0.9 : renderW * 0.96;
+        const guideW = isCard ? cw * 0.88 : cw * 0.92;
         const targetAspect = isCard
           ? CARD_ASPECT
           : isBook
             ? BOOK_ASPECT
             : PASSPORT_ASPECT;
-        const guideH = Math.min(guideW / targetAspect, renderH * 0.96);
-        const guideX = offsetX + (renderW - guideW) / 2;
-        const guideY = offsetY + (renderH - guideH) / 2;
+        const guideH = Math.min(guideW / targetAspect, ch * 0.92);
+        const guideX = (cw - guideW) / 2,
+          guideY = (ch - guideH) / 2;
 
-        // Subtract negative offset before scaling — maps perfectly to object-fit: cover
-        let roiX = Math.round((guideX - offsetX) * scaleX);
-        let roiY = Math.round((guideY - offsetY) * scaleY);
+        const scaleX = vw / cw,
+          scaleY = vh / ch;
+        let roiX = Math.round(guideX * scaleX);
+        let roiY = Math.round(guideY * scaleY);
         let roiW = Math.round(guideW * scaleX);
         let roiH = Math.round(guideH * scaleY);
 
-        // Boundary Protection: Clamp to avoid texture spill errors
-        roiX = Math.max(0, Math.min(roiX, vw - 20));
-        roiY = Math.max(0, Math.min(roiY, vh - 20));
-
-        // MEASURE FULL BOOKLET BOUNDS BEFORE SPLITTING FOR THE ASPECT RATIO CHECK
+        // 1️⃣ MEASURE FULL BOOKLET BOUNDS BEFORE SPLITTING FOR THE ASPECT RATIO CHECK
         const sw_full = Math.min(roiW, vw - roiX),
           sh_full = Math.min(roiH, vh - roiY);
         if (sw_full < 20 || sh_full < 20) return null;
@@ -1784,40 +1680,27 @@
             : 0;
         dbg("dbgAspectSig", sig_aspect.toFixed(0));
 
-        // CRUCIAL REFACTOR: Cache the clean, unmutated full booklet bounds FIRST.
-        // This ensures burstCapture gets the exact, uncorrupted bounding box!
-        lastFullRoi = {
-          roiX: Math.max(
-            0,
-            Math.min(Math.round((guideX - offsetX) * scaleX), vw - 20),
-          ),
-          roiY: Math.max(
-            0,
-            Math.min(Math.round((guideY - offsetY) * scaleY), vh - 20),
-          ),
-          roiW: Math.min(Math.round(guideW * scaleX), vw),
-          roiH: Math.min(Math.round(guideH * scaleY), vh),
-        };
-        lastRoi = { ...lastFullRoi };
-
-        // Create isolated variables for frame analysis drawing so we don't destroy lastRoi
-        let drawRoiX = roiX;
-        let drawRoiW = roiW;
-
-        // SPLIT THE CHANNELS NOW: Target exclusively the Right Half Data Page
+        // 2️⃣ SPLIT THE CHANNELS NOW: Target exclusively the Right Half Data Page
         if (isBook) {
-          drawRoiX = Math.round(roiX + roiW * 0.5);
-          drawRoiX = Math.max(0, Math.min(drawRoiX, vw - 20));
-          drawRoiW = Math.round(roiW * 0.5);
+          roiX = Math.round(roiX + roiW * 0.5); // Start halfway across the booklet guide
+          roiW = Math.round(roiW * 0.5); // Target just the right data page width
         }
 
-        const sw = Math.min(drawRoiW, vw - drawRoiX),
+        lastFullRoi = {
+          roiX: Math.round(guideX * scaleX),
+          roiY: Math.round(guideY * scaleY),
+          roiW: Math.round(guideW * scaleX),
+          roiH: Math.round(guideH * scaleY),
+        };
+        lastRoi = { roiX, roiY, roiW, roiH };
+
+        const sw = Math.min(roiW, vw - roiX),
           sh = Math.min(roiH, vh - roiY);
         if (sw < 20 || sh < 20) return null;
 
         buf.width = sw;
         buf.height = sh;
-        bctx.drawImage(video, drawRoiX, roiY, sw, sh, 0, 0, sw, sh);
+        bctx.drawImage(video, roiX, roiY, sw, sh, 0, 0, sw, sh);
         const imgData = bctx.getImageData(0, 0, sw, sh);
         const zinc = tozinc(imgData);
 
@@ -1830,24 +1713,21 @@
           let photoX, photoW, photoY, photoH;
           if (isCard) {
             photoW = Math.round(sw * 0.35);
-            photoX = drawRoiX + (sw - photoW);
+            photoX = roiX + (sw - photoW);
             photoY = roiY;
             photoH = sh;
           } else if (isBook) {
-            // Maps precisely onto the user's face quadrant on the right page
-            photoW = Math.round(roiW * 0.22);
-            photoX = Math.round(roiX + roiW * 0.52);
+            // Targets the lower quadrant of our pre-split right page viewport
+            photoW = Math.round(sw * 0.45);
+            photoX = roiX;
             photoY = roiY + Math.round(sh * 0.45);
             photoH = Math.round(sh * 0.5);
           } else {
             photoW = Math.round(sw * 0.4);
-            photoX = drawRoiX;
+            photoX = roiX;
             photoY = roiY;
             photoH = Math.round(sh * 0.6);
           }
-
-          photoX = Math.max(0, Math.min(photoX, vw - photoW));
-          photoY = Math.max(0, Math.min(photoY, vh - photoH));
 
           detectFaceInZone(video, photoX, photoY, photoW, photoH).then(
             (score) => {
@@ -1869,7 +1749,7 @@
         const sig_quality = bright >= 65 && bright <= 225 ? 100 : 0;
         dbg("dbgBright", bright.toFixed(0));
 
-        /* Composite Score Calculation */
+        /* Composite Framework Matrix Calculations */
         const composite = isBook
           ? Math.round(sig_sharp * 0.6 + sig_face * 0.15 + sig_aspect * 0.25)
           : Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2);
@@ -1879,13 +1759,13 @@
         const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
         const gateCard = isCard
           ? sig_face >= 30 && sig_aspect >= 50
-          : isBook
-            ? sig_face >= 22 && sig_aspect >= 40
-            : sig_aspect >= 40;
+          : sig_aspect >= 40;
 
+        // Adjusted face gate fallback for old book textures
         const gateFace = isBook
-          ? faceReady && lastFaceZoneTs > 0 && sig_face >= 22
+          ? !faceReady || lastFaceZoneTs === 0 || sig_face >= 15
           : !faceReady || lastFaceZoneTs === 0 || sig_face >= GATE_FACE_MIN;
+
         const gateSharp = sig_sharp >= 45;
         const gateAll =
           gateCard &&
@@ -1904,7 +1784,7 @@
         dbg("dbgGateFace", gateFace ? "✓" : "✗ " + sig_face.toFixed(0));
         dbg("dbgGateSharp", gateSharp ? "✓" : "✗ " + sig_sharp.toFixed(0));
 
-        /* Feedback Outputs */
+        /* Feedback System Outputs */
         let message, cls;
         if (bright < 65) {
           message = "Too dark — move to a brighter area";
@@ -1932,6 +1812,10 @@
           cls = "warn";
         }
 
+        // let gateBannerMsg = !gateCard
+        //   ? "Make sure the photo page is open and fully visible"
+        //   : null;
+
         return {
           composite,
           sig_aspect,
@@ -1948,6 +1832,7 @@
           gateSharp,
           message,
           cls,
+          // gateBannerMsg,
         };
       }
 
@@ -1970,15 +1855,16 @@
           const result = analyseFrame(video, buf, bctx);
           if (!result) return;
 
-          smoothedComposite =
-            smoothedComposite * 0.75 + result.composite * 0.25;
+          smoothedComposite = smoothedComposite * 0.6 + result.composite * 0.4;
           dbg("dbgSmoothed", Math.round(smoothedComposite));
 
           if (result.composite >= SCORE_GATE) resetInactivityTimer();
 
+          // FIXED: Dynamically calculate the target hold duration BEFORE parsing layout progress
           const burstMs =
             window.documentType === "book" ? 3000 : BURST_TRIGGER_MS;
 
+          // FIXED: Uses synchronized burstMs instead of hardcoded BURST_TRIGGER_MS
           const ringProgress =
             gatePassStartMs && result.gateAll
               ? Math.min((ts - gatePassStartMs) / burstMs, 1.0)
@@ -1991,7 +1877,19 @@
             _lastFbCls = result.cls;
           }
 
-          if (result.gateAll && smoothedComposite >= 58 && !burstTriggered) {
+          // const banner = el("gateBanner");
+          // if (result.gateBannerMsg) {
+          //   banner.textContent = result.gateBannerMsg;
+          //   banner.classList.add("visible");
+          //   gatePassStartMs = null;
+          //   burstTriggered = false;
+          //   gateMissCount = 0;
+          //   updateCaptureRing(0, burstMs); // FIXED: Synchronized duration variable pass
+          //   return;
+          // }
+          // banner.classList.remove("visible");
+
+          if (result.gateAll && smoothedComposite >= 45 && !burstTriggered) {
             gateMissCount = 0;
             if (!gatePassStartMs) gatePassStartMs = ts;
             const elapsed = ts - gatePassStartMs;
@@ -2015,7 +1913,6 @@
             }
           }
         }
-
         idRafId = requestAnimationFrame(loop);
       }
 
@@ -2045,40 +1942,31 @@
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        const cw = canvas.width,
+          ch = canvas.height;
         const isCard = window.documentType === "card";
         const isPassport = window.documentType === "passport";
 
-        // FIXED: Prevents UI from freezing if called before _vt populates
-        const transform =
-          _vt && _vt.renderW
-            ? _vt
-            : {
-                offsetX: 0,
-                offsetY: 0,
-                renderW: canvas.width,
-                renderH: canvas.height,
-              };
-
-        const { offsetX, offsetY, renderW, renderH } = transform;
-
-        const fw = isCard ? renderW * 0.9 : renderW * 0.96;
+        // Card gets compact frame. Book and passport get larger frame.
+        const fw = isCard ? cw * 0.88 : cw * 0.92;
         const targetAspect = isCard
           ? CARD_ASPECT
           : isPassport
             ? PASSPORT_ASPECT
             : BOOK_ASPECT;
-        const fh = Math.min(fw / targetAspect, renderH * 0.96);
-        const fx = offsetX + (renderW - fw) / 2;
-        const fy = offsetY + (renderH - fh) / 2;
+        const fh = Math.min(fw / targetAspect, ch * 0.92);
+        const fx = (cw - fw) / 2,
+          fy = (ch - fh) / 2;
 
         // Render uniform backdrop transparency matrix
         ctx.fillStyle = "rgba(0,0,0,0.4)";
         ctx.beginPath();
-        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.rect(0, 0, cw, ch);
         ctx.rect(fx, fy, fw, fh);
         ctx.fill("evenodd");
 
         // STABILIZED UI MATRIX GATES
+        // Green only activates if ALL structural rules pass AND the capture ring is 100% full
         const isFullyCaptured = result && result.gateAll && ringProgress >= 1.0;
         const isActivelyTracking =
           result && result.gateAll && ringProgress < 1.0;
@@ -2091,12 +1979,14 @@
               ? "rgba(251,191,36,.4)" // TRANSITIONAL AMBER
               : "rgba(255,255,255,.75)"; // NEUTRAL WHITE GUIDE
 
+        // FIXED: Force dashed line layout to persist until final, true resolution is achieved
         ctx.setLineDash(isFullyCaptured ? [] : [10, 8]);
         ctx.strokeStyle = fc;
         ctx.lineWidth = 2.5;
         ctx.strokeRect(fx, fy, fw, fh);
         ctx.setLineDash([]);
 
+        // Draw Corner Accents
         const cl = 18;
         ctx.strokeStyle = fc;
         ctx.lineWidth = 4;
@@ -2113,6 +2003,7 @@
           ctx.stroke();
         });
 
+        // Render soft inside screen glow only upon complete success match execution
         if (isFullyCaptured) {
           ctx.fillStyle = "rgba(74,222,128,.07)";
           ctx.fillRect(fx, fy, fw, fh);
@@ -2120,7 +2011,7 @@
       }
 
       /* ================================================================
-   BURST CAPTURE - CHANNEL SPLIT MECHANICS ENFORCED
+   BURST CAPTURE
 ================================================================ */
       async function burstCapture(videoEl) {
         if (isCaptureInProgress) return;
@@ -2128,6 +2019,7 @@
         cancelRaf(idRafId);
         idRafId = null;
         el("captureRingWrap").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         setFb("idFeedback", "Scanning…", "ok");
 
         const buf = document.createElement("canvas");
@@ -2138,7 +2030,7 @@
           await new Promise((r) => setTimeout(r, BURST_INTERVAL_MS));
           if (!videoEl.videoWidth || videoEl.readyState < 2) continue;
           const result = analyseFrame(videoEl, buf, bctx);
-          if (!result || result.composite < 60) continue;
+          if (!result || result.composite < 50) continue;
           const frameScore =
             result.sig_sharp * 0.5 +
             result.sig_quality * 0.25 +
@@ -2162,6 +2054,7 @@
           });
         }
 
+        /* Fallback: one raw frame if burst was empty */
         if (frames.length === 0) {
           const fb = document.createElement("canvas");
           fb.width = Math.round(videoEl.videoWidth * 0.8);
@@ -2179,6 +2072,7 @@
         const best = frames[0];
         setFb("idFeedback", "Processing…", "ok");
 
+        /* Compress */
         let q = 0.85,
           blob;
         while (q >= 0.4) {
@@ -2190,68 +2084,37 @@
         }
         window.capturedIDBlob = blob;
 
+        /* OCR */
         let parsed = {};
         try {
           if (!window._ocrWorker) {
-            window._ocrWorker = await Tesseract.createWorker("eng");
+            window._ocrWorker = await Tesseract.createWorker("eng", 1, {
+              workerPath:
+                "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+              corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
+              langPath: "https://tessdata.projectnaptha.com/4.0.0",
+            });
           }
 
-          const currentScale = best.canvas.width / videoEl.videoWidth;
-
           if (window.documentType === "card" && best.roi) {
-            let cardRoi = { ...best.roi };
-            if (currentScale !== 1) {
-              cardRoi.roiX = Math.round(cardRoi.roiX * currentScale);
-              cardRoi.roiY = Math.round(cardRoi.roiY * currentScale);
-              cardRoi.roiW = Math.round(cardRoi.roiW * currentScale);
-              cardRoi.roiH = Math.round(cardRoi.roiH * currentScale);
-            }
-            const cardCanvas = await rectifyCard(best.canvas, cardRoi, videoEl);
-            parsed = parseSouthAfricanSmartID(await zonalOCR(cardCanvas));
-            window.capturedIDBlob = await new Promise((r) =>
-              cardCanvas.toBlob(r, "image/jpeg", 0.92),
+            const cardCanvas = await rectifyCard(
+              best.canvas,
+              best.roi,
+              videoEl,
             );
+            parsed = parseSouthAfricanSmartID(await zonalOCR(cardCanvas));
+            dbg("dbgIdNum", parsed.idNumber || "none");
           } else if (best.roi) {
             if (window.documentType === "passport") {
-              let passportFullRoi = { ...best.fullRoi };
-              if (currentScale !== 1) {
-                passportFullRoi.roiX = Math.round(
-                  passportFullRoi.roiX * currentScale,
-                );
-                passportFullRoi.roiY = Math.round(
-                  passportFullRoi.roiY * currentScale,
-                );
-                passportFullRoi.roiW = Math.round(
-                  passportFullRoi.roiW * currentScale,
-                );
-                passportFullRoi.roiH = Math.round(
-                  passportFullRoi.roiH * currentScale,
-                );
-              }
-              parsed = await ocrPassport(best.canvas, passportFullRoi, videoEl);
+              // Full-page OCR — no coordinate splitting, no double-scale bug
+              // lastFullRoi holds the complete guide frame in video coordinates
+              parsed = await ocrPassport(best.canvas, best.fullRoi, videoEl);
+              dbg("dbgIdNum", parsed.passportNumber || "none");
             } else {
-              let { roiX, roiY, roiW, roiH } = best.roi;
-
-              // Apply scale modifier to keep coordinates aligned with the image size
-              if (currentScale !== 1) {
-                roiX = Math.round(roiX * currentScale);
-                roiY = Math.round(roiY * currentScale);
-                roiW = Math.round(roiW * currentScale);
-                roiH = Math.round(roiH * currentScale);
-              }
-
-              // SENIOR CRUCIAL CHANNEL SPLIT: Force the crop box onto the Right Page
-              // This isolates the data page from the instructions on the left page
-              roiX = Math.round(roiX + roiW * 0.5);
-              roiW = Math.round(roiW * 0.5);
-
-              // Safeguard tracking coordinates to prevent frame boundary overflows
-              roiX = Math.max(0, Math.min(roiX, best.canvas.width - 20));
-              roiY = Math.max(0, Math.min(roiY, best.canvas.height - 20));
-              roiW = Math.min(roiW, best.canvas.width - roiX);
-              roiH = Math.min(roiH, best.canvas.height - roiY);
-
+              /* GREEN ID BOOK - DIRECT RIGHT HALF EXTRACTION — UNTOUCHED */
+              const { roiX, roiY, roiW, roiH } = best.roi;
               const UP = Math.max(3, Math.ceil(60 / roiH));
+
               const bookCanvas = document.createElement("canvas");
               bookCanvas.width = roiW * UP;
               bookCanvas.height = roiH * UP;
@@ -2260,6 +2123,7 @@
               bctx2.imageSmoothingEnabled = true;
               bctx2.imageSmoothingQuality = "high";
 
+              // Draw our precise pre-isolated right half viewport
               bctx2.drawImage(
                 best.canvas,
                 roiX,
@@ -2271,6 +2135,7 @@
                 bookCanvas.width,
                 bookCanvas.height,
               );
+
               preprocessZone(
                 bctx2,
                 bookCanvas.width,
@@ -2279,19 +2144,27 @@
                 true,
               );
 
+              // Call our relaxed single-scan text block engine
               const zones = await zonalOCRBook(bookCanvas);
+
+              // Hand off data seamlessly to your untouched parsing algorithm
               parsed = parseGreenIDBook(zones);
+
+              dbg("dbgIdNum", parsed.idNumber || "none");
+              dbg("dbgBookAnchor", parsed._bookAnchor || "none");
             }
           }
 
           parsed._idValid = parsed._idValid ?? true;
           parsed._saCountry = parsed._saCountry ?? true;
-        } catch (error) {
+          dbg("dbgIdValid", parsed._idValid ? "✓" : "✗");
+        } catch {
           parsed = {};
-          console.error("OCR Routing Crash:", error);
+          dbg("dbgIdNum", "ocr-failed");
         }
 
         window.extractedIDData = parsed;
+
         const validation = validateExtractedData(parsed);
 
         if (!validation.pass) {
@@ -2299,8 +2172,7 @@
           burstTriggered = false;
           gatePassStartMs = null;
           stopIdCam();
-          el("step3").classList.add("step3--error");
-          el("idFeedback").style.display = "none";
+          setFb("idFeedback", "Capture stopped", "bad");
           if (
             validation.code === "wrong_doc" ||
             validation.code === "foreign_doc"
@@ -2316,10 +2188,13 @@
                 "Open the passport to your photo page. Keep it flat. Make sure it is well-lit, clear, and the photo page fills most of the guide frame until it turns green.",
             };
             el("retryNotice").textContent =
-              retryMessages[window.documentType] || "Please align document.";
+              retryMessages[window.documentType] ||
+              "Please ensure your document is fully visible, well lit, and in focus, then try again.";
             el("retryNotice").classList.add("visible");
           }
           el("btnRetryID").style.display = "flex";
+          el("step3").classList.add("step3--error");
+          el("captureRingWrap").classList.remove("visible");
           return;
         }
 
@@ -2331,6 +2206,7 @@
 
       /* ================================================================
    VALIDATION
+   — Smart ID and Passport flows remain unchanged.
    — Green ID Book validation now checks for at least one trusted marker:
        1. A valid 13-digit South African ID number (strongest signal)
        2. OCR detects "S.A. BURGER" or "S.A. CITIZEN"
@@ -2388,27 +2264,8 @@
             };
           }
 
-          // Captures raw text results and maps them into uniform keys for Step 5
-          parsed.surname = (
-            parsed.surname ||
-            parsed.surName ||
-            parsed["van"] ||
-            parsed["van/surname"] ||
-            ""
-          )
-            .trim()
-            .replace(/[^a-zA-Z\s\-]/g, "");
-
-          parsed.firstNames = (
-            parsed.firstNames ||
-            parsed.givenNames ||
-            parsed["voorname"] ||
-            parsed["voorname/first names"] ||
-            ""
-          )
-            .trim()
-            .replace(/[^a-zA-Z\s\-]/g, "");
-
+          // Allow continuation even if the ID checksum fails.
+          // The user can review and correct the number later if needed.
           parsed._saCountry = true;
 
           return { pass: true, code: "ok", reason: "" };
@@ -2439,8 +2296,26 @@
         return { pass: true, code: "ok", reason: "" };
       }
 
+      // function checkResultsCompleteness() {
+      //   const idVal =
+      //     (el("fIdNumber") || el("fPassportNumber"))?.value?.trim() || "";
+      //   const surnameVal = el("fSurname")?.value?.trim() || "";
+      //   const namesVal = el("fNames")?.value?.trim() || "";
+      //   const confirmed = el("chkConfirm")?.checked || false;
+      //   const btnConfirm = el("btnConfirm"),
+      //     btnRestart = el("btnRestart");
+      //   if (!idVal || (!surnameVal && !namesVal) || !confirmed) {
+      //     btnConfirm.disabled = true;
+      //     btnRestart.style.display =
+      //       !idVal || (!surnameVal && !namesVal) ? "flex" : "none";
+      //   } else {
+      //     btnConfirm.disabled = false;
+      //     btnRestart.style.display = "none";
+      //   }
+      // }
+
       /* ── Field validation state machine ── */
-      const _fieldState = {};
+      const _fieldState = {}; // tracks whether each field has been touched
 
       function setFieldError(id, msg) {
         const input = el(id);
@@ -2465,6 +2340,7 @@
         const warnEl = el(id + "__warn");
         const errEl = el(id + "__err");
         if (!input || !warnEl) return;
+        // Only show warn if there's no active error
         if (errEl && errEl.classList.contains("visible")) return;
         if (msg) {
           input.classList.add("warn");
@@ -2526,15 +2402,16 @@
           setFieldError(fieldId, null);
           setFieldWarn(fieldId, null);
 
-          // if (window.documentType !== "book") {
-          //   const ocrId = (ocr.idNumber || "").trim();
-          //   if (ocrId && ocrId.length === 13 && ocr._idValid && val !== ocrId) {
-          //     setFieldWarn(
-          //       fieldId,
-          //       "This doesn't match what we read — please double-check",
-          //     );
-          //   }
-          // }
+          // Only warn on mismatch for Smart ID card — not green ID book (OCR unreliable)
+          if (window.documentType !== "book") {
+            const ocrId = (ocr.idNumber || "").trim();
+            if (ocrId && ocrId.length === 13 && ocr._idValid && val !== ocrId) {
+              setFieldWarn(
+                fieldId,
+                "This doesn't match what we read — please double-check",
+              );
+            }
+          }
           return true;
         }
       }
@@ -2561,6 +2438,7 @@
 
         const idFieldId = isPassport ? "fPassportNumber" : "fIdNumber";
 
+        // Only validate fields that have been touched
         const idOk = validateIdField(idFieldId, !!_fieldState[idFieldId]);
         const surOk = validateNameField(
           "fSurname",
@@ -2585,15 +2463,19 @@
           const input = el(id);
           if (!input) return;
 
+          // On blur: mark as touched, run full validation
           input.addEventListener("blur", () => {
             _fieldState[id] = true;
             checkResultsCompleteness();
           });
 
+          // On input: if already touched (error recovery) re-validate immediately
           input.addEventListener("input", () => {
             if (_fieldState[id]) checkResultsCompleteness();
           });
         });
+
+        // Checkbox also re-evaluates button state
         el("chkConfirm")?.addEventListener("change", checkResultsCompleteness);
       }
 
@@ -2836,8 +2718,11 @@
 
       /* ================================================================
    RELAXED GREEN ID BOOK RIGHT-PAGE OCR (ALIGNMENT-FREE)
+   Scans the entire right data page as a whole to tolerate shake.
+   Bypasses the photo block automatically and matches data keys.
 ================================================================ */
       async function zonalOCRBook(bookCanvas) {
+        // Broad whitelist to allow tracking fields, mixed strings, and line breaks
         const whitelist =
           "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -./':\n";
         const results = {
@@ -2845,10 +2730,10 @@
           citizenLabel: "",
           surname: "",
           names: "",
-          dobRaw: "",
         };
 
         try {
+          // PSM "3" analyzes full layout hierarchies naturally, even if tilted
           const { data } = await window._ocrWorker.recognize(
             bookCanvas,
             {},
@@ -2859,60 +2744,39 @@
           );
 
           const fullText = data.text || "";
+          const lines = fullText.split("\n").map((l) => l.trim());
+
+          // Pass the entire text block to idNumber so your sliding window loop searches everything
           results.idNumber = fullText;
 
-          const lines = fullText
-            .split("\n")
-            .map((l) => l.trim())
-            .filter(Boolean);
-
+          // Search lines sequentially to populate remaining fields
           for (let i = 0; i < lines.length; i++) {
             const currentLine = lines[i];
 
+            // Grab the Citizen Anchor
             if (/BURGER|CITIZEN/i.test(currentLine)) {
               results.citizenLabel = currentLine;
             }
 
-            // Capture Date of Birth Raw Line
-            if (/GEBOOR|DATE\s*OF\s*B/i.test(currentLine)) {
-              results.dobRaw = currentLine;
+            // Grab Surname (checks line below if field value wrapped down)
+            if (/VAN\/SURNAME|SURNAME/i.test(currentLine)) {
+              results.surname = currentLine;
               if (
                 lines[i + 1] &&
-                /\d/.test(lines[i + 1]) &&
-                !/UITGEREIK|ISSUED/i.test(lines[i + 1])
+                !/VOORNAME|FORENAMES|NAMES|ID/i.test(lines[i + 1])
               ) {
-                results.dobRaw += " " + lines[i + 1];
+                results.surname += " " + lines[i + 1];
               }
             }
 
-            if (/VAN|SURNAME/i.test(currentLine)) {
-              const inlineText = currentLine
-                .replace(/VAN|SURNAME|[\/\s\-\:]/gi, "")
-                .trim();
+            // Grab Forenames (checks line below if fields are multi-line)
+            if (/VOORNAME\/FORENAMES|FORENAMES|NAMES/i.test(currentLine)) {
+              results.names = currentLine;
               if (
-                inlineText.length > 1 &&
-                !/VOORNAME|FORENAMES|NAMES/i.test(inlineText)
-              ) {
-                results.surname = currentLine;
-              } else if (
                 lines[i + 1] &&
-                !/VOORNAME|FORENAMES|NAMES|ID|GEBOOR/i.test(lines[i + 1])
+                !/VAN|SURNAME|ID|BURGER|CITIZEN/i.test(lines[i + 1])
               ) {
-                results.surname = currentLine + " " + lines[i + 1];
-              }
-            }
-
-            if (/VOORNAME|FORENAMES|NAMES/i.test(currentLine)) {
-              const inlineText = currentLine
-                .replace(/VOORNAME|FORENAMES|NAMES|[\/\s\-\:]/gi, "")
-                .trim();
-              if (inlineText.length > 1 && !/VAN|SURNAME/i.test(inlineText)) {
-                results.names = currentLine;
-              } else if (
-                lines[i + 1] &&
-                !/VAN|SURNAME|ID|GEBOOR|DISTRIK/i.test(lines[i + 1])
-              ) {
-                results.names = currentLine + " " + lines[i + 1];
+                results.names += " " + lines[i + 1];
               }
             }
           }
@@ -2920,182 +2784,114 @@
           console.error("Relaxed right-page extraction crash:", error);
         }
 
+        // Returns the exact schema signature required by parseGreenIDBook(zones)
         return results;
       }
 
       /* ================================================================
-   GREEN ID BOOK PARSER - ANTI-PREFIX EXTRACTION ENGINE
+   GREEN ID BOOK PARSER
+   _bookAnchor: truthy string = S.A. BURGER/CITIZEN label detected.
+   This is the document-identity proof beyond Luhn.
 ================================================================ */
       function parseGreenIDBook(zones) {
-        const fullText = zones.idNumber || "";
-        const lines = fullText
-          .split("\n")
-          .map((l) => l.trim())
-          .filter(Boolean);
+        const rawDigits = (zones.idNumber || "").replace(/[^0-9]/g, "");
 
-        let idTargetLine = "";
-        let dobTargetLine = "";
-
-        // 1. Landmark Isolation Layer
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          if (/I\.?D\.?\s*No/i.test(line)) {
-            idTargetLine = line;
-            if (
-              lines[i + 1] &&
-              /\d/.test(lines[i + 1]) &&
-              !/VAN|SURNAME|VOOR/i.test(lines[i + 1])
-            ) {
-              idTargetLine += " " + lines[i + 1];
-            }
-          }
-          if (
-            /GEBOOR|DATE\s*OF\s*B|BIRTH/i.test(line) &&
-            !/UITGEREIK|ISSUED/i.test(line)
-          ) {
-            dobTargetLine = line;
-            if (
-              lines[i + 1] &&
-              /\d/.test(lines[i + 1]) &&
-              !/UITGEREIK|ISSUED|GESAG/i.test(lines[i + 1])
-            ) {
-              dobTargetLine += " " + lines[i + 1];
-            }
-          }
-        }
-
-        // 2. Isolate the true 2-Digit Year of Birth Anchor for cross-validation
-        let dobAnchorYOB = "";
-        const dobContext = dobTargetLine || zones.dobRaw || "";
-        const dateMatch =
-          dobContext.match(/(\d{4})[\-\.\s]\d{2}[\-\.\s]\d{2}/) ||
-          dobContext.match(/(\d{2})[\-\.\s]\d{2}[\-\.\s]\d{2}/);
-        if (dateMatch) {
-          const rawYear = dateMatch[1];
-          dobAnchorYOB = rawYear.length === 4 ? rawYear.slice(-2) : rawYear;
-        }
-
-        const searchBlock = idTargetLine || fullText;
-        let cleanDigits = searchBlock.replace(/[^0-9]/g, "");
-
+        // Sliding window — barcode bleed often prepends/appends a stray digit.
+        // Try every 13-digit window and take the first that passes Luhn.
         let rawId = "";
         let idValid = false;
-
-        if (cleanDigits.length === 14 && cleanDigits.startsWith("1")) {
-          const candidateWithNoOne = cleanDigits.slice(1);
-
-          if (
-            dobAnchorYOB &&
-            candidateWithNoOne.startsWith(dobAnchorYOB) &&
-            saLuhn13(candidateWithNoOne)
-          ) {
-            rawId = candidateWithNoOne;
+        for (let start = 0; start <= rawDigits.length - 13; start++) {
+          const candidate = rawDigits.slice(start, start + 13);
+          if (saLuhn13(candidate)) {
+            rawId = candidate;
             idValid = true;
-          } else if (saLuhn13(candidateWithNoOne)) {
-            rawId = candidateWithNoOne;
-            idValid = true;
+            break;
           }
         }
-        if (!idValid) {
-          for (let start = 0; start <= cleanDigits.length - 13; start++) {
-            const candidate = cleanDigits.slice(start, start + 13);
-            if (saLuhn13(candidate)) {
-              if (dobAnchorYOB && !candidate.startsWith(dobAnchorYOB)) {
-                continue;
-              }
-              rawId = candidate;
-              idValid = true;
-              break;
-            }
-          }
-        }
-        if (!idValid && dobAnchorYOB) {
-          const targetIdx = cleanDigits.indexOf(dobAnchorYOB);
-          if (targetIdx !== -1) {
-            const candidate = cleanDigits.slice(targetIdx, targetIdx + 13);
-            if (candidate.length === 13) {
-              rawId = candidate;
-              idValid = saLuhn13(rawId);
-            }
-          }
-        }
+        // Fall back to first 13 digits if no window passed Luhn
+        if (!idValid) rawId = rawDigits.slice(0, 13);
 
-        // Ultimate System Fallback
-        if (!idValid) {
-          const fallbackMatch = searchBlock.replace(/\s+/g, "").match(/\d{13}/);
-          rawId = fallbackMatch ? fallbackMatch[0] : cleanDigits.slice(0, 13);
-        }
-
-        // Normalize name layout strings to pre-fill Step 5 confirmation forms
         const surname = cleanBookField(zones.surname || "");
-        const firstNames = cleanBookField(zones.names || "");
+        const names = cleanBookField(zones.names || "");
 
+        // Reuse Smart ID parser to derive DOB, gender, citizenship, age — single source of truth
         let dobISO = "";
         let gender = "";
         let citizenship = "";
         let age = null;
 
-        if (rawId.length === 13) {
+        if (idValid && rawId.length === 13) {
           const derived = parseSouthAfricanSmartID({
             idNumber: rawId,
             surname: "",
             names: "",
           });
-          dobISO = derived.dobISO || "";
-          gender = derived.gender || "";
-          citizenship = derived.citizenship || "";
-          age = derived.age ?? null;
+          if (derived._idValid) {
+            dobISO = derived.dobISO || "";
+            gender = derived.gender || "";
+            citizenship = derived.citizenship || "";
+            age = derived.age ?? null;
+          }
         }
 
+        // Anchor: citizen label strip below barcode
         const labelRaw = (zones.citizenLabel || "").toUpperCase();
         const anchorHit = /BURGER|CITIZEN|S\.?A\.?\s*(BURGER|CITIZEN)/.test(
           labelRaw,
         )
           ? labelRaw.trim()
           : null;
-        const idZoneText = fullText.toUpperCase();
+
+        // Anchor: barcode zone sometimes contains the label text
+        const idZoneText = (zones.idNumber || "").toUpperCase();
         const barcodeAreaHit = /BURGER|CITIZEN|S\.?A\.?B|S\.?A\.?C/.test(
           idZoneText,
         )
           ? "barcode-area"
           : null;
+
+        // Anchor: bilingual field labels unique to this document
+        const allText = Object.values(zones).join(" ").toUpperCase();
         const bilingualHit =
-          /VAN\/SURNAME|VOORNAAM|BINNELANDSE|HOME AFFAIRS/.test(idZoneText)
+          /VAN\/SURNAME|VOORNAAM|BINNELANDSE|HOME AFFAIRS|GEBOORTEDATUM/.test(
+            allText,
+          )
             ? "bilingual-label"
             : null;
 
         return {
-          idNumber: rawId,
+          idNumber: idValid ? rawId : rawId || "",
           surname,
-          firstNames,
-          dobISO: dobISO || (dateMatch ? dateMatch[0] : ""),
+          names,
+          dobISO,
           gender,
           citizenship,
           age,
           isPassport: false,
           isGreenBook: true,
-          _idValid: rawId.length === 13,
+          _idValid: idValid,
           _saCountry: true,
           _bookAnchor: anchorHit || barcodeAreaHit || bilingualHit || null,
         };
       }
 
       function cleanBookField(raw) {
-        if (!raw) return "";
-
         return raw
           .replace(
-            /([\s\S]*?)(VAN\/SURNAME|SURNAME|VOORNAME\/FORENAMES|FORENAMES|NAMES?)\s*[:\-]*/i,
+            /^(VAN\/SURNAME|SURNAME|VOORNAME\/FORENAMES|FORENAMES|NAMES?)\s*[:\-]*/i,
             "",
           )
           .replace(/[^A-Za-z\s'\-]/g, "")
-          .replace(/\s+/g, " ")
           .trim()
           .toUpperCase();
       }
 
       /* ================================================================
    PASSPORT FULL-PAGE OCR
+   Uses the full guide-frame ROI from best.canvas.
+   No coordinate splitting — guide frame ensures quality,
+   Tesseract + extractMRZFromText find the MRZ by pattern.
+   Works for any ICAO Doc 9303 compliant passport globally.
 ================================================================ */
       async function ocrPassport(bestCanvas, fullRoi, videoEl) {
         if (!fullRoi) return {};
@@ -3138,6 +2934,8 @@
           passportCanvas.height,
         );
 
+        // Sharpen but do not binarize the full page —
+        // binarizing hurts name/bio text quality above the MRZ
         preprocessZone(
           ctx,
           passportCanvas.width,
@@ -3183,8 +2981,10 @@
           const a = lines[i].padEnd(44, "<").slice(0, 44);
           const b = lines[i + 1].padEnd(44, "<").slice(0, 44);
 
+          // TD3 line 1: starts with P, followed by 1 subtype char, followed by 3-char country code
           const line1ok = /^P[A-Z<][A-Z<]{3}/.test(a) && a.includes("<<");
 
+          // TD3 line 2: passport number at 0-8, check digit at 9, DOB at 13-18, expiry at 21-26
           const line2ok =
             b.length >= 44 &&
             /^[A-Z0-9<]{9}[0-9][A-Z<]{3}\d{6}[0-9][MF<]\d{6}/.test(b);
@@ -3537,11 +3337,6 @@
           selfieStreamReady = null;
           selfieStream = stream;
           video.srcObject = stream;
-          await new Promise((resolve) => {
-            if (video.videoWidth) resolve();
-            else
-              video.addEventListener("loadedmetadata", resolve, { once: true });
-          });
           await video.play();
           loader.style.display = "none";
           resizeSelfieCanvas();
@@ -3615,7 +3410,7 @@
 
           ctx.fillStyle = "rgba(0,0,0,0.38)";
           ctx.beginPath();
-          ctx.rect(0, 0, canvas.width, canvas.height);
+          ctx.rect(0, 0, cw, ch);
           ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
           ctx.fill("evenodd");
 
@@ -3814,6 +3609,12 @@
         displayResults({});
       }
 
+      // function buildField(label, value, id) {
+      //   const sid = id ? ` id="${id}"` : "";
+      //   const safeV = value != null && value !== "" ? esc(String(value)) : "";
+      //   return `<div class="field-row"><div class="field-label">${esc(label)}</div><input class="field-input" type="text" value="${safeV}" placeholder="Not extracted"${sid}></div>`;
+      // }
+
       function buildPrefilledField(label, id, value, placeholder, inputmode) {
         const im = inputmode ? ` inputmode="${inputmode}"` : "";
         const safeV = value != null && value !== "" ? esc(String(value)) : "";
@@ -3827,6 +3628,11 @@
       <div class="field-warn" id="${esc(id)}__warn"></div>
     </div>`;
       }
+
+      // function buildEmptyField(label, id, placeholder, inputmode) {
+      //   const im = inputmode ? ` inputmode="${inputmode}"` : "";
+      //   return `<div class="field-row"><div class="field-label">${esc(label)}</div><input class="field-input" type="text" value="" placeholder="${esc(placeholder)}" id="${esc(id)}"${im} autocomplete="off" autocorrect="off" spellcheck="false"></div>`;
+      // }
 
       function buildReadonlyField(label, value) {
         if (!value) return "";
@@ -3867,7 +3673,7 @@
           html += buildPrefilledField(
             "Given name(s)",
             "fNames",
-            ocr.firstNames || ocr.names || "",
+            ocr.names || "",
             "As it appears on your passport",
             "text",
           );
@@ -3888,7 +3694,7 @@
           html += buildReadonlyField("Expiry date", ocr.expiryISO || "");
         } else if (isBook) {
           html += `<div class="book-review-notice">
-<strong>Please review:</strong> Verify your details below exactly as they appear in your ID book.
+  <strong>Please review:</strong> Verify your details below exactly as they appear in your ID book.
 </div>`;
           html += buildPrefilledField(
             "ID number",
@@ -3900,7 +3706,7 @@
           html += buildPrefilledField(
             "Full names",
             "fNames",
-            ocr.firstNames || ocr.names || "",
+            ocr.names || "",
             "As it appears on your document",
             "text",
           );
@@ -3925,7 +3731,7 @@
           html += buildPrefilledField(
             "Full names",
             "fNames",
-            ocr.firstNames || ocr.names || "",
+            ocr.names || "",
             "As it appears on your document",
             "text",
           );
@@ -3950,46 +3756,31 @@
         el("mrzIntegritySection").style.display = "none";
         el("failList").style.display = "none";
       }
-
       async function confirmResults() {
         const ocr = window.extractedIDData || {};
         const isPassport = ocr.isPassport || false;
         const isBook = window.documentType === "book";
 
-        // ── USER DECLARED DATA
+        // ── USER DECLARED DATA ──────────────────────────────────────────
+        // What the user typed — authoritative submission, never overridden by OCR
         const userInput = {
           document_type: window.documentType,
-          id_number:
-            (
-              el("input_fIdNumber")?.value ||
-              el("fIdNumber")?.value ||
-              ""
-            ).trim() || null,
-          passport_number:
-            (
-              el("input_fPassportNumber")?.value ||
-              el("fPassportNumber")?.value ||
-              ""
-            ).trim() || null,
-          surname:
-            (
-              el("input_fSurname")?.value ||
-              el("fSurname")?.value ||
-              ""
-            ).trim() || null,
-          names:
-            (el("input_fNames")?.value || el("fNames")?.value || "").trim() ||
-            null,
+          id_number: el("fIdNumber")?.value?.trim() || null,
+          passport_number: el("fPassportNumber")?.value?.trim() || null,
+          surname: el("fSurname")?.value?.trim() || null,
+          names: el("fNames")?.value?.trim() || null,
         };
 
-        // ── OCR EXTRACTED DATA
+        // ── OCR EXTRACTED DATA ──────────────────────────────────────────
+        // Background signal only — sent silently for backend reconciliation
+        // Never used on the frontend to validate or block the user
         let ocrExtracted = {};
 
         if (isPassport) {
           ocrExtracted = {
             ocr_passport_number: ocr.passportNumber || null,
             ocr_surname: ocr.surname || null,
-            ocr_names: ocr.firstNames || ocr.names || null,
+            ocr_names: ocr.names || null,
             ocr_dob: ocr.dobISO || null,
             ocr_gender: ocr.gender || null,
             ocr_nationality: ocr.nationality || null,
@@ -4005,22 +3796,24 @@
           ocrExtracted = {
             ocr_id_number: ocr.idNumber || null,
             ocr_surname: ocr.surname || null,
-            ocr_names: ocr.firstNames || ocr.names || null,
+            ocr_names: ocr.names || null,
             ocr_dob: ocr.dobISO || null,
             ocr_gender: ocr.gender || null,
             ocr_citizenship: ocr.citizenship || null,
             ocr_id_valid: ocr._idValid ?? null,
+            // Book-specific anchor signal
             ocr_book_anchor: isBook ? ocr._bookAnchor || null : undefined,
           };
+          // Remove undefined keys cleanly
           Object.keys(ocrExtracted).forEach(
             (k) => ocrExtracted[k] === undefined && delete ocrExtracted[k],
           );
         }
 
-        // ── GUARD: no API configured
+        // ── GUARD: no API configured ────────────────────────────────────
         if (
           !window.API_BASE_URL ||
-          window.API_BASE_URL === "https://wallety-api.com/verify"
+          window.API_BASE_URL === "https://your-api.com/verify"
         ) {
           console.log("User input:", userInput);
           console.log("OCR extracted (silent):", ocrExtracted);
@@ -4028,7 +3821,7 @@
           return;
         }
 
-        // ── BUILD FORM DATA
+        // ── BUILD FORM DATA ─────────────────────────────────────────────
         const fd = new FormData();
 
         // Images
@@ -4037,6 +3830,7 @@
         if (window.capturedSelfieBlob)
           fd.append("selfie_image", window.capturedSelfieBlob, "selfie.jpg");
 
+        // User declared — flat fields
         Object.entries(userInput).forEach(([k, v]) => {
           if (v !== null) fd.append(k, v);
         });
@@ -4044,6 +3838,7 @@
         // OCR extracted — sent as a single JSON blob so backend can parse cleanly
         fd.append("ocr_data", JSON.stringify(ocrExtracted));
 
+        // ── SUBMIT ──────────────────────────────────────────────────────
         const btnConfirm = el("btnConfirm");
         btnConfirm.disabled = true;
         btnConfirm.classList.add("loading");
@@ -4100,6 +3895,7 @@
           .forEach((c) => c.classList.remove("selected"));
         el("btnContinue").disabled = true;
         el("retryNotice").classList.remove("visible");
+        // el("gateBanner").classList.remove("visible");
         el("captureRingWrap").classList.remove("visible");
         document
           .querySelectorAll(".step")
