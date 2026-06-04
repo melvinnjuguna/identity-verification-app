@@ -1,0 +1,28 @@
+{
+    "whatsApp_number": "27821112222",
+    "document_type": "PASSPORT",
+    "images": {
+        "id_image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k=",
+        "selfie_image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJQAB/9k="
+    },
+    "user_declared": {
+        "identity_number": "A01234567",
+        "first_names": "MELVIN",
+        "surname": "SMITH"
+    },
+    "ocr_extracted": {
+        "identity_number": "A01234567",
+        "first_names": "MELVIN",
+        "surname": "SMITH",
+        "dob": "1994-08-20",
+        "gender": "male",
+        "citizenship_status": null,
+        "passport_metadata": {
+            "nationality": "ZAF",
+            "issuing_country": "ZAF",
+            "expiry_date": "2034-08-20",
+            "raw_mrz_line1": "P<ZAFSMITH<<MELVIN<<<<<<<<<<<<<<<<<<<<<<<<<<",
+            "raw_mrz_line2": "A012345675ZAF9408204M3408200<<<<<<<<<<<<<<02"
+        }
+    }
+}
