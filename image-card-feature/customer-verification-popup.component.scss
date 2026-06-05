@@ -1,0 +1,100 @@
+.history-container {
+  padding: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+
+  h2 {
+    margin-bottom: 20px;
+  }
+}
+
+.history-card {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+
+  .status {
+    font-weight: bold;
+    &.rejected {
+      color: #ff0000;
+    }
+    &.resubmitted {
+      color: #ee82ee;
+    }
+    &.pending {
+      color: #fca311;
+    }
+    &.expired {
+      color: grey;
+    }
+    &.frozen {
+      color: blue;
+    }
+    &.approved {
+      color: green;
+    }
+  }
+
+  .date {
+    font-size: 0.9em;
+    color: #666;
+  }
+}
+
+.history-content {
+  margin-bottom: 10px;
+  p {
+    margin: 5px 0;
+  }
+}
+
+.history-footer {
+  font-size: 0.9em;
+  color: #333;
+}
+
+.no-records {
+  padding: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  color: #666;
+  border: 1px dashed #ccc;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+/* Added modal size modifications */
+.modal-dialog {
+  max-width: 80vw; /* Increased modal width */
+  margin: 1.75rem auto;
+}
+
+.modal-content {
+  height: auto;
+  min-height: 80vh; /* Increased modal height */
+}
+
+#verification-history,
+#personal-details {
+  max-height: 70vh; /* Restrict height to fit within viewport */
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding: 1rem;
+}
+
+.view-content {
+  .col-4,
+  .col-3 {
+    &.d-flex {
+      align-items: flex-start;
+    }
+  }
+}

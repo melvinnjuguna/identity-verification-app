@@ -1,0 +1,32 @@
+<div class="image-container">
+  <div class="image-wrapper" [ngClass]="orientation">
+    <ng-container *ngIf="imageUrl && imageUrl !== ''; else noImage">
+      <div class="image-section">
+        <img [src]="IMAGE" alt="{{ label }}" class="identity-image" />
+      </div>
+    </ng-container>
+    <ng-template #noImage>
+      <div class="placeholder-section">
+        <div class="placeholder-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon"
+          >
+            <line x1="2" y1="2" x2="22" y2="22"></line>
+            <path d="M10.41 10.41a2 2 0 1 1-2.83-2.83"></path>
+            <line x1="13.5" y1="13.5" x2="6" y2="21"></line>
+            <line x1="18" y1="12" x2="21" y2="15"></line>
+          </svg>
+        </div>
+        <p class="placeholder-text">No image available</p>
+      </div>
+    </ng-template>
+  </div>
+  <p class="customer-id-text">{{ label }}</p>
+</div>

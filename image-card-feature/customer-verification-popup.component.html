@@ -1,0 +1,281 @@
+<ng-template #personalDetailsTemplate>
+  <div class="modal-header">
+    <h4 class="modal-title float-start">
+      <i class="bx bx-user"></i>
+      Customer Details
+    </h4>
+    <button
+      type="button"
+      class="btn-close float-end"
+      aria-label="Close"
+      (click)="modalDialog.dismiss()"
+    ></button>
+  </div>
+
+  <form #form="ngForm" autocomplete="off">
+    <div class="modal-body rs-modal-content">
+      <ul class="nav nav-tabs mt-1" id="left-tabes" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            data-bs-toggle="tab"
+            data-bs-target="#personal-details"
+            role="tab"
+            aria-controls="personal-details"
+            aria-selected="true"
+            (click)="switchTab('customer-verification')"
+          >
+            Customer Verification
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            data-bs-toggle="tab"
+            data-bs-target="#verification-history"
+            role="tab"
+            aria-controls="verification-history"
+            aria-selected="false"
+            (click)="switchTab('verification-history')"
+          >
+            Verification History
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content tabs p-0 mt-2">
+
+        <!-- Customer Verification Tab -->
+        <div class="tab-pane show active" id="personal-details" role="tabpanel">
+          <div class="view-content">
+            <div class="row g-3">
+
+              <!-- Col 1: Form Fields -->
+              <div class="col-5">
+                <div class="row">
+                  <div class="mb-3 col">
+                    <label for="name" class="col-form-label">Name</label>
+                    <input
+                      [disabled]="true"
+                      name="name"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="ViewModel.firstName"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="mb-3 col">
+                    <label for="surname" class="col-form-label">Surname</label>
+                    <input
+                      [disabled]="true"
+                      name="surname"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="ViewModel.surname"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="mb-3 col">
+                    <label for="passport" class="col-form-label">
+                      National ID No. / Passport No.
+                    </label>
+                    <input
+                      [disabled]="true"
+                      *ngIf="ViewModel.passportNumber !== null && ViewModel.passportNumber !== ''"
+                      name="passport"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="ViewModel.passportNumber"
+                    />
+                    <input
+                      [disabled]="true"
+                      *ngIf="ViewModel.idNumber !== null && ViewModel.idNumber !== ''"
+                      name="idNumber"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="ViewModel.idNumber"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="mb-3 col">
+                    <label for="country" class="col-form-label">Country</label>
+                    <input
+                      [disabled]="true"
+                      name="country"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="ViewModel.country"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="mb-3 col">
+                    <label for="phoneNumber" class="col-form-label">
+                      WhatsApp Number
+                    </label>
+                    <input
+                      [disabled]="true"
+                      name="phoneNumber"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="ViewModel.phoneNumber"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="mb-3 col">
+                    <label for="accountCreationDate" class="col-form-label">
+                      Registration Date
+                    </label>
+                    <input
+                      [disabled]="true"
+                      name="accountCreationDate"
+                      class="form-control form-control-sm"
+                      [(ngModel)]="ViewModel.accountCreationDate"
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="mb-3 col">
+                    <label for="status" class="col-form-label">
+                      Update Status
+                    </label>
+                    <app-select-single-lookup
+                      #status
+                      name="status"
+                      id="status"
+                      from="body"
+                      [ApiMethod]="'KYCStatuses'"
+                      [BindValue]="'name'"
+                      [(ngModel)]="RegistrationStatus"
+                      (OnChangeEmitter)="onChangeLookup($event, 'KYCStatusId')"
+                      [AllowedItems]="['Rejected', 'KYC approved']"
+                      [IsCustomRequest]="true"
+                    ></app-select-single-lookup>
+                  </div>
+                </div>
+                <div
+                  class="row"
+                  *ngIf="RegistrationStatus !== undefined && RegistrationStatus === 'Rejected'"
+                >
+                  <div class="mb-3 col">
+                    <label for="reason" class="col-form-label">
+                      Rejection Reason
+                    </label>
+                    <app-select-single-lookup
+                      #reason
+                      name="reason"
+                      id="reason"
+                      from="body"
+                      [ApiMethod]="'VerificationRejectReasons'"
+                      [BindValue]="'name'"
+                      [(ngModel)]="RejectionReason"
+                      (OnChangeEmitter)="onChangeLookup($event, 'RejectReasonId')"
+                    ></app-select-single-lookup>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Col 2: ID Image (landscape) -->
+              <div class="col-4 d-flex align-items-start">
+                <app-image-card
+                  [imageUrl]="ViewModel?.identityImage"
+                  orientation="landscape"
+                  label="ID Document"
+                  class="w-100"
+                ></app-image-card>
+              </div>
+
+              <!-- Col 3: Selfie (portrait) -->
+              <div class="col-3 d-flex align-items-start">
+                <app-image-card
+                  [imageUrl]="ViewModel?.faceImage"
+                  orientation="portrait"
+                  label="Selfie"
+                  class="w-100"
+                ></app-image-card>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Verification History Tab -->
+        <div class="tab-pane show" id="verification-history" role="tabpanel">
+          <div class="view-content">
+            <div
+              *ngIf="!ViewModel.history || ViewModel.history.length === 0"
+              class="no-records"
+            >
+              <p>No history records found.</p>
+            </div>
+            <div *ngIf="ViewModel.history && ViewModel.history.length > 0">
+              <div
+                *ngFor="let record of ViewModel.history"
+                class="history-card"
+              >
+                <div class="history-header">
+                  <span
+                    class="status"
+                    [class.rejected]="record?.kycStatusId === REJECTED_ID"
+                    [class.resubmitted]="record?.kycStatusId === RESUBMITTED_ID"
+                    [class.pending]="record?.kycStatus?.includes('Pending')"
+                    [class.expired]="record?.kycStatusId === REQUESTED_ID"
+                    [class.frozen]="record?.kycStatusId === FROZEN_ID"
+                    [class.approved]="record?.kycStatusId === APPROVED_ID"
+                  >
+                    Status: {{ record.kycStatus }}
+                  </span>
+                  <span class="date">
+                    Updated on:
+                    {{ record.date | date: "yyyy, dd MMM  HH:mm:ss:SSS" }}
+                  </span>
+                </div>
+                <div
+                  *ngIf="
+                    record.kycStatusId === REQUESTED_ID ||
+                    record.kycStatusId === REJECTED_ID
+                  "
+                >
+                  <div class="history-content">
+                    <p><strong>Rejection Reason:</strong></p>
+                    <p>{{ record.rejectionReason }}</p>
+                  </div>
+                  <div class="history-footer">
+                    <p>
+                      <strong>Updated By:</strong>
+                      {{ record.updatedBy }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="modal-footer bg-light-gray">
+      <button
+        *ngIf="IsLoading"
+        type="button"
+        class="btn btn-outline-success me-2"
+        [disabled]="true"
+      >
+        <i class="bx bx-loader-alt bx-spin bx-rotate-90"></i>
+      </button>
+      <button
+        *ngIf="!IsLoading && activeTab === 'customer-verification'"
+        type="button"
+        class="btn btn-primary btn-sm"
+        (click)="update()"
+        [disabled]="
+          !(form.controls['reason'] && form.controls['reason'].value) &&
+          form.controls['status'] &&
+          form.controls['status'].value !== 'KYC approved'
+        "
+      >
+        <i class="bx bxs-edit"></i>
+        Update
+      </button>
+    </div>
+  </form>
+</ng-template>

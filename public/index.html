@@ -1,0 +1,4280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-store, no-cache, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Identity Verification</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+      :root {
+        --red: #e50914;
+        --red-dark: #b8070f;
+        --ink: #18181b;
+        --ink-mid: #52525b;
+        --ink-light: #71717a;
+        --ink-ghost: #a1a1aa;
+        --surface: #f5f4f2;
+        --white: #ffffff;
+        --border: #e0deda;
+        --green: #1a8a4a;
+        --amber: #c27c00;
+        --radius-lg: 18px;
+        --radius-md: 12px;
+        --radius-sm: 8px;
+        --font: "Space Grotesk", sans-serif;
+        --mono: "Space Grotesk", monospace;
+        --shadow: 0 2px 14px rgba(0, 0, 0, 0.07);
+        --shadow-lg: 0 8px 36px rgba(0, 0, 0, 0.11);
+        --red-muted: rgba(229, 9, 20, 0.08);
+        --red-border: rgba(229, 9, 20, 0.28);
+        --border-2: #ccc9c4;
+      }
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        font-family: var(--font);
+        background: var(--surface);
+        color: var(--ink);
+        width: 100%;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      .app {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 0 16px 32px;
+        min-height: 100svh;
+        height: 100svh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      @media (min-width: 400px) {
+        .app {
+          padding: 0 20px 32px;
+        }
+      }
+
+      /* ── Step bar ── */
+      .step-bar {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 14px 0 10px;
+        flex-wrap: wrap;
+      }
+      .step-bar.visible {
+        display: flex;
+      }
+      .step-pip {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--ink-light);
+        padding: 4px 10px;
+        border-radius: 20px;
+        transition: all 0.25s;
+      }
+      .step-pip.active {
+        color: var(--red);
+        font-weight: 700;
+        background: rgba(229, 9, 20, 0.08);
+      }
+      .step-pip.done {
+        color: var(--green);
+        font-weight: 600;
+      }
+      .step-sep {
+        color: var(--ink-ghost);
+        font-size: 12px;
+        font-weight: 400;
+        user-select: none;
+      }
+
+      /* ── Steps ── */
+      .step {
+        display: none;
+        flex-direction: column;
+        flex: 1;
+      }
+      .step.active {
+        display: flex;
+        animation: stepIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      @keyframes stepIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      #step2.active,
+      #step3.active,
+      #step4.active {
+        height: calc(100svh - 56px);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .step2-hint {
+        margin-bottom: 20px;
+      }
+
+      #step2 .section-sub {
+        min-height: 2.6em;
+        line-height: 1.3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #step3.step3--error {
+        height: calc(100svh - 56px);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      #step3.step3--error #idCamWrap {
+        height: 180px;
+        max-height: 180px;
+        flex-shrink: 0;
+      }
+      #step3.step3--error .cam-video {
+        aspect-ratio: unset;
+        height: 180px;
+        object-fit: cover;
+      }
+      #step3.step3--error #idCanvas {
+        display: none;
+      }
+
+      #step5.active {
+        height: calc(100svh - 56px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      #step5.active::-webkit-scrollbar {
+        display: none;
+      }
+      body:has(#step2.active),
+      body:has(#step3.active),
+      body:has(#step4.active) {
+        overflow: hidden;
+        height: 100svh;
+      }
+
+      /* ── Typography ── */
+      .hero-title {
+        font-size: 24px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 6px;
+        letter-spacing: -0.02em;
+      }
+      .hero-sub {
+        font-size: 13px;
+        text-align: center;
+        color: var(--ink-mid);
+        margin-bottom: 20px;
+        line-height: 1.55;
+      }
+      .section-title {
+        font-size: 21px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 3px;
+        text-align: center;
+      }
+      .section-sub {
+        font-size: 13px;
+        color: var(--ink-mid);
+        margin-bottom: 14px;
+        text-align: center;
+      }
+
+      /* ── Guide cards ── */
+      .guide-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        margin-bottom: 18px;
+        flex: 1;
+      }
+      .guide-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+      }
+      .guide-icon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--red);
+      }
+
+      .guide-icon svg {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .guide-text h4 {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 2px;
+      }
+      .guide-text p {
+        font-size: 12px;
+        color: var(--ink-mid);
+        line-height: 1.5;
+      }
+
+      /* ── Doc selection ── */
+      .doc-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        margin-bottom: 18px;
+        flex: 1;
+      }
+      .doc-card {
+        background: var(--white);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 18px 16px;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s,
+          transform 0.1s;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .doc-card.selected {
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.1);
+        background: #fffafa;
+      }
+      .doc-card:active {
+        transform: scale(0.98);
+      }
+      .doc-card-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .doc-card h3 {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 3px;
+      }
+      .doc-card p {
+        font-size: 12px;
+        color: var(--ink-mid);
+      }
+      .doc-card-icon svg {
+        width: 28px;
+        height: 28px;
+        color: var(--red);
+      }
+
+      .doc-expired-warning.visible {
+        display: block;
+      }
+
+      /* ── Buttons ── */
+      .btn {
+        background: var(--red);
+        color: var(--white);
+        border: none;
+        border-radius: 40px;
+        padding: 0 28px;
+        height: 52px; /* fixed height, not min-height + padding */
+        font-family: var(--font);
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        appearance: none;
+        -webkit-appearance: none;
+        touch-action: manipulation;
+        position: relative; /* needed for loading state */
+      }
+      .btn:active {
+        background: var(--red-dark);
+        transform: scale(0.97);
+      }
+      .btn:disabled {
+        background: #e4e4e7; /* zinc-200 — not #ccc, matches your warm palette */
+        color: var(--ink-ghost);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Loading state — replaces text with centered spinner, width never changes */
+      .btn.loading {
+        color: transparent;
+        pointer-events: none;
+        cursor: wait;
+      }
+      .btn.loading::after {
+        content: "";
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border: 2.5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.72s linear infinite;
+      }
+
+      /* Ghost variant — inherits height/radius from .btn */
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink-mid);
+        border: 1.5px solid var(--border-2); /* stronger than card border */
+      }
+      .btn-ghost:active {
+        background: var(--surface);
+        transform: scale(0.97);
+      }
+      .btn-ghost:disabled {
+        background: transparent;
+        color: var(--ink-ghost);
+        border-color: var(--border);
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .btn-row .btn {
+        flex: 1;
+      }
+
+      /* ── Camera ── */
+      .cam-wrap {
+        position: relative;
+        width: 100%;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: #111;
+        margin-bottom: 10px;
+        height: 52svh;
+        flex-shrink: 0;
+      }
+      .cam-video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        background: #111;
+      }
+      .cam-canvas {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        width: 100%;
+        height: 100%;
+      }
+      .cam-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        gap: 12px;
+        z-index: 10;
+      }
+      .cam-overlay.hidden {
+        display: none;
+      }
+      #selfieVideo,
+      #selfieCanvas {
+        transform: scaleX(-1);
+      }
+
+      /* ── Capture ring ── */
+      .capture-ring-wrap {
+        position: absolute;
+        bottom: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+      .capture-ring-wrap.visible {
+        display: flex;
+      }
+      .capture-ring-svg {
+        width: 52px;
+        height: 52px;
+        transform: rotate(-90deg);
+      }
+      .capture-ring-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.18);
+        stroke-width: 4;
+      }
+      .capture-ring-fill {
+        fill: none;
+        stroke: #4ade80;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 138.2;
+        stroke-dashoffset: 138.2;
+        transition: stroke-dashoffset 0.1s linear;
+      }
+      .capture-ring-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      /* ── Feedback / errors ── */
+      .feedback {
+        background: rgba(15, 15, 15, 0.82);
+        color: #fff;
+        border-radius: var(--radius-sm);
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 10px;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(6px);
+        transition: background 0.2s;
+        letter-spacing: 0.02em;
+      }
+      .feedback.ok {
+        background: rgba(26, 138, 74, 0.88);
+      }
+      .feedback.warn {
+        background: rgba(194, 124, 0, 0.88);
+      }
+      .feedback.bad {
+        background: rgba(15, 15, 15, 0.82);
+      }
+      .err-box {
+        background: #fdecea;
+        border: 1px solid #f5c6cb;
+        color: #8b1a1a;
+        border-radius: var(--radius-sm);
+        padding: 11px 13px;
+        font-size: 13px;
+        margin-bottom: 10px;
+      }
+      .retry-notice {
+        background: var(--amber);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        font-size: 13px;
+        margin-bottom: 10px;
+        line-height: 1.5;
+        display: none;
+        color: var(--white);
+        text-align: center;
+      }
+      .retry-notice.visible {
+        display: block;
+      }
+
+      /* ── Spinner ── */
+      .spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid rgba(255, 255, 255, 0.22);
+        border-top-color: var(--red);
+        border-radius: 50%;
+        animation: spin 0.72s linear infinite;
+      }
+      .spinner.dark {
+        border-color: rgba(15, 15, 15, 0.1);
+        border-top-color: var(--red);
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Results ── */
+      .results-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 14px;
+        border: 1px solid var(--border);
+        flex: 0 0 auto;
+      }
+      .doc-expired-warning {
+        background: #fdecea;
+        border: 1px solid #f5c6cb;
+        color: #8b1a1a;
+        border-radius: var(--radius-sm);
+        padding: 11px 13px;
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+      .book-review-notice {
+        background: #fff8e1;
+        border: 1px solid #ffe082;
+        color: #7a5500;
+        border-radius: var(--radius-sm);
+        padding: 11px 13px;
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+      .score-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--surface);
+        font-size: 13px;
+      }
+      .score-row:last-of-type {
+        border-bottom: none;
+      }
+      .score-label {
+        color: var(--ink-mid);
+      }
+      .score-val {
+        font-weight: 700;
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .fields-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--ink);
+        margin: 14px 0 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+      }
+      .field-row {
+        margin-bottom: 9px;
+      }
+      .field-label {
+        font-size: 10px;
+        color: var(--ink-light);
+        margin-bottom: 3px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      /* ── Confirm checkbox row ── */
+      .confirm-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--ink-mid);
+        margin-top: 10px;
+        cursor: pointer;
+      }
+      .confirm-checkbox {
+        margin-top: 2px;
+        accent-color: var(--red);
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      /* ── Results actions row ── */
+      .results-actions {
+        display: none;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .results-actions.visible {
+        display: flex;
+      }
+
+      /* REPLACE .field-input */
+      .field-input {
+        width: 100%;
+        height: 44px; /* fixed height, consistent with tap target standard */
+        padding: 0 12px; /* horizontal only — height handles vertical */
+        border: 1.5px solid var(--border-2); /* stronger than card border */
+        border-radius: var(--radius-sm);
+        font-family: var(--font);
+        font-size: 13px;
+        background: var(
+          --white
+        ); /* was --surface, inputs should sit above the page */
+        color: var(--ink);
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        appearance: none;
+        -webkit-appearance: none;
+        outline: none;
+      }
+      .field-input:focus {
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px var(--red-muted);
+        background: var(--white);
+      }
+      .results-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 13px;
+        padding: 40px 0;
+        color: var(--ink-mid);
+        font-size: 13px;
+      }
+
+      /* ── Field validation states ── */
+      .field-row {
+        position: relative;
+      }
+      .field-error {
+        font-size: 11px;
+        color: #c0392b;
+        margin-top: 4px;
+        min-height: 0;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition:
+          max-height 0.18s ease,
+          opacity 0.18s ease;
+        padding-left: 2px;
+      }
+      .field-error.visible {
+        max-height: 32px;
+        opacity: 1;
+      }
+      .field-input.error {
+        border-color: #c0392b;
+        background: #fff8f8;
+      }
+      .field-input.warn {
+        border-color: var(--amber);
+        background: #fffbf0;
+      }
+      .field-warn {
+        font-size: 11px;
+        color: var(--amber);
+        margin-top: 4px;
+        min-height: 0;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition:
+          max-height 0.18s ease,
+          opacity 0.18s ease;
+        padding-left: 2px;
+      }
+      .field-warn.visible {
+        max-height: 32px;
+        opacity: 1;
+      }
+      .field-value {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--ink);
+        padding: 9px 11px;
+        background: var(--surface);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        opacity: 0.7;
+      }
+      .cam-note {
+        font-size: 12px;
+        color: var(--ink-light);
+        text-align: center;
+        margin-top: 8px;
+      }
+      .cam-hint {
+        font-size: 14px;
+        color: var(--ink-light);
+        text-align: center;
+        margin-top: 8px;
+        padding: 2px;
+      }
+
+      /* ── Debug panel ── */
+      #debugPanel {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.93);
+        color: #0f0;
+        padding: 14px 16px;
+        font-family: var(--mono);
+        font-size: 11px;
+        z-index: 9999;
+        border-radius: 14px 14px 0 0;
+        max-height: 48vh;
+        overflow-y: auto;
+      }
+      #debugPanel.visible {
+        display: block;
+      }
+      .dbg-title {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 7px;
+        font-size: 12px;
+      }
+      .dbg-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 2px 0;
+      }
+      .dbg-k {
+        color: #888;
+      }
+      .dbg-v {
+        color: #0f0;
+      }
+      .dbg-v.warn {
+        color: #fbbf24;
+      }
+      .dbg-v.fail {
+        color: #f87171;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav class="step-bar" id="stepBar">
+        <span class="step-pip" data-step="1">Start</span
+        ><span class="step-sep">›</span>
+        <span class="step-pip" data-step="2">ID Type</span
+        ><span class="step-sep">›</span>
+        <span class="step-pip" data-step="3">Capture</span
+        ><span class="step-sep">›</span>
+        <span class="step-pip" data-step="4">Selfie</span
+        ><span class="step-sep">›</span>
+        <span class="step-pip" data-step="5">Confirm</span>
+      </nav>
+
+      <!-- STEP 1 -->
+      <div class="step active" id="step1">
+        <div style="padding-top: 24px">
+          <div style="text-align: center; margin-bottom: 16px">
+            <img
+              src="./assets/logo.webp"
+              alt="Wallety"
+              style="height: 24px; object-fit: contain"
+            />
+          </div>
+          <div style="margin-bottom: 12px">
+            <h2 class="section-title">Verify your Identity</h2>
+          </div>
+        </div>
+        <div class="guide-list">
+          <div class="guide-card">
+            <div class="guide-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div class="guide-text">
+              <h4>Accepted Documents</h4>
+              <p>
+                South African Smart ID card, South African ID book, or Passport.
+              </p>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4" />
+                <path
+                  d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+                />
+              </svg>
+            </div>
+            <div class="guide-text">
+              <h4>Good Lighting</h4>
+              <p>
+                Use natural or bright indoor light. Avoid shadows and glare on
+                the document.
+              </p>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="6" width="18" height="12" rx="2" />
+                <path d="M3 10h18" />
+              </svg>
+            </div>
+            <div class="guide-text">
+              <h4>Flat Surface</h4>
+              <p>
+                Place your document on a flat, dark surface with all four
+                corners visible.
+              </p>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </div>
+            <div class="guide-text">
+              <h4>Correct Distance</h4>
+              <p>
+                Hold your phone about a forearm’s length away. Adjust so the
+                document fills most of the guide frame.
+              </p>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-icon">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M5 20c0-4 3-6 7-6s7 2 7 6" />
+              </svg>
+            </div>
+            <div class="guide-text">
+              <h4>Clear Selfie</h4>
+              <p>
+                Face the camera directly. Remove glasses, hats, and masks.
+                Neutral expression.
+              </p>
+            </div>
+          </div>
+        </div>
+        <button class="btn" onclick="goStep(2)">Start Now</button>
+        <p class="cam-note">
+          Camera access required. You'll be prompted to allow it.
+        </p>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step" id="step2">
+        <div style="padding-top: 12px">
+          <h2 class="section-title">Select the type of ID</h2>
+          <p class="section-sub" id="step2Sub">
+            Have it ready and open to the photo page
+          </p>
+        </div>
+        <div class="doc-grid">
+          <div class="doc-card" id="cardTypeCard" onclick="selectDoc('card')">
+            <div class="doc-card-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2" y="6" width="20" height="13" rx="2" />
+                <circle cx="8" cy="12" r="2" />
+                <path d="M13 10h4M13 13h3" />
+              </svg>
+            </div>
+            <div>
+              <h3>Smart ID Card</h3>
+              <p>South African Smart ID card — Your photo on the front.</p>
+            </div>
+          </div>
+
+          <div class="doc-card" id="cardTypeBook" onclick="selectDoc('book')">
+            <div class="doc-card-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path
+                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                />
+                <circle cx="13" cy="9" r="2" />
+                <path d="M10 14h6" />
+              </svg>
+            </div>
+            <div>
+              <h3>Green ID Book</h3>
+              <p>
+                South African green ID book — Open the booklet to your photo
+                page.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="doc-card"
+            id="cardTypePassport"
+            onclick="selectDoc('passport')"
+          >
+            <div class="doc-card-icon">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path
+                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                />
+                <circle cx="13" cy="8.5" r="2.5" />
+                <path d="M10 14.5c0-1.7 1.3-3 3-3s3 1.3 3 3" />
+                <circle cx="13" cy="8.5" r="5" stroke-dasharray="2 2" />
+              </svg>
+            </div>
+            <div>
+              <h3>Passport</h3>
+              <p>Passport — Open the passport to your photo page.</p>
+            </div>
+          </div>
+        </div>
+        <p class="cam-hint step2-hint">
+          Make sure your ID document is well-lit, clear, and fills most of the
+          guide frame.
+        </p>
+        <button class="btn" id="btnContinue" disabled onclick="goStep(3)">
+          Continue
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step" id="step3">
+        <div style="padding-top: 12px">
+          <h2 class="section-title" id="step3Title">ID Document</h2>
+          <p class="section-sub" id="step3Sub">
+            ID must fill most of the guide frame until it turns green
+          </p>
+          <button
+            class="btn btn-ghost"
+            style="
+              margin-top: 10px;
+              min-height: 40px;
+              font-size: 13px;
+              margin-bottom: 14px;
+            "
+            onclick="goBackToDocSelect()"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            Change ID type
+          </button>
+        </div>
+        <div class="cam-wrap" id="idCamWrap">
+          <video
+            class="cam-video"
+            id="idVideo"
+            autoplay
+            playsinline
+            muted
+          ></video>
+          <canvas class="cam-canvas" id="idCanvas"></canvas>
+          <div class="capture-ring-wrap" id="captureRingWrap">
+            <svg class="capture-ring-svg" viewBox="0 0 48 48">
+              <circle class="capture-ring-track" cx="24" cy="24" r="22" />
+              <circle
+                class="capture-ring-fill"
+                id="captureRingFill"
+                cx="24"
+                cy="24"
+                r="22"
+              />
+            </svg>
+            <span class="capture-ring-label">Hold still</span>
+          </div>
+          <div class="cam-overlay" id="idLoading">
+            <div class="spinner"></div>
+            <span style="font-size: 13px">Starting camera…</span>
+          </div>
+        </div>
+        <div class="feedback" id="idFeedback">Initialising…</div>
+        <div class="retry-notice" id="retryNotice">
+          Please ensure your document is fully visible, well lit, and in focus,
+          then try again.
+        </div>
+        <div class="err-box" id="idError" style="display: none"></div>
+        <button
+          class="btn btn-ghost"
+          id="btnRetryID"
+          onclick="retryIdCamera()"
+          style="display: none; margin-top: 10px"
+        >
+          Retry
+        </button>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step" id="step4">
+        <div style="padding-top: 12px">
+          <h2 class="section-title">Selfie Verification</h2>
+          <p class="section-sub">Position your face within the oval</p>
+        </div>
+        <div class="cam-wrap" id="selfieCamWrap">
+          <video
+            class="cam-video"
+            id="selfieVideo"
+            autoplay
+            playsinline
+            muted
+          ></video>
+          <canvas class="cam-canvas" id="selfieCanvas"></canvas>
+          <div class="cam-overlay" id="selfieLoading">
+            <div class="spinner"></div>
+          </div>
+          <div class="cam-overlay hidden" id="faceLoading">
+            <div class="spinner"></div>
+            <span style="font-size: 13px">Preparing…</span>
+          </div>
+          <div class="capture-ring-wrap" id="selfieCaptureRingWrap">
+            <svg class="capture-ring-svg" viewBox="0 0 48 48">
+              <circle class="capture-ring-track" cx="24" cy="24" r="22" />
+              <circle
+                class="capture-ring-fill"
+                id="selfieCaptureRingFill"
+                cx="24"
+                cy="24"
+                r="22"
+              />
+            </svg>
+            <span class="capture-ring-label">Hold still</span>
+          </div>
+        </div>
+        <div class="err-box" id="selfieError" style="display: none"></div>
+        <div class="feedback" id="selfieFeedback">Initialising…</div>
+        <button
+          class="btn btn-ghost"
+          id="btnRetrySelfie"
+          onclick="retrySelfie()"
+          style="display: none; margin-top: 10px"
+        >
+          Try Again
+        </button>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="step" id="step5">
+        <div style="padding-top: 12px">
+          <h2 class="section-title">Confirm Your Details</h2>
+          <p class="section-sub">Review and correct your details if needed.</p>
+        </div>
+        <div class="results-loading" id="resultsLoading">
+          <div class="spinner dark"></div>
+          <span>Extracting your details…</span>
+        </div>
+        <div class="err-box" id="resultsError" style="display: none"></div>
+        <div class="results-card" id="resultsCard" style="display: none">
+          <div
+            class="doc-expired-warning"
+            id="rowExpiredWarning"
+            style="display: none"
+          >
+            ⚠ This document may be expired. Please check the expiry date.
+          </div>
+          <div id="extractedFields"></div>
+          <div id="mrzIntegritySection" style="display: none">
+            <div class="fields-title">Document integrity</div>
+            <div id="mrzIntegrityBody"></div>
+          </div>
+          <div id="failList" style="display: none">
+            <div class="fields-title" style="color: #8b1a1a">Notes</div>
+            <div id="failItems"></div>
+          </div>
+        </div>
+        <label class="confirm-label">
+          <input
+            type="checkbox"
+            class="confirm-checkbox"
+            id="chkConfirm"
+            onchange="checkResultsCompleteness()"
+          />
+          I confirm that the information entered is correct.
+        </label>
+        <div class="results-actions" id="resultsActions">
+          <button
+            class="btn"
+            id="btnConfirm"
+            onclick="confirmResults()"
+            disabled
+          >
+            Confirm &amp; Submit
+          </button>
+          <button
+            class="btn btn-ghost"
+            id="btnRestart"
+            onclick="restart()"
+            style="display: none"
+          >
+            Start over
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBUG PANEL -->
+    <div id="debugPanel">
+      <div class="dbg-title">Debug</div>
+      <div class="dbg-row">
+        <span class="dbg-k">Composite</span
+        ><span class="dbg-v" id="dbgScore">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Smoothed</span
+        ><span class="dbg-v" id="dbgSmoothed">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Aspect sig</span
+        ><span class="dbg-v" id="dbgAspectSig">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Face zone</span
+        ><span class="dbg-v" id="dbgFaceZone">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Sharpness</span
+        ><span class="dbg-v" id="dbgSharp">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Brightness</span
+        ><span class="dbg-v" id="dbgBright">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Gate card</span
+        ><span class="dbg-v" id="dbgGateCard">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Gate aspect</span
+        ><span class="dbg-v" id="dbgGateAspect">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Gate face</span
+        ><span class="dbg-v" id="dbgGateFace">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Gate sharp</span
+        ><span class="dbg-v" id="dbgGateSharp">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Miss count</span
+        ><span class="dbg-v" id="dbgMiss">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">OCR status</span
+        ><span class="dbg-v" id="dbgOcr">loading…</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Face models</span
+        ><span class="dbg-v" id="dbgFace">loading…</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Doc type</span
+        ><span class="dbg-v" id="dbgDoc">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">ID number</span
+        ><span class="dbg-v" id="dbgIdNum">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">ID valid</span
+        ><span class="dbg-v" id="dbgIdValid">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Book anchor</span
+        ><span class="dbg-v" id="dbgBookAnchor">--</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Fallbacks</span
+        ><span class="dbg-v" id="dbgFallback">0</span>
+      </div>
+      <div class="dbg-row">
+        <span class="dbg-k">Selfie face</span
+        ><span class="dbg-v" id="dbgFaceD">--</span>
+      </div>
+    </div>
+
+    <script>
+      /* ================================================================
+   CONSTANTS
+================================================================ */
+      const CARD_ASPECT = 1.586;
+      const BOOK_ASPECT = 1.55;
+      const PASSPORT_ASPECT = 1.42;
+      const ASPECT_TOLERANCE = 0.05;
+      const GATE_ASPECT_MIN = 45;
+      const GATE_FACE_MIN = 25;
+      const SCORE_GATE = 58;
+      const GATE_MISS_TOLERANCE = 4;
+      const BURST_TRIGGER_MS = 2500;
+      const BURST_FRAME_COUNT = 25;
+      const BURST_INTERVAL_MS = 120;
+      const SELFIE_MISS_TOLERANCE = 3;
+      const SELFIE_BURST_TRIGGER_MS = 2500;
+      const INACTIVITY_LIMIT = 60 * 1000;
+      const GENDER_MAP = { M: "male", F: "female" };
+      const CITIZEN_MAP = { 0: "citizen", 1: "permanent_resident" };
+
+      /* ================================================================
+   URL CONTEXT — injected by WhatsApp bot redirect
+================================================================ */
+      const _urlParams = new URLSearchParams(window.location.search);
+      const _pathParts = window.location.pathname.split("/");
+      const _knownName = _urlParams.get("name") || "";
+
+      /* ================================================================
+   GLOBAL STATE
+================================================================ */
+      window.documentType = null;
+      window.capturedIDBlob = null;
+      window.capturedSelfieBlob = null;
+      window.extractedIDData = null;
+
+      let currentStep = 1;
+      let idStream = null;
+      let selfieStream = null;
+      let idRafId = null;
+      let selfieRafId = null;
+      let isCaptureInProgress = false;
+
+      let selfieGatePassStartMs = null;
+      let selfieBurstTriggered = false;
+      let selfieMissCount = 0;
+
+      let fallbackCount = 0;
+      let lastFaceZoneScore = 0;
+      let faceZonePending = false;
+      let lastFaceZoneTs = 0;
+      let idStreamReady = null;
+      let selfieStreamReady = null;
+      let lastRoi = null;
+      let lastFullRoi = null;
+      let _vt = {
+        scaleX: 1,
+        scaleY: 1,
+        offsetX: 0,
+        offsetY: 0,
+        renderW: 0,
+        renderH: 0,
+      };
+      let globalInactivityTimeout = null;
+      let burstTriggered = false;
+      let gatePassStartMs = null;
+      let smoothedComposite = 0;
+      let gateMissCount = 0;
+      let _lastFbMsg = "",
+        _lastFbCls = "";
+      let isPopstate = false;
+
+      /* ================================================================
+   EAGER ENGINE INIT
+================================================================ */
+      let ocrReady = false;
+      let faceReady = false;
+
+      (async () => {
+        try {
+          window._ocrWorker = await Tesseract.createWorker("eng", 1, {
+            workerPath:
+              "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+            corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
+            langPath: "https://tessdata.projectnaptha.com/4.0.0",
+          });
+          ocrReady = true;
+          dbg("dbgOcr", "ready ✓");
+        } catch {
+          dbg("dbgOcr", "FAILED");
+        }
+      })();
+
+      (async () => {
+        try {
+          await faceapi.nets.tinyFaceDetector.loadFromUri(
+            "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights",
+          );
+          faceReady = true;
+          dbg("dbgFace", "ready ✓");
+        } catch {
+          dbg("dbgFace", "FAILED");
+        }
+      })();
+
+
+/* ================================================================
+   URL & COOKIE CONTEXT CONFIGURATION
+================================================================ */
+function getSecureCookieValue(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match).trim() : null;
+}
+
+function parseSessionIdentity() {
+  // 1. Check for cookie dropped securely by your server.js route
+  const cookieWa = getSecureCookieValue("wa_num");
+  if (cookieWa && /^\d{7,15}$/.test(cookieWa)) return cookieWa;
+
+  // 2. Fallback to parsing the path segment
+  const pathSegments = window.location.pathname.split("/").filter(p => p.trim() !== "");
+  const registerIdx = pathSegments.indexOf("register");
+  if (registerIdx !== -1 && pathSegments[registerIdx + 1]) {
+    const candidate = pathSegments[registerIdx + 1].trim();
+    if (/^\d{7,15}$/.test(candidate)) return candidate;
+  }
+
+  return "";
+}
+
+// Global immutable variable
+const _knownWa = parseSessionIdentity();
+
+// ── THEME-ALIGNED CIRCUIT BREAKER OVERLAY ────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  if (_knownWa) {
+    console.log("[KYC SESSION CONFIRMED] Context running for identifier:", _knownWa);
+    return; // Exit normally, full capture app runs!
+  }
+
+  console.warn("[KYC CONTEXT MISSING] Rendering secure safety overlay.");
+
+  // Inject a secure safety layout styled entirely with your custom design tokens
+  const safetyOverlay = document.createElement("div");
+  safetyOverlay.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: var(--surface); z-index: 99999; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--font); padding: 24px; box-sizing: border-box; text-align: center;
+  `;
+
+  safetyOverlay.innerHTML = `
+    <div style="
+      max-width: 440px; width: 100%; padding: 36px 32px; 
+      box-shadow: var(--shadow-lg); border-radius: var(--radius-lg); 
+      background: var(--white); border: 1px solid var(--border);
+    ">
+      <div style="font-size: 44px; margin-bottom: 20px; line-height: 1;">🔒</div>
+      <h2 style="
+        margin: 0 0 12px 0; color: var(--ink); font-size: 22px; 
+        font-weight: 700; letter-spacing: -0.02em;
+      ">Verification Session Inactive</h2>
+      <p style="
+        margin: 0 0 28px 0; color: var(--ink-mid); font-size: 14px; 
+        line-height: 1.6; font-family: var(--mono);
+      ">
+        To securely scan your identity documents, you must initialize an active registration session via your official WhatsApp workspace link.
+      </p>
+      <a href="https://wa.me" style="
+        display: inline-flex; align-items: center; justify-content: center; 
+        width: 100%; padding: 14px; background: var(--ink); color: var(--white);
+        text-decoration: none; border-radius: var(--radius-md); font-size: 15px; 
+        font-weight: 600; box-sizing: border-box; transition: background 0.2s ease;
+      " onmouseover="this.style.background='var(--ink-mid)'" 
+        onmouseout="this.style.background='var(--ink)'">
+        Return to WhatsApp Securely
+      </a>
+    </div>
+  `;
+
+  document.body.appendChild(safetyOverlay);
+});
+
+
+      /* ================================================================
+   STEP NAVIGATION
+================================================================ */
+      function goStep(n) {
+        if (currentStep === 3) {
+          stopIdCam();
+          cancelRaf(idRafId);
+          idRafId = null;
+        }
+        if (currentStep === 4) {
+          stopSelfieCam();
+          cancelRaf(selfieRafId);
+          selfieRafId = null;
+        }
+        document
+          .querySelectorAll(".step")
+          .forEach((s) => s.classList.remove("active"));
+        el("step" + n).classList.add("active");
+        currentStep = n;
+        updateStepBar(n);
+        el("stepBar").classList.toggle("visible", n >= 2);
+        // if (!isPopstate && n <= 3) history.pushState({ step: n }, "");
+        if (!isPopstate) history.pushState({ step: n }, "");
+        if (n === 2) prewarmIdCamera();
+        if (n === 3) initStep3();
+        if (n === 4) {
+          startSelfieCamera();
+          startSelfieAnalysis();
+        }
+        if (n === 5) performVerification();
+      }
+
+      function updateStepBar(active) {
+        document.querySelectorAll(".step-pip").forEach((pip) => {
+          const s = +pip.dataset.step;
+          pip.classList.remove("active", "done");
+          if (s === active) pip.classList.add("active");
+          else if (s < active) pip.classList.add("done");
+        });
+      }
+
+      /* ================================================================
+   STEP 2
+    ================================================================ */
+      function prewarmIdCamera() {
+        if (idStreamReady) return;
+        idStreamReady = requestCamera("environment").catch(() => {
+          idStreamReady = null;
+        });
+      }
+
+      function selectDoc(type) {
+        window.documentType = type;
+        document
+          .querySelectorAll(".doc-card")
+          .forEach((c) => c.classList.remove("selected"));
+        const map = {
+          card: "cardTypeCard",
+          book: "cardTypeBook",
+          passport: "cardTypePassport",
+        };
+        el(map[type]).classList.add("selected");
+        el("btnContinue").disabled = false;
+
+        const hints = {
+          card: "Have it ready with the front facing up",
+          book: "Open it to the photo page before continuing",
+          passport: "Open it to the photo page before continuing",
+        };
+        el("step2Sub").textContent = hints[type];
+
+        dbg("dbgDoc", type);
+        prewarmIdCamera();
+      }
+
+      /* ================================================================
+   STEP 3 — INIT
+================================================================ */
+      function initStep3() {
+        isCaptureInProgress = false;
+        burstTriggered = false;
+        gatePassStartMs = null;
+        smoothedComposite = 0;
+        gateMissCount = 0;
+        fallbackCount = 0;
+        lastFaceZoneScore = 0;
+        faceZonePending = false;
+        lastFaceZoneTs = 0;
+        _lastFbMsg = "";
+        _lastFbCls = "";
+
+        if (window.documentType === "card") {
+          el("step3Title").textContent = "SA Smart ID Card";
+        } else if (window.documentType === "book") {
+          el("step3Title").textContent = "SA Green ID Book";
+        } else if (window.documentType === "passport") {
+          el("step3Title").textContent = "Passport";
+        }
+
+        el("idError").style.display = "none";
+        el("btnRetryID").style.display = "none";
+        el("retryNotice").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
+
+        startIdCamera();
+      }
+
+      function goBackToDocSelect() {
+        stopIdCam();
+        cancelRaf(idRafId);
+        idRafId = null;
+        isCaptureInProgress = false;
+        burstTriggered = false;
+        gatePassStartMs = null;
+        smoothedComposite = 0;
+        gateMissCount = 0;
+        lastFaceZoneScore = 0;
+        faceZonePending = false;
+        lastFaceZoneTs = 0;
+        _lastFbMsg = "";
+        _lastFbCls = "";
+        idStreamReady = null;
+
+        el("idError").style.display = "none";
+        el("btnRetryID").style.display = "none";
+        el("retryNotice").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
+        el("step3").classList.remove("step3--error");
+
+        document
+          .querySelectorAll(".step")
+          .forEach((s) => s.classList.remove("active"));
+        el("step2").classList.add("active");
+        currentStep = 2;
+        updateStepBar(2);
+      }
+
+      /* ================================================================
+   ID CAMERA
+================================================================ */
+      async function startIdCamera() {
+        el("idError").style.display = "none";
+        el("btnRetryID").style.display = "none";
+
+        const spinnerTimer = idStreamReady
+          ? null
+          : setTimeout(() => {
+              el("idLoading").style.display = "flex";
+              setFb("idFeedback", "Starting camera…");
+            }, 350);
+
+        try {
+          const stream = idStreamReady
+            ? await idStreamReady
+            : await requestCamera("environment");
+          clearTimeout(spinnerTimer);
+          idStreamReady = null;
+          idStream = stream;
+          const video = el("idVideo");
+          video.srcObject = stream;
+          await new Promise((resolve) => {
+            if (video.videoWidth) resolve();
+            else
+              video.addEventListener("loadedmetadata", resolve, { once: true });
+          });
+          await video.play();
+          el("idLoading").style.display = "none";
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resizeIdCanvas();
+              drawGuideOverlay(null, 0);
+              setFb("idFeedback", "Position your document in the frame");
+              resetInactivityTimer();
+              startIdAnalysis();
+            });
+          });
+        } catch {
+          clearTimeout(spinnerTimer);
+          idStreamReady = null;
+          el("idLoading").style.display = "none";
+          showIdError(
+            "Camera access denied. Please allow camera permissions and try again.",
+          );
+          el("btnRetryID").style.display = "flex";
+          el("step3").classList.add("step3--error");
+          setFb("idFeedback", "Camera unavailable", "bad");
+        }
+      }
+
+      function stopIdCam() {
+        clearInactivityTimer();
+        if (idStream) {
+          idStream.getTracks().forEach((t) => t.stop());
+          idStream = null;
+        }
+        const v = el("idVideo");
+        if (v) v.srcObject = null;
+      }
+
+      function retryIdCamera() {
+        idStreamReady = null;
+        isCaptureInProgress = false;
+        burstTriggered = false;
+        gatePassStartMs = null;
+        smoothedComposite = 0;
+        gateMissCount = 0;
+        fallbackCount = 0;
+
+        lastFaceZoneScore = 0;
+        faceZonePending = false;
+        lastFaceZoneTs = 0;
+
+        lastRoi = null;
+        lastFullRoi = null;
+        _lastFbMsg = "";
+        _lastFbCls = "";
+
+        _vt = {
+          scaleX: 1,
+          scaleY: 1,
+          offsetX: 0,
+          offsetY: 0,
+          renderW: 0,
+          renderH: 0,
+        };
+
+        el("step3").classList.remove("step3--error");
+        el("idError").style.display = "none";
+        el("btnRetryID").style.display = "none";
+        el("retryNotice").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
+
+        el("idCamWrap").style.height = "";
+        el("idCamWrap").style.maxHeight = "";
+        el("idFeedback").style.display = "";
+
+        cancelRaf(idRafId);
+        idRafId = null;
+        clearInactivityTimer();
+
+        startIdCamera();
+      }
+
+      function updateVideoTransform() {
+        const video = el("idVideo");
+        const canvas = el("idCanvas");
+
+        if (
+          !video ||
+          !canvas ||
+          !video.videoWidth ||
+          !video.videoHeight ||
+          canvas.width < 10 ||
+          canvas.height < 10
+        )
+          return;
+
+        const videoAspect = video.videoWidth / video.videoHeight;
+        const canvasAspect = canvas.width / canvas.height;
+
+        let renderW, renderH, offsetX, offsetY;
+
+        if (videoAspect > canvasAspect) {
+          // Video is wider than canvas — crops left and right edges
+          renderH = canvas.height;
+          renderW = canvas.height * videoAspect;
+          offsetX = (canvas.width - renderW) / 2;
+          offsetY = 0;
+        } else {
+          // Video is taller than canvas — crops top and bottom edges
+          renderW = canvas.width;
+          renderH = canvas.width / videoAspect;
+          offsetX = 0;
+          offsetY = (canvas.height - renderH) / 2;
+        }
+
+        if (renderW < 10 || renderH < 10) return;
+
+        _vt = {
+          scaleX: video.videoWidth / renderW,
+          scaleY: video.videoHeight / renderH,
+          offsetX,
+          offsetY,
+          renderW,
+          renderH,
+        };
+      }
+
+      function resizeIdCanvas() {
+        const canvas = el("idCanvas"),
+          video = el("idVideo");
+        if (!canvas || !video) return;
+
+        const r = video.getBoundingClientRect();
+        canvas.width = r.width;
+        canvas.height = r.height;
+
+        updateVideoTransform();
+      }
+
+      /* ================================================================
+   INACTIVITY TIMER
+================================================================ */
+      function resetInactivityTimer() {
+        if (globalInactivityTimeout) clearTimeout(globalInactivityTimeout);
+        globalInactivityTimeout = setTimeout(
+          handleCameraTimeout,
+          INACTIVITY_LIMIT,
+        );
+      }
+      function clearInactivityTimer() {
+        if (globalInactivityTimeout) {
+          clearTimeout(globalInactivityTimeout);
+          globalInactivityTimeout = null;
+        }
+      }
+      function handleCameraTimeout() {
+        cancelRaf(idRafId);
+        idRafId = null;
+        cancelRaf(selfieRafId);
+        selfieRafId = null;
+        isCaptureInProgress = false;
+        window.isSelfieCaptureInProgress = false;
+        stopIdCam();
+        stopSelfieCam();
+        window.documentType = null;
+        goStep(2);
+      }
+
+      /* ================================================================
+   CAMERA HELPER
+================================================================ */
+      async function requestCamera(facing) {
+        try {
+          return await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: facing },
+              width: { ideal: 1280 },
+              height: { ideal: 960 },
+            },
+            audio: false,
+          });
+        } catch {
+          return await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
+      }
+
+      /* ================================================================
+   SA ID DETECTION ENGINE - UNBLOCKED FIXED ASPECT FLOW
+================================================================ */
+      function analyseFrame(video, buf, bctx) {
+        if (!video.videoWidth || video.readyState < 2) return null;
+
+        const vw = video.videoWidth,
+          vh = video.videoHeight;
+        const isCard = window.documentType === "card";
+        const isBook = window.documentType === "book";
+        const isPassport = window.documentType === "passport";
+
+        // Safeguard: Ensure the transform matrix cache is alive
+        const transform =
+          _vt && _vt.renderW
+            ? _vt
+            : {
+                scaleX: 1,
+                scaleY: 1,
+                offsetX: 0,
+                offsetY: 0,
+                renderW: video.videoWidth,
+                renderH: video.videoHeight,
+              };
+
+        const { scaleX, scaleY, offsetX, offsetY, renderW, renderH } =
+          transform;
+
+        const guideW = isCard ? renderW * 0.9 : renderW * 0.96;
+        const targetAspect = isCard
+          ? CARD_ASPECT
+          : isBook
+            ? BOOK_ASPECT
+            : PASSPORT_ASPECT;
+        const guideH = Math.min(guideW / targetAspect, renderH * 0.96);
+        const guideX = offsetX + (renderW - guideW) / 2;
+        const guideY = offsetY + (renderH - guideH) / 2;
+
+        // Subtract negative offset before scaling — maps perfectly to object-fit: cover
+        let roiX = Math.round((guideX - offsetX) * scaleX);
+        let roiY = Math.round((guideY - offsetY) * scaleY);
+        let roiW = Math.round(guideW * scaleX);
+        let roiH = Math.round(guideH * scaleY);
+
+        // Boundary Protection: Clamp to avoid texture spill errors
+        roiX = Math.max(0, Math.min(roiX, vw - 20));
+        roiY = Math.max(0, Math.min(roiY, vh - 20));
+
+        // MEASURE FULL BOOKLET BOUNDS BEFORE SPLITTING FOR THE ASPECT RATIO CHECK
+        const sw_full = Math.min(roiW, vw - roiX),
+          sh_full = Math.min(roiH, vh - roiY);
+        if (sw_full < 20 || sh_full < 20) return null;
+
+        /* Signal 1: Aspect ratio (Measures the full open booklet layout) */
+        const actualAspect = sw_full / sh_full;
+        const effectiveTolerance = isCard ? ASPECT_TOLERANCE : 0.15;
+        const aspectDiff = Math.abs(actualAspect - targetAspect) / targetAspect;
+        const sig_aspect =
+          aspectDiff <= effectiveTolerance
+            ? Math.round((1 - aspectDiff / effectiveTolerance) * 100)
+            : 0;
+        dbg("dbgAspectSig", sig_aspect.toFixed(0));
+
+        // CRUCIAL REFACTOR: Cache the clean, unmutated full booklet bounds FIRST.
+        // This ensures burstCapture gets the exact, uncorrupted bounding box!
+        lastFullRoi = {
+          roiX: Math.max(
+            0,
+            Math.min(Math.round((guideX - offsetX) * scaleX), vw - 20),
+          ),
+          roiY: Math.max(
+            0,
+            Math.min(Math.round((guideY - offsetY) * scaleY), vh - 20),
+          ),
+          roiW: Math.min(Math.round(guideW * scaleX), vw),
+          roiH: Math.min(Math.round(guideH * scaleY), vh),
+        };
+        lastRoi = { ...lastFullRoi };
+
+        // Create isolated variables for frame analysis drawing so we don't destroy lastRoi
+        let drawRoiX = roiX;
+        let drawRoiW = roiW;
+
+        // SPLIT THE CHANNELS NOW: Target exclusively the Right Half Data Page
+        if (isBook) {
+          drawRoiX = Math.round(roiX + roiW * 0.5);
+          drawRoiX = Math.max(0, Math.min(drawRoiX, vw - 20));
+          drawRoiW = Math.round(roiW * 0.5);
+        }
+
+        const sw = Math.min(drawRoiW, vw - drawRoiX),
+          sh = Math.min(roiH, vh - roiY);
+        if (sw < 20 || sh < 20) return null;
+
+        buf.width = sw;
+        buf.height = sh;
+        bctx.drawImage(video, drawRoiX, roiY, sw, sh, 0, 0, sw, sh);
+        const imgData = bctx.getImageData(0, 0, sw, sh);
+        const zinc = tozinc(imgData);
+
+        /* Signal 2: Face (throttled 800ms) */
+        const now = performance.now();
+        if (faceReady && !faceZonePending && now - lastFaceZoneTs > 800) {
+          faceZonePending = true;
+          lastFaceZoneTs = now;
+
+          let photoX, photoW, photoY, photoH;
+          if (isCard) {
+            photoW = Math.round(sw * 0.35);
+            photoX = drawRoiX + (sw - photoW);
+            photoY = roiY;
+            photoH = sh;
+          } else if (isBook) {
+            // Maps precisely onto the user's face quadrant on the right page
+            photoW = Math.round(roiW * 0.22);
+            photoX = Math.round(roiX + roiW * 0.52);
+            photoY = roiY + Math.round(sh * 0.45);
+            photoH = Math.round(sh * 0.5);
+          } else {
+            photoW = Math.round(sw * 0.4);
+            photoX = drawRoiX;
+            photoY = roiY;
+            photoH = Math.round(sh * 0.6);
+          }
+
+          photoX = Math.max(0, Math.min(photoX, vw - photoW));
+          photoY = Math.max(0, Math.min(photoY, vh - photoH));
+
+          detectFaceInZone(video, photoX, photoY, photoW, photoH).then(
+            (score) => {
+              lastFaceZoneScore = score;
+              faceZonePending = false;
+              dbg("dbgFaceZone", score.toFixed(0));
+            },
+          );
+        }
+        const sig_face = lastFaceZoneScore;
+
+        /* Signal 3: Sharpness */
+        const lapVar = laplacianVariance(zinc, sw, sh);
+        const sig_sharp = Math.min(100, Math.max(0, (lapVar - 50) / 1.7));
+        dbg("dbgSharp", lapVar.toFixed(0));
+
+        /* Signal 4: Brightness */
+        const bright = brightness(zinc);
+        const sig_quality = bright >= 65 && bright <= 225 ? 100 : 0;
+        dbg("dbgBright", bright.toFixed(0));
+
+        /* Composite Score Calculation */
+        const composite = isBook
+          ? Math.round(sig_sharp * 0.6 + sig_face * 0.15 + sig_aspect * 0.25)
+          : Math.round(sig_sharp * 0.5 + sig_face * 0.3 + sig_aspect * 0.2);
+        dbg("dbgScore", composite);
+
+        /* Gates evaluation */
+        const gateAspect = sig_aspect >= GATE_ASPECT_MIN;
+        const gateCard = isCard
+          ? sig_face >= 30 && sig_aspect >= 50
+          : isBook
+            ? sig_face >= 22 && sig_aspect >= 40
+            : sig_aspect >= 40;
+
+        const gateFace = isBook
+          ? faceReady && lastFaceZoneTs > 0 && sig_face >= 22
+          : !faceReady || lastFaceZoneTs === 0 || sig_face >= GATE_FACE_MIN;
+        const gateSharp = sig_sharp >= 45;
+        const gateAll =
+          gateCard &&
+          gateAspect &&
+          gateFace &&
+          gateSharp &&
+          composite >= SCORE_GATE;
+
+        dbg(
+          "dbgGateCard",
+          gateCard
+            ? "✓"
+            : `✗ face:${sig_face.toFixed(0)} asp:${sig_aspect.toFixed(0)}`,
+        );
+        dbg("dbgGateAspect", gateAspect ? "✓" : "✗ " + sig_aspect.toFixed(0));
+        dbg("dbgGateFace", gateFace ? "✓" : "✗ " + sig_face.toFixed(0));
+        dbg("dbgGateSharp", gateSharp ? "✓" : "✗ " + sig_sharp.toFixed(0));
+
+        /* Feedback Outputs */
+        let message, cls;
+        if (bright < 65) {
+          message = "Too dark — move to a brighter area";
+          cls = "bad";
+        } else if (bright > 225) {
+          message = "Too much glare — reduce direct light";
+          cls = "bad";
+        } else if (!gateSharp) {
+          message = "Hold still — waiting for focus";
+          cls = "warn";
+        } else if (!gateAspect) {
+          message = "Move closer and hold steady";
+          cls = "warn";
+        } else if (!gateCard) {
+          message = "Make sure the data page is fully open";
+          cls = "warn";
+        } else if (!gateFace) {
+          message = "Ensure the document photo is fully visible";
+          cls = "warn";
+        } else if (gateAll) {
+          message = "Scanning, please hold still…";
+          cls = "ok";
+        } else {
+          message = "Hold steady — almost ready";
+          cls = "warn";
+        }
+
+        return {
+          composite,
+          sig_aspect,
+          sig_face,
+          sig_sharp,
+          sig_quality,
+          bright,
+          lapVar,
+          actualAspect,
+          gateAll,
+          gateCard,
+          gateAspect,
+          gateFace,
+          gateSharp,
+          message,
+          cls,
+        };
+      }
+
+      /* ================================================================
+   REAL-TIME ANALYSIS LOOP - SYNCHRONIZED GREEN FRAME TIMING
+================================================================ */
+      function startIdAnalysis() {
+        const video = el("idVideo");
+        const buf = document.createElement("canvas");
+        const bctx = buf.getContext("2d", { willReadFrequently: true });
+        let lastTs = 0;
+
+        function loop(ts) {
+          idRafId = requestAnimationFrame(loop);
+          if (ts - lastTs < 100) return;
+          lastTs = ts;
+          if (!video.videoWidth || video.readyState < 2 || isCaptureInProgress)
+            return;
+
+          const result = analyseFrame(video, buf, bctx);
+          if (!result) return;
+
+          smoothedComposite =
+            smoothedComposite * 0.75 + result.composite * 0.25;
+          dbg("dbgSmoothed", Math.round(smoothedComposite));
+
+          if (result.composite >= SCORE_GATE) resetInactivityTimer();
+
+          const burstMs =
+            window.documentType === "book" ? 3000 : BURST_TRIGGER_MS;
+
+          const ringProgress =
+            gatePassStartMs && result.gateAll
+              ? Math.min((ts - gatePassStartMs) / burstMs, 1.0)
+              : 0;
+
+          drawGuideOverlay(result, ringProgress);
+          if (result.message !== _lastFbMsg || result.cls !== _lastFbCls) {
+            setFb("idFeedback", result.message, result.cls);
+            _lastFbMsg = result.message;
+            _lastFbCls = result.cls;
+          }
+
+          if (result.gateAll && smoothedComposite >= 58 && !burstTriggered) {
+            gateMissCount = 0;
+            if (!gatePassStartMs) gatePassStartMs = ts;
+            const elapsed = ts - gatePassStartMs;
+            updateCaptureRing(elapsed, burstMs);
+            if (elapsed >= burstMs) {
+              burstTriggered = true;
+              gatePassStartMs = null;
+              burstCapture(video);
+            }
+          } else if (!burstTriggered) {
+            gateMissCount++;
+            dbg("dbgMiss", gateMissCount);
+            if (gateMissCount >= GATE_MISS_TOLERANCE) {
+              if (gatePassStartMs) {
+                gatePassStartMs = null;
+                fallbackCount++;
+                dbg("dbgFallback", fallbackCount);
+              }
+              gateMissCount = 0;
+              updateCaptureRing(0, burstMs);
+            }
+          }
+        }
+
+        idRafId = requestAnimationFrame(loop);
+      }
+
+      /* ================================================================
+   CAPTURE RING
+================================================================ */
+      function updateCaptureRing(elapsed, duration) {
+        const wrap = el("captureRingWrap"),
+          fill = el("captureRingFill");
+        const C = 138.2;
+        if (elapsed <= 0) {
+          wrap.classList.remove("visible");
+          fill.style.strokeDashoffset = C;
+          return;
+        }
+        wrap.classList.add("visible");
+        fill.style.strokeDashoffset = C * (1 - Math.min(elapsed / duration, 1));
+      }
+
+      /* ================================================================
+   CANVAS GUIDE OVERLAY - PRECISION TIMING COHERENCE
+================================================================ */
+      function drawGuideOverlay(result, ringProgress = 0) {
+        const canvas = el("idCanvas"),
+          video = el("idVideo");
+        if (!canvas || !video || !window.documentType) return;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const isCard = window.documentType === "card";
+        const isPassport = window.documentType === "passport";
+
+        // FIXED: Prevents UI from freezing if called before _vt populates
+        const transform =
+          _vt && _vt.renderW
+            ? _vt
+            : {
+                offsetX: 0,
+                offsetY: 0,
+                renderW: canvas.width,
+                renderH: canvas.height,
+              };
+
+        const { offsetX, offsetY, renderW, renderH } = transform;
+
+        const fw = isCard ? renderW * 0.9 : renderW * 0.96;
+        const targetAspect = isCard
+          ? CARD_ASPECT
+          : isPassport
+            ? PASSPORT_ASPECT
+            : BOOK_ASPECT;
+        const fh = Math.min(fw / targetAspect, renderH * 0.96);
+        const fx = offsetX + (renderW - fw) / 2;
+        const fy = offsetY + (renderH - fh) / 2;
+
+        // Render uniform backdrop transparency matrix
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.beginPath();
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.rect(fx, fy, fw, fh);
+        ctx.fill("evenodd");
+
+        // STABILIZED UI MATRIX GATES
+        const isFullyCaptured = result && result.gateAll && ringProgress >= 1.0;
+        const isActivelyTracking =
+          result && result.gateAll && ringProgress < 1.0;
+
+        const fc = isFullyCaptured
+          ? "rgba(74,222,128,.95)" // SOLID VIBRANT GREEN
+          : isActivelyTracking
+            ? "rgba(251,191,36,.9)" // AMBER: Reading stable layout data
+            : result && result.composite >= 50
+              ? "rgba(251,191,36,.4)" // TRANSITIONAL AMBER
+              : "rgba(255,255,255,.75)"; // NEUTRAL WHITE GUIDE
+
+        ctx.setLineDash(isFullyCaptured ? [] : [10, 8]);
+        ctx.strokeStyle = fc;
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(fx, fy, fw, fh);
+        ctx.setLineDash([]);
+
+        const cl = 18;
+        ctx.strokeStyle = fc;
+        ctx.lineWidth = 4;
+        [
+          [fx, fy, 1, 1],
+          [fx + fw, fy, -1, 1],
+          [fx, fy + fh, 1, -1],
+          [fx + fw, fy + fh, -1, -1],
+        ].forEach(([x, y, dx, dy]) => {
+          ctx.beginPath();
+          ctx.moveTo(x + dx * cl, y);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x, y + dy * cl);
+          ctx.stroke();
+        });
+
+        if (isFullyCaptured) {
+          ctx.fillStyle = "rgba(74,222,128,.07)";
+          ctx.fillRect(fx, fy, fw, fh);
+        }
+      }
+
+      /* ================================================================
+   BURST CAPTURE - CHANNEL SPLIT MECHANICS ENFORCED
+================================================================ */
+      async function burstCapture(videoEl) {
+        if (isCaptureInProgress) return;
+        isCaptureInProgress = true;
+        cancelRaf(idRafId);
+        idRafId = null;
+        el("captureRingWrap").classList.remove("visible");
+        setFb("idFeedback", "Scanning…", "ok");
+
+        const buf = document.createElement("canvas");
+        const bctx = buf.getContext("2d", { willReadFrequently: true });
+        const frames = [];
+
+        for (let i = 0; i < BURST_FRAME_COUNT; i++) {
+          await new Promise((r) => setTimeout(r, BURST_INTERVAL_MS));
+          if (!videoEl.videoWidth || videoEl.readyState < 2) continue;
+          const result = analyseFrame(videoEl, buf, bctx);
+          if (!result || result.composite < 60) continue;
+          const frameScore =
+            result.sig_sharp * 0.5 +
+            result.sig_quality * 0.25 +
+            result.sig_face * 0.15 +
+            result.sig_aspect * 0.1;
+          const scale = Math.min(
+            1,
+            1920 / Math.max(videoEl.videoWidth, videoEl.videoHeight),
+          );
+          const full = document.createElement("canvas");
+          full.width = Math.round(videoEl.videoWidth * scale);
+          full.height = Math.round(videoEl.videoHeight * scale);
+          full
+            .getContext("2d")
+            .drawImage(videoEl, 0, 0, full.width, full.height);
+          frames.push({
+            score: frameScore,
+            canvas: full,
+            roi: lastRoi ? { ...lastRoi } : null,
+            fullRoi: lastFullRoi ? { ...lastFullRoi } : null,
+          });
+        }
+
+        if (frames.length === 0) {
+          const fb = document.createElement("canvas");
+          fb.width = Math.round(videoEl.videoWidth * 0.8);
+          fb.height = Math.round(videoEl.videoHeight * 0.8);
+          fb.getContext("2d").drawImage(videoEl, 0, 0, fb.width, fb.height);
+          frames.push({
+            score: 0,
+            canvas: fb,
+            roi: lastRoi ? { ...lastRoi } : null,
+            fullRoi: lastFullRoi ? { ...lastFullRoi } : null,
+          });
+        }
+
+        frames.sort((a, b) => b.score - a.score);
+        const best = frames[0];
+        setFb("idFeedback", "Processing…", "ok");
+
+        let q = 0.85,
+          blob;
+        while (q >= 0.4) {
+          blob = await new Promise((r) =>
+            best.canvas.toBlob(r, "image/jpeg", q),
+          );
+          if (blob.size <= 1.5 * 1024 * 1024) break;
+          q -= 0.05;
+        }
+        window.capturedIDBlob = blob;
+
+        let parsed = {};
+        try {
+          if (!window._ocrWorker) {
+            window._ocrWorker = await Tesseract.createWorker("eng");
+          }
+
+          const currentScale = best.canvas.width / videoEl.videoWidth;
+
+          if (window.documentType === "card" && best.roi) {
+            let cardRoi = { ...best.roi };
+            if (currentScale !== 1) {
+              cardRoi.roiX = Math.round(cardRoi.roiX * currentScale);
+              cardRoi.roiY = Math.round(cardRoi.roiY * currentScale);
+              cardRoi.roiW = Math.round(cardRoi.roiW * currentScale);
+              cardRoi.roiH = Math.round(cardRoi.roiH * currentScale);
+            }
+            const cardCanvas = await rectifyCard(best.canvas, cardRoi, videoEl);
+            parsed = parseSouthAfricanSmartID(await zonalOCR(cardCanvas));
+            window.capturedIDBlob = await new Promise((r) =>
+              cardCanvas.toBlob(r, "image/jpeg", 0.92),
+            );
+          } else if (best.roi) {
+            if (window.documentType === "passport") {
+              let passportFullRoi = { ...best.fullRoi };
+              if (currentScale !== 1) {
+                passportFullRoi.roiX = Math.round(
+                  passportFullRoi.roiX * currentScale,
+                );
+                passportFullRoi.roiY = Math.round(
+                  passportFullRoi.roiY * currentScale,
+                );
+                passportFullRoi.roiW = Math.round(
+                  passportFullRoi.roiW * currentScale,
+                );
+                passportFullRoi.roiH = Math.round(
+                  passportFullRoi.roiH * currentScale,
+                );
+              }
+              parsed = await ocrPassport(best.canvas, passportFullRoi, videoEl);
+            } else {
+              let { roiX, roiY, roiW, roiH } = best.roi;
+
+              // Apply scale modifier to keep coordinates aligned with the image size
+              if (currentScale !== 1) {
+                roiX = Math.round(roiX * currentScale);
+                roiY = Math.round(roiY * currentScale);
+                roiW = Math.round(roiW * currentScale);
+                roiH = Math.round(roiH * currentScale);
+              }
+
+              // SENIOR CRUCIAL CHANNEL SPLIT: Force the crop box onto the Right Page
+              // This isolates the data page from the instructions on the left page
+              roiX = Math.round(roiX + roiW * 0.5);
+              roiW = Math.round(roiW * 0.5);
+
+              // Safeguard tracking coordinates to prevent frame boundary overflows
+              roiX = Math.max(0, Math.min(roiX, best.canvas.width - 20));
+              roiY = Math.max(0, Math.min(roiY, best.canvas.height - 20));
+              roiW = Math.min(roiW, best.canvas.width - roiX);
+              roiH = Math.min(roiH, best.canvas.height - roiY);
+
+              const UP = Math.max(3, Math.ceil(60 / roiH));
+              const bookCanvas = document.createElement("canvas");
+              bookCanvas.width = roiW * UP;
+              bookCanvas.height = roiH * UP;
+
+              const bctx2 = bookCanvas.getContext("2d");
+              bctx2.imageSmoothingEnabled = true;
+              bctx2.imageSmoothingQuality = "high";
+
+              bctx2.drawImage(
+                best.canvas,
+                roiX,
+                roiY,
+                roiW,
+                roiH,
+                0,
+                0,
+                bookCanvas.width,
+                bookCanvas.height,
+              );
+              preprocessZone(
+                bctx2,
+                bookCanvas.width,
+                bookCanvas.height,
+                1.2,
+                true,
+              );
+
+              const zones = await zonalOCRBook(bookCanvas);
+              parsed = parseGreenIDBook(zones);
+            }
+          }
+
+          parsed._saCountry = parsed._saCountry ?? true;
+        } catch (error) {
+          parsed = {};
+          console.error("OCR Routing Crash:", error);
+        }
+
+        window.extractedIDData = parsed;
+        const validation = validateExtractedData(parsed);
+
+        if (!validation.pass) {
+          isCaptureInProgress = false;
+          burstTriggered = false;
+          gatePassStartMs = null;
+          stopIdCam();
+          el("step3").classList.add("step3--error");
+          el("idFeedback").style.display = "none";
+          if (
+            validation.code === "wrong_doc" ||
+            validation.code === "foreign_doc"
+          ) {
+            el("idError").textContent = validation.reason;
+            el("idError").style.display = "block";
+            el("retryNotice").classList.remove("visible");
+          } else {
+            const retryMessages = {
+              card: "Place your Smart ID card with the front (your photo) facing the camera. Make sure it is well-lit, clear, and fills most of the guide frame until it turns green.",
+              book: "Open the booklet to your photo page. Keep it flat. Make sure it is well-lit, clear, and fills most of the guide frame until it turns green.",
+              passport:
+                "Open the passport to your photo page. Keep it flat. Make sure it is well-lit, clear, and the photo page fills most of the guide frame until it turns green.",
+            };
+            el("retryNotice").textContent =
+              retryMessages[window.documentType] || "Please align document.";
+            el("retryNotice").classList.add("visible");
+          }
+          el("btnRetryID").style.display = "flex";
+          return;
+        }
+
+        stopIdCam();
+        prewarmSelfieCamera();
+        setFb("idFeedback", "Document captured ✓", "ok");
+        setTimeout(() => goStep(4), 700);
+      }
+
+      /* ================================================================
+   VALIDATION
+   — Green ID Book validation now checks for at least one trusted marker:
+       1. A valid 13-digit South African ID number (strongest signal)
+       2. OCR detects "S.A. BURGER" or "S.A. CITIZEN"
+       3. OCR detects bilingual labels like VAN/SURNAME or VOORNAAM
+     If at least one marker is found, validation passes.
+================================================================ */
+      function validateExtractedData(parsed) {
+        if (
+          !parsed ||
+          typeof parsed !== "object" ||
+          Object.keys(parsed).length === 0
+        ) {
+          return {
+            pass: false,
+            code: "ocr_empty",
+            reason:
+              "We couldn't read the document clearly. Please hold steady and ensure the image is sharp and well lit.",
+          };
+        }
+
+        if (parsed.isPassport) {
+          if (!parsed.passportNumber)
+            return {
+              pass: false,
+              code: "partial_read",
+              reason:
+                "Please make sure the bottom two lines of the passport are fully visible inside the frame.",
+            };
+
+          if (!parsed.checks || parsed.checks.passed < 3)
+            return {
+              pass: false,
+              code: "bad_number",
+              reason:
+                "Try reducing glare and placing the passport on a flat, well-lit surface.",
+            };
+
+          parsed._idValid = true;
+          parsed._saCountry = true;
+
+          return { pass: true, code: "ok", reason: "" };
+        }
+
+        if (parsed.isGreenBook) {
+          const hasValidId = parsed.idNumber?.length === 13 && parsed._idValid;
+
+          const hasCitizenLabel = !!parsed._bookAnchor;
+
+          if (!hasValidId && !hasCitizenLabel) {
+            return {
+              pass: false,
+              code: "wrong_doc",
+              reason:
+                "We couldn’t confidently identify the document. Please open the green ID book to the photo page and try again.",
+            };
+          }
+
+          // Captures raw text results and maps them into uniform keys for Step 5
+          parsed.surname = (
+            parsed.surname ||
+            parsed.surName ||
+            parsed["van"] ||
+            parsed["van/surname"] ||
+            ""
+          )
+            .trim()
+            .replace(/[^a-zA-Z\s\-]/g, "");
+
+          parsed.firstNames = (
+            parsed.firstNames ||
+            parsed.givenNames ||
+            parsed["voorname"] ||
+            parsed["voorname/first names"] ||
+            ""
+          )
+            .trim()
+            .replace(/[^a-zA-Z\s\-]/g, "");
+
+          parsed._saCountry = true;
+
+          return { pass: true, code: "ok", reason: "" };
+        }
+
+        /* Smart ID */
+        const id = parsed.idNumber;
+
+        if (!id)
+          return {
+            pass: false,
+            code: "partial_read",
+            reason:
+              "Please align the card fully within the guide frame before capturing.",
+          };
+
+        if (id.length !== 13 || !saLuhn13(id))
+          return {
+            pass: false,
+            code: "bad_number",
+            reason:
+              "Try holding the card steady and reducing reflections for a clearer scan.",
+          };
+
+        parsed._idValid = true;
+        parsed._saCountry = true;
+
+        return { pass: true, code: "ok", reason: "" };
+      }
+
+      /* ── Field validation state machine ── */
+      const _fieldState = {};
+
+      function setFieldError(id, msg) {
+        const input = el(id);
+        const errEl = el(id + "__err");
+        const warnEl = el(id + "__warn");
+        if (!input || !errEl) return;
+        input.classList.remove("warn");
+        if (msg) {
+          input.classList.add("error");
+          errEl.textContent = msg;
+          errEl.classList.add("visible");
+          if (warnEl) warnEl.classList.remove("visible");
+        } else {
+          input.classList.remove("error");
+          errEl.textContent = "";
+          errEl.classList.remove("visible");
+        }
+      }
+
+      function setFieldWarn(id, msg) {
+        const input = el(id);
+        const warnEl = el(id + "__warn");
+        const errEl = el(id + "__err");
+        if (!input || !warnEl) return;
+        if (errEl && errEl.classList.contains("visible")) return;
+        if (msg) {
+          input.classList.add("warn");
+          warnEl.textContent = msg;
+          warnEl.classList.add("visible");
+        } else {
+          input.classList.remove("warn");
+          warnEl.textContent = "";
+          warnEl.classList.remove("visible");
+        }
+      }
+
+      function validateIdField(fieldId, touched) {
+        const val = el(fieldId)?.value?.trim() || "";
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+
+        if (!val) {
+          if (touched) setFieldError(fieldId, "This field is required");
+          return false;
+        }
+
+        if (isPassport) {
+          const formatOk = /^[A-Z0-9]{6,9}$/i.test(val);
+          if (!formatOk) {
+            if (touched)
+              setFieldError(
+                fieldId,
+                "Enter a valid passport number (6–9 characters)",
+              );
+            return false;
+          }
+          setFieldError(fieldId, null);
+          // Silent match check
+          const ocrPassNo = (ocr.passportNumber || "").replace(/</g, "").trim();
+          if (ocrPassNo && val.toUpperCase() !== ocrPassNo.toUpperCase()) {
+            setFieldWarn(
+              fieldId,
+              "This doesn't match what we read — please double-check",
+            );
+          } else {
+            setFieldWarn(fieldId, null);
+          }
+          return true;
+        } else {
+          if (!/^\d{13}$/.test(val)) {
+            if (touched)
+              setFieldError(fieldId, "ID number must be exactly 13 digits");
+            return false;
+          }
+          if (!saLuhn13(val)) {
+            if (touched)
+              setFieldError(
+                fieldId,
+                "Please check your ID number — the format isn't valid",
+              );
+            return false;
+          }
+          setFieldError(fieldId, null);
+          setFieldWarn(fieldId, null);
+
+          // if (window.documentType !== "book") {
+          //   const ocrId = (ocr.idNumber || "").trim();
+          //   if (ocrId && ocrId.length === 13 && ocr._idValid && val !== ocrId) {
+          //     setFieldWarn(
+          //       fieldId,
+          //       "This doesn't match what we read — please double-check",
+          //     );
+          //   }
+          // }
+          return true;
+        }
+      }
+
+      function validateNameField(fieldId, label, touched) {
+        const val = el(fieldId)?.value?.trim() || "";
+        if (!val) {
+          if (touched) setFieldError(fieldId, `${label} is required`);
+          return false;
+        }
+        if (val.length < 2) {
+          if (touched) setFieldError(fieldId, `${label} seems too short`);
+          return false;
+        }
+        setFieldError(fieldId, null);
+        setFieldWarn(fieldId, null);
+        return true;
+      }
+
+      function checkResultsCompleteness() {
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+        const confirmed = el("chkConfirm")?.checked || false;
+
+        const idFieldId = isPassport ? "fPassportNumber" : "fIdNumber";
+
+        const idOk = validateIdField(idFieldId, !!_fieldState[idFieldId]);
+        const surOk = validateNameField(
+          "fSurname",
+          "Surname",
+          !!_fieldState["fSurname"],
+        );
+        const namOk = validateNameField(
+          "fNames",
+          isPassport ? "Given name(s)" : "Full names",
+          !!_fieldState["fNames"],
+        );
+
+        el("btnConfirm").disabled = !(idOk && surOk && namOk && confirmed);
+      }
+
+      function bindFieldValidation() {
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+        const idFieldId = isPassport ? "fPassportNumber" : "fIdNumber";
+
+        [idFieldId, "fSurname", "fNames"].forEach((id) => {
+          const input = el(id);
+          if (!input) return;
+
+          input.addEventListener("blur", () => {
+            _fieldState[id] = true;
+            checkResultsCompleteness();
+          });
+
+          input.addEventListener("input", () => {
+            if (_fieldState[id]) checkResultsCompleteness();
+          });
+        });
+        el("chkConfirm")?.addEventListener("change", checkResultsCompleteness);
+      }
+
+      /* ================================================================
+   SA LUHN
+================================================================ */
+      function saLuhn13(num) {
+        if (!/^\d{13}$/.test(num)) return false;
+        let oddStr = "";
+        for (let i = 1; i < 13; i += 2) oddStr += num[i];
+        let doubled = parseInt(oddStr, 10) * 2;
+        let doubledSum = String(doubled)
+          .split("")
+          .reduce((a, c) => a + parseInt(c, 10), 0);
+        let evenSum = 0;
+        for (let i = 0; i < 12; i += 2) evenSum += parseInt(num[i], 10);
+        return (doubledSum + evenSum + parseInt(num[12], 10)) % 10 === 0;
+      }
+
+      /* ================================================================
+   FACE IN ZONE DETECTION
+================================================================ */
+      async function detectFaceInZone(video, roiX, roiY, photoW, roiH) {
+        if (!faceReady) return 0;
+        try {
+          const pz = document.createElement("canvas");
+          pz.width = Math.max(photoW, 80);
+          pz.height = Math.max(roiH, 100);
+          pz.getContext("2d").drawImage(
+            video,
+            roiX,
+            roiY,
+            photoW,
+            roiH,
+            0,
+            0,
+            pz.width,
+            pz.height,
+          );
+          const det = await faceapi.detectSingleFace(
+            pz,
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 160,
+              scoreThreshold: 0.35,
+            }),
+          );
+          if (!det) return 0;
+          const fill =
+            (det.box.width * det.box.height) / (pz.width * pz.height);
+          return Math.round(
+            det.score * (fill > 0.08 && fill < 0.92 ? 1 : 0.3) * 100,
+          );
+        } catch {
+          return 0;
+        }
+      }
+
+      /* ================================================================
+   IMAGE UTILITIES
+================================================================ */
+      function tozinc(imgData) {
+        const d = imgData.data,
+          len = d.length / 4,
+          g = new Uint8Array(len);
+        for (let i = 0; i < len; i++)
+          g[i] = Math.round(
+            0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2],
+          );
+        return g;
+      }
+      function laplacianVariance(zinc, w, h) {
+        let sum = 0,
+          sum2 = 0,
+          n = 0;
+        for (let y = 1; y < h - 1; y++)
+          for (let x = 1; x < w - 1; x++) {
+            const i = y * w + x;
+            const v =
+              4 * zinc[i] -
+              zinc[i - 1] -
+              zinc[i + 1] -
+              zinc[i - w] -
+              zinc[i + w];
+            sum += v;
+            sum2 += v * v;
+            n++;
+          }
+        return n ? sum2 / n - Math.pow(sum / n, 2) : 0;
+      }
+      function brightness(zinc) {
+        let s = 0;
+        for (let i = 0; i < zinc.length; i++) s += zinc[i];
+        return s / zinc.length;
+      }
+
+      /* ================================================================
+   OCR PREPROCESSING
+================================================================ */
+      function preprocessZone(ctx, w, h, sharpAmount = 1.5, binarize = false) {
+        const im = ctx.getImageData(0, 0, w, h);
+        const d = im.data;
+        const zinc = new Uint8Array(w * h);
+        for (let i = 0; i < w * h; i++) {
+          const g = Math.round(
+            0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2],
+          );
+          d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = zinc[i] = g;
+        }
+        if (binarize) {
+          let sumLuma = 0;
+          for (let i = 0; i < zinc.length; i++) sumLuma += zinc[i];
+          const avg = sumLuma / zinc.length;
+          const cutoff = Math.max(95, Math.min(160, avg * 0.86));
+          for (let i = 0; i < w * h; i++) {
+            const val = zinc[i] < cutoff ? 0 : 255;
+            d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = zinc[i] = val;
+          }
+        }
+        for (let y = 1; y < h - 1; y++) {
+          const off = y * w;
+          for (let x = 1; x < w - 1; x++) {
+            const i = off + x;
+            const blur = Math.round(
+              (zinc[i - w - 1] +
+                zinc[i - w] * 2 +
+                zinc[i - w + 1] +
+                zinc[i - 1] * 2 +
+                zinc[i] * 4 +
+                zinc[i + 1] * 2 +
+                zinc[i + w - 1] +
+                zinc[i + w] * 2 +
+                zinc[i + w + 1]) /
+                16,
+            );
+            d[i * 4] =
+              d[i * 4 + 1] =
+              d[i * 4 + 2] =
+                Math.max(
+                  0,
+                  Math.min(255, zinc[i] + (zinc[i] - blur) * sharpAmount),
+                );
+          }
+        }
+        ctx.putImageData(im, 0, 0);
+      }
+
+      /* ================================================================
+   RECTIFY CARD
+================================================================ */
+      async function rectifyCard(bestCanvas, roi, videoEl) {
+        const { roiX, roiY, roiW, roiH } = roi;
+        const scaleX = bestCanvas.width / videoEl.videoWidth;
+        const scaleY = bestCanvas.height / videoEl.videoHeight;
+        const srcX = Math.max(0, Math.round(roiX * scaleX));
+        const srcY = Math.max(0, Math.round(roiY * scaleY));
+        const srcW = Math.min(
+          bestCanvas.width - srcX,
+          Math.round(roiW * scaleX),
+        );
+        const srcH = Math.min(
+          bestCanvas.height - srcY,
+          Math.round(srcW / CARD_ASPECT),
+        );
+        const outW = 600,
+          outH = Math.round(outW / CARD_ASPECT);
+        const c = document.createElement("canvas");
+        c.width = outW;
+        c.height = outH;
+        const ctx = c.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(bestCanvas, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
+        return c;
+      }
+
+      /* ================================================================
+   SMART ID ZONAL OCR
+================================================================ */
+      async function zonalOCR(cardCanvas) {
+        const UP = 3,
+          TEXT_X1 = 0.18,
+          TEXT_X2 = 0.72;
+        const zones = [
+          { name: "surname", y1: 0.22, y2: 0.32, psm: "7", digits: false },
+          { name: "names", y1: 0.35, y2: 0.47, psm: "6", digits: false },
+          { name: "idNumber", y1: 0.6, y2: 0.8, psm: "7", digits: true },
+        ];
+        const results = {};
+        for (const zone of zones) {
+          const srcX = Math.round(cardCanvas.width * TEXT_X1);
+          const srcY = Math.round(cardCanvas.height * zone.y1);
+          const srcW = Math.round(cardCanvas.width * (TEXT_X2 - TEXT_X1));
+          const srcH = Math.round(cardCanvas.height * (zone.y2 - zone.y1));
+          if (srcW < 10 || srcH < 8) {
+            results[zone.name] = "";
+            continue;
+          }
+          const c = document.createElement("canvas");
+          c.width = srcW * UP;
+          c.height = srcH * UP;
+          const ctx = c.getContext("2d");
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(
+            cardCanvas,
+            srcX,
+            srcY,
+            srcW,
+            srcH,
+            0,
+            0,
+            c.width,
+            c.height,
+          );
+          preprocessZone(
+            ctx,
+            c.width,
+            c.height,
+            zone.digits ? 1.6 : 0.8,
+            !zone.digits,
+          );
+          try {
+            const { data } = await window._ocrWorker.recognize(
+              c,
+              {},
+              {
+                tessedit_pageseg_mode: zone.psm,
+                tessedit_char_whitelist: zone.digits
+                  ? "0123456789"
+                  : "ABCDEFGHIJKLMNOPQRSTUVWXYZ -'",
+              },
+            );
+            results[zone.name] = data.text.trim();
+          } catch {
+            results[zone.name] = "";
+          }
+        }
+        return results;
+      }
+
+      /* ================================================================
+   RELAXED GREEN ID BOOK RIGHT-PAGE OCR (ALIGNMENT-FREE)
+================================================================ */
+      async function zonalOCRBook(bookCanvas) {
+        const whitelist =
+          "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -./':\n";
+        const results = {
+          idNumber: "",
+          citizenLabel: "",
+          surname: "",
+          names: "",
+          dobRaw: "",
+        };
+
+        try {
+          const { data } = await window._ocrWorker.recognize(
+            bookCanvas,
+            {},
+            {
+              tessedit_pageseg_mode: "3",
+              tessedit_char_whitelist: whitelist,
+            },
+          );
+
+          const fullText = data.text || "";
+          results.idNumber = fullText;
+
+          const lines = fullText
+            .split("\n")
+            .map((l) => l.trim())
+            .filter(Boolean);
+
+          for (let i = 0; i < lines.length; i++) {
+            const currentLine = lines[i];
+
+            if (/BURGER|CITIZEN/i.test(currentLine)) {
+              results.citizenLabel = currentLine;
+            }
+
+            // Capture Date of Birth Raw Line
+            if (/GEBOOR|DATE\s*OF\s*B/i.test(currentLine)) {
+              results.dobRaw = currentLine;
+              if (
+                lines[i + 1] &&
+                /\d/.test(lines[i + 1]) &&
+                !/UITGEREIK|ISSUED/i.test(lines[i + 1])
+              ) {
+                results.dobRaw += " " + lines[i + 1];
+              }
+            }
+
+            if (/VAN|SURNAME/i.test(currentLine)) {
+              const inlineText = currentLine
+                .replace(/VAN|SURNAME|[\/\s\-\:]/gi, "")
+                .trim();
+              if (
+                inlineText.length > 1 &&
+                !/VOORNAME|FORENAMES|NAMES/i.test(inlineText)
+              ) {
+                results.surname = currentLine;
+              } else if (
+                lines[i + 1] &&
+                !/VOORNAME|FORENAMES|NAMES|ID|GEBOOR/i.test(lines[i + 1])
+              ) {
+                results.surname = currentLine + " " + lines[i + 1];
+              }
+            }
+
+            if (/VOORNAME|FORENAMES|NAMES/i.test(currentLine)) {
+              const inlineText = currentLine
+                .replace(/VOORNAME|FORENAMES|NAMES|[\/\s\-\:]/gi, "")
+                .trim();
+              if (inlineText.length > 1 && !/VAN|SURNAME/i.test(inlineText)) {
+                results.names = currentLine;
+              } else if (
+                lines[i + 1] &&
+                !/VAN|SURNAME|ID|GEBOOR|DISTRIK/i.test(lines[i + 1])
+              ) {
+                results.names = currentLine + " " + lines[i + 1];
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Relaxed right-page extraction crash:", error);
+        }
+
+        return results;
+      }
+
+      /* ================================================================
+   GREEN ID BOOK PARSER - ANTI-PREFIX EXTRACTION ENGINE
+================================================================ */
+      function parseGreenIDBook(zones) {
+        const fullText = zones.idNumber || "";
+        const lines = fullText
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean);
+
+        let idTargetLine = "";
+        let dobTargetLine = "";
+
+        // 1. Landmark Isolation Layer
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (/I\.?D\.?\s*No/i.test(line)) {
+            idTargetLine = line;
+            if (
+              lines[i + 1] &&
+              /\d/.test(lines[i + 1]) &&
+              !/VAN|SURNAME|VOOR/i.test(lines[i + 1])
+            ) {
+              idTargetLine += " " + lines[i + 1];
+            }
+          }
+          if (
+            /GEBOOR|DATE\s*OF\s*B|BIRTH/i.test(line) &&
+            !/UITGEREIK|ISSUED/i.test(line)
+          ) {
+            dobTargetLine = line;
+            if (
+              lines[i + 1] &&
+              /\d/.test(lines[i + 1]) &&
+              !/UITGEREIK|ISSUED|GESAG/i.test(lines[i + 1])
+            ) {
+              dobTargetLine += " " + lines[i + 1];
+            }
+          }
+        }
+
+        // 2. Isolate the true 2-Digit Year of Birth Anchor for cross-validation
+        let dobAnchorYOB = "";
+        const dobContext = dobTargetLine || zones.dobRaw || "";
+        const dateMatch =
+          dobContext.match(/(\d{4})[\-\.\s]\d{2}[\-\.\s]\d{2}/) ||
+          dobContext.match(/(\d{2})[\-\.\s]\d{2}[\-\.\s]\d{2}/);
+        if (dateMatch) {
+          const rawYear = dateMatch[1];
+          dobAnchorYOB = rawYear.length === 4 ? rawYear.slice(-2) : rawYear;
+        }
+
+        const searchBlock = idTargetLine || fullText;
+        let cleanDigits = searchBlock.replace(/[^0-9]/g, "");
+
+        let rawId = "";
+        let idValid = false;
+
+        if (cleanDigits.length === 14 && cleanDigits.startsWith("1")) {
+          const candidateWithNoOne = cleanDigits.slice(1);
+
+          if (
+            dobAnchorYOB &&
+            candidateWithNoOne.startsWith(dobAnchorYOB) &&
+            saLuhn13(candidateWithNoOne)
+          ) {
+            rawId = candidateWithNoOne;
+            idValid = true;
+          } else if (saLuhn13(candidateWithNoOne)) {
+            rawId = candidateWithNoOne;
+            idValid = true;
+          }
+        }
+        if (!idValid) {
+          for (let start = 0; start <= cleanDigits.length - 13; start++) {
+            const candidate = cleanDigits.slice(start, start + 13);
+            if (saLuhn13(candidate)) {
+              if (dobAnchorYOB && !candidate.startsWith(dobAnchorYOB)) {
+                continue;
+              }
+              rawId = candidate;
+              idValid = true;
+              break;
+            }
+          }
+        }
+        if (!idValid && dobAnchorYOB) {
+          const targetIdx = cleanDigits.indexOf(dobAnchorYOB);
+          if (targetIdx !== -1) {
+            const candidate = cleanDigits.slice(targetIdx, targetIdx + 13);
+            if (candidate.length === 13) {
+              rawId = candidate;
+              idValid = saLuhn13(rawId);
+            }
+          }
+        }
+
+        // Ultimate System Fallback
+        if (!idValid) {
+          const fallbackMatch = searchBlock.replace(/\s+/g, "").match(/\d{13}/);
+          rawId = fallbackMatch ? fallbackMatch[0] : cleanDigits.slice(0, 13);
+        }
+
+        // Normalize name layout strings to pre-fill Step 5 confirmation forms
+        const surname = cleanBookField(zones.surname || "");
+        const firstNames = cleanBookField(zones.names || "");
+
+        let dobISO = "";
+        let gender = "";
+        let citizenship = "";
+        let age = null;
+
+        if (rawId.length === 13) {
+          const derived = parseSouthAfricanSmartID({
+            idNumber: rawId,
+            surname: "",
+            names: "",
+          });
+          dobISO = derived.dobISO || "";
+          gender = derived.gender || "";
+          citizenship_status = derived.citizenship_status ?? null;
+          age = derived.age ?? null;
+        }
+
+        const labelRaw = (zones.citizenLabel || "").toUpperCase();
+        const anchorHit = /BURGER|CITIZEN|S\.?A\.?\s*(BURGER|CITIZEN)/.test(
+          labelRaw,
+        )
+          ? labelRaw.trim()
+          : null;
+        const idZoneText = fullText.toUpperCase();
+        const barcodeAreaHit = /BURGER|CITIZEN|S\.?A\.?B|S\.?A\.?C/.test(
+          idZoneText,
+        )
+          ? "barcode-area"
+          : null;
+        const bilingualHit =
+          /VAN\/SURNAME|VOORNAAM|BINNELANDSE|HOME AFFAIRS/.test(idZoneText)
+            ? "bilingual-label"
+            : null;
+
+        return {
+          idNumber: rawId,
+          surname,
+          firstNames,
+          dobISO: dobISO || (dateMatch ? dateMatch[0] : ""),
+          gender,
+          citizenship_status,
+          age,
+          isPassport: false,
+          isGreenBook: true,
+          _idValid: rawId.length === 13,
+          _saCountry: true,
+          _bookAnchor: anchorHit || barcodeAreaHit || bilingualHit || null,
+        };
+      }
+
+      function cleanBookField(raw) {
+        if (!raw) return "";
+
+        return raw
+          .replace(
+            /([\s\S]*?)(VAN\/SURNAME|SURNAME|VOORNAME\/FORENAMES|FORENAMES|NAMES?)\s*[:\-]*/i,
+            "",
+          )
+          .replace(/[^A-Za-z\s'\-]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toUpperCase();
+      }
+
+      /* ================================================================
+   PASSPORT FULL-PAGE OCR
+================================================================ */
+      async function ocrPassport(bestCanvas, fullRoi, videoEl) {
+        if (!fullRoi) return {};
+
+        const { roiX, roiY, roiW, roiH } = fullRoi;
+        const scaleX = bestCanvas.width / videoEl.videoWidth;
+        const scaleY = bestCanvas.height / videoEl.videoHeight;
+
+        const srcX = Math.max(0, Math.round(roiX * scaleX));
+        const srcY = Math.max(0, Math.round(roiY * scaleY));
+        const srcW = Math.min(
+          bestCanvas.width - srcX,
+          Math.round(roiW * scaleX),
+        );
+        const srcH = Math.min(
+          bestCanvas.height - srcY,
+          Math.round(roiH * scaleY),
+        );
+
+        if (srcW < 20 || srcH < 20) return {};
+
+        // Target at least 200px height for reliable MRZ reading
+        const UP = Math.max(2, Math.ceil(200 / srcH));
+        const passportCanvas = document.createElement("canvas");
+        passportCanvas.width = srcW * UP;
+        passportCanvas.height = srcH * UP;
+
+        const ctx = passportCanvas.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(
+          bestCanvas,
+          srcX,
+          srcY,
+          srcW,
+          srcH,
+          0,
+          0,
+          passportCanvas.width,
+          passportCanvas.height,
+        );
+
+        preprocessZone(
+          ctx,
+          passportCanvas.width,
+          passportCanvas.height,
+          1.8,
+          false,
+        );
+
+        const timeout = new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("ocr-timeout")), 12000),
+        );
+
+        try {
+          const { data } = await Promise.race([
+            window._ocrWorker.recognize(
+              passportCanvas,
+              {},
+              {
+                tessedit_pageseg_mode: "6",
+                tessedit_char_whitelist:
+                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
+              },
+            ),
+            timeout,
+          ]);
+          return extractMRZFromText(data.text || "");
+        } catch {
+          return {};
+        }
+      }
+
+      /* ================================================================
+   MRZ EXTRACTION
+================================================================ */
+      function extractMRZFromText(text) {
+        if (!text) return {};
+        const lines = text
+          .toUpperCase()
+          .split("\n")
+          .map((l) => l.replace(/\s/g, "").replace(/[^A-Z0-9<]/g, "<"))
+          .filter((l) => l.length >= 30);
+        for (let i = 0; i < lines.length - 1; i++) {
+          const a = lines[i].padEnd(44, "<").slice(0, 44);
+          const b = lines[i + 1].padEnd(44, "<").slice(0, 44);
+
+          const line1ok = /^P[A-Z<][A-Z<]{3}/.test(a) && a.includes("<<");
+
+          const line2ok =
+            b.length >= 44 &&
+            /^[A-Z0-9<]{9}[0-9][A-Z<]{3}\d{6}[0-9][MF<]\d{6}/.test(b);
+
+          if (line1ok && line2ok) return parsePassportMRZ(a, b);
+        }
+        for (let i = 0; i < lines.length - 1; i++) {
+          const a = lines[i],
+            b = lines[i + 1];
+          if (
+            a.length >= 38 &&
+            b.length >= 38 &&
+            (a.includes("<<") || (a.match(/</g) || []).length > 3)
+          )
+            return parsePassportMRZ(
+              a.padEnd(44, "<").slice(0, 44),
+              b.padEnd(44, "<").slice(0, 44),
+            );
+        }
+        return {};
+      }
+
+      /* ================================================================
+   PARSE PASSPORT MRZ  (unchanged)
+================================================================ */
+      function parsePassportMRZ(l1, l2) {
+        function sanitise(raw) {
+          return raw
+            .toUpperCase()
+            .replace(/\s/g, "")
+            .replace(/[c\(\[\{]/g, "<")
+            .replace(/[^A-Za-z0-9<]/g, "<")
+            .padEnd(44, "<")
+            .slice(0, 44);
+        }
+        l1 = sanitise(l1);
+        l2 = sanitise(l2);
+        const A2D = { O: "0", I: "1", S: "5", B: "8", G: "6", Z: "2" };
+        const D2A = { 0: "O", 1: "I", 5: "S", 8: "B", 6: "G", 2: "Z" };
+        const fa = (s) =>
+          s
+            .split("")
+            .map((c) => D2A[c] || c)
+            .join("");
+        const fd = (s) =>
+          s
+            .split("")
+            .map((c) => A2D[c] || c)
+            .join("");
+        let rawPassNo = l2.slice(0, 9);
+        const chkPassNo = fd(l2.charAt(9));
+        const issuingCountry = fa(l1.slice(2, 5)).replace(/</g, "");
+        const nameField = l1.slice(5);
+        const nationality = fa(l2.slice(10, 13)).replace(/</g, "");
+        const rawDob = fd(l2.slice(13, 19)),
+          chkDob = fd(l2.charAt(19));
+        const rawSex = fa(l2.charAt(20));
+        const rawExpiry = fd(l2.slice(21, 27)),
+          chkExpiry = fd(l2.charAt(27));
+        let rawPersonal = l2.slice(28, 42);
+        const chkPersonal = fd(l2.charAt(42)),
+          chkComp = fd(l2.charAt(43));
+        function chk(str) {
+          const W = [7, 3, 1];
+          let t = 0;
+          for (let i = 0; i < str.length; i++) {
+            const c = str[i];
+            t +=
+              (c === "<"
+                ? 0
+                : c >= "0" && c <= "9"
+                  ? +c
+                  : c.charCodeAt(0) - 55) * W[i % 3];
+          }
+          return String(t % 10);
+        }
+        const passOk = chk(rawPassNo) === chkPassNo,
+          dobOk = chk(rawDob) === chkDob,
+          expOk = chk(rawExpiry) === chkExpiry,
+          personalOk =
+            rawPersonal.replace(/</g, "") === "" ||
+            chk(rawPersonal) === chkPersonal;
+        const compStr = l2.slice(0, 10) + l2.slice(13, 20) + l2.slice(21, 43);
+        const compOk = chk(compStr) === chkComp;
+        const passed = [passOk, dobOk, expOk, personalOk, compOk].filter(
+          Boolean,
+        ).length;
+        const nameParts = nameField.split("<<");
+        const surname = (nameParts[0] || "").replace(/</g, " ").trim();
+        const names = nameParts.slice(1).join(" ").replace(/</g, " ").trim();
+        function toISO(yymmdd, future) {
+          if (!/^\d{6}$/.test(yymmdd)) return "";
+          const yy = yymmdd.slice(0, 2),
+            mm = yymmdd.slice(2, 4),
+            dd = yymmdd.slice(4, 6);
+          const cy = new Date().getFullYear() % 100,
+            yyNum = parseInt(yy, 10);
+          const cent = future
+            ? yyNum <= cy + 15
+              ? "20"
+              : "19"
+            : yyNum <= cy
+              ? "20"
+              : "19";
+          return `${cent}${yy}-${mm}-${dd}`;
+        }
+        const dobISO = toISO(rawDob, false),
+          expiryISO = toISO(rawExpiry, true);
+        let age = null;
+        if (dobISO) {
+          const b = new Date(dobISO),
+            t = new Date();
+          age = t.getFullYear() - b.getFullYear();
+          if (t < new Date(t.getFullYear(), b.getMonth(), b.getDate())) age--;
+        }
+        const gender = GENDER_MAP[rawSex] ?? "unknown";
+        const passportNumber = rawPassNo.replace(/</g, "").trim();
+        const personalNumber = rawPersonal.replace(/</g, "").trim();
+        const documentExpired = expiryISO
+          ? new Date(expiryISO) < new Date(new Date().toDateString())
+          : false;
+        return {
+          isPassport: true,
+          docType: fa(l1.slice(0, 1)),
+          issuingCountry,
+          surname,
+          names,
+          passportNumber,
+          idNumber: passportNumber,
+          nationality,
+          dobISO,
+          age,
+          gender,
+          expiryISO,
+          documentExpired,
+          personalNumber,
+          mrzLine1: l1,
+          mrzLine2: l2,
+          checks: {
+            passport: passOk,
+            dob: dobOk,
+            expiry: expOk,
+            personal: personalOk,
+            composite: compOk,
+            passed,
+            integrityPct: Math.round((passed / 5) * 100),
+          },
+        };
+      }
+
+      /* ================================================================
+   PARSE SA SMART ID
+================================================================ */
+      const SA_ID_LABEL_NOISE = new Set([
+        "SURNAME",
+        "SURMAME",
+        "NAMES",
+        "NAME",
+        "SEX",
+        "NATIONALITY",
+        "IDENTITY",
+        "NUMBER",
+        "DATE",
+        "BIRTH",
+        "COUNTRY",
+        "STATUS",
+        "CITIZEN",
+        "REPUBLIC",
+        "SOUTH",
+        "AFRICA",
+        "NATIONAL",
+        "CARD",
+        "THE",
+        "AND",
+        "FOR",
+        "VON",
+        "VAN",
+        "OF",
+        "FF",
+        "NW",
+        "FW",
+        "IS",
+        "YH",
+        "TRY",
+        "XORG",
+        "NORE",
+        "SRNEST",
+        "SES",
+      ]);
+
+      function stripNameNoise(raw) {
+        if (!raw) return "";
+        return raw
+          .toUpperCase()
+          .replace(/[\[\]\(\)\{\}_\|\=\+]/g, " ")
+          .split(/\s+/)
+          .filter(
+            (t) =>
+              t &&
+              t.length >= 2 &&
+              !/^\d+$/.test(t) &&
+              !SA_ID_LABEL_NOISE.has(t),
+          )
+          .join(" ")
+          .trim();
+      }
+
+      function parseSouthAfricanSmartID(input) {
+        const isZonal = input !== null && typeof input === "object";
+        let rawSurname = "",
+          rawNames = "",
+          rawIdNumber = "";
+        if (isZonal) {
+          rawSurname = (input.surname || "").trim();
+          rawNames = (input.names || "").trim();
+          rawIdNumber = (input.idNumber || "").trim();
+        } else {
+          const text = input || "";
+          const flat = text
+            .split("\n")
+            .map((l) => l.trim())
+            .filter(Boolean)
+            .join(" ");
+          const candidates = flat.match(/\b\d{13}\b/g) || [];
+          for (const raw of candidates) {
+            if (saLuhn13(raw)) {
+              rawIdNumber = raw;
+              break;
+            }
+          }
+          if (!rawIdNumber) {
+            const fuzzy = flat.match(/\b\d[\d\s\-]{11,15}\d\b/g) || [];
+            for (const raw of fuzzy) {
+              const digits = raw.replace(/[\s\-]/g, "");
+              if (digits.length === 13 && saLuhn13(digits)) {
+                rawIdNumber = digits;
+                break;
+              }
+            }
+          }
+        }
+        function cleanName(raw) {
+          if (!raw) return "";
+          const init = raw
+            .replace(
+              /^(SURNAME|SURMAME|NAMES?|REPUBLIC|SOUTH|AFRICA)\s*[:\-]*\s*/i,
+              "",
+            )
+            .trim();
+          const stripped = stripNameNoise(init);
+          const tokens = stripped
+            .toUpperCase()
+            .split(/\s+/)
+            .filter((t) => t.length >= 2);
+          return tokens.filter(
+            (t) => !SA_ID_LABEL_NOISE.has(t) && !/^\d+$/.test(t),
+          ).length > 0
+            ? stripped
+            : "";
+        }
+        const surname = cleanName(rawSurname);
+        const names = cleanName(rawNames);
+        const idNumber = rawIdNumber.replace(/[^0-9]/g, "").slice(0, 13);
+        if (!idNumber || idNumber.length !== 13 || !saLuhn13(idNumber))
+          return { _idValid: false, _saCountry: false };
+        const yy = idNumber.slice(0, 2),
+          mm = idNumber.slice(2, 4),
+          dd = idNumber.slice(4, 6);
+        const cy = new Date().getFullYear(),
+          yyi = parseInt(yy, 10);
+        const fullYear = yyi <= cy % 100 ? 2000 + yyi : 1900 + yyi;
+        const dobISO = `${fullYear}-${mm}-${dd}`;
+        const dob = new Date(dobISO);
+        let age = null;
+        if (!isNaN(dob.getTime())) {
+          const today = new Date();
+          age = today.getFullYear() - dob.getFullYear();
+          if (
+            today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate())
+          )
+            age--;
+        }
+        const genderCode = parseInt(idNumber.slice(6, 10), 10);
+        return {
+          idNumber,
+          surname,
+          names,
+          dobISO,
+          age,
+          gender: GENDER_MAP[genderCode >= 5000 ? "M" : "F"],
+          nationality: "RSA",
+          citizenship_status: CITIZEN_MAP[idNumber.charAt(10)] ?? null,
+          isPassport: false,
+          _idValid: true,
+          _saCountry: true,
+        };
+      }
+
+      /* ================================================================
+   STEP 4 — SELFIE
+================================================================ */
+      function prewarmSelfieCamera() {
+        if (selfieStreamReady || selfieStream) return;
+        selfieStreamReady = requestCamera("user")
+          .then((stream) => {
+            selfieStream = stream;
+            return stream;
+          })
+          .catch(() => {
+            selfieStreamReady = null;
+            selfieStream = null;
+          });
+      }
+
+      async function startSelfieCamera() {
+        const video = el("selfieVideo"),
+          loader = el("selfieLoading"),
+          fLoad = el("faceLoading"),
+          err = el("selfieError"),
+          retry = el("btnRetrySelfie");
+        err.style.display = retry.style.display = "none";
+
+        if (!faceReady) {
+          fLoad.classList.remove("hidden");
+          fLoad.style.display = "flex";
+          const poll = setInterval(() => {
+            if (faceReady) {
+              fLoad.classList.add("hidden");
+              fLoad.style.display = "none";
+              clearInterval(poll);
+            }
+          }, 200);
+        }
+
+        const spinnerTimer = selfieStreamReady
+          ? null
+          : setTimeout(() => {
+              loader.style.display = "flex";
+              setFb("selfieFeedback", "Starting camera…");
+            }, 80);
+
+        try {
+          const stream = selfieStreamReady
+            ? await selfieStreamReady
+            : await requestCamera("user");
+          clearTimeout(spinnerTimer);
+          selfieStreamReady = null;
+          selfieStream = stream;
+          video.srcObject = stream;
+          await new Promise((resolve) => {
+            if (video.videoWidth) resolve();
+            else
+              video.addEventListener("loadedmetadata", resolve, { once: true });
+          });
+          await video.play();
+          loader.style.display = "none";
+          resizeSelfieCanvas();
+        } catch {
+          clearTimeout(spinnerTimer);
+          selfieStreamReady = null;
+          loader.style.display = fLoad.style.display = "none";
+          err.textContent =
+            "Camera access denied. Please allow permissions and try again.";
+          err.style.display = "block";
+          retry.style.display = "flex";
+          setFb("selfieFeedback", "Camera unavailable", "bad");
+        }
+      }
+
+      function stopSelfieCam() {
+        if (selfieStream) {
+          selfieStream.getTracks().forEach((t) => t.stop());
+          selfieStream = null;
+        }
+        const v = el("selfieVideo");
+        if (v) v.srcObject = null;
+      }
+
+      function retrySelfie() {
+        selfieStreamReady = null;
+        selfieGatePassStartMs = null;
+        selfieBurstTriggered = false;
+        selfieMissCount = 0;
+        el("selfieError").style.display = el("btnRetrySelfie").style.display =
+          "none";
+        startSelfieCamera();
+      }
+
+      function resizeSelfieCanvas() {
+        const v = el("selfieVideo"),
+          c = el("selfieCanvas");
+        if (!v || !c) return;
+        const r = v.getBoundingClientRect();
+        c.width = r.width;
+        c.height = r.height;
+      }
+
+      function startSelfieAnalysis() {
+        const video = el("selfieVideo"),
+          canvas = el("selfieCanvas");
+        const ctx = canvas.getContext("2d");
+        let lastTs = 0;
+
+        async function loop(ts) {
+          if (ts - lastTs < 125) {
+            selfieRafId = requestAnimationFrame(loop);
+            return;
+          }
+          lastTs = ts;
+          if (
+            !video.videoWidth ||
+            video.readyState < 2 ||
+            window.isSelfieCaptureInProgress
+          ) {
+            selfieRafId = requestAnimationFrame(loop);
+            return;
+          }
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const cw = canvas.width,
+            ch = canvas.height;
+          const ovalRx = cw * 0.38,
+            ovalRy = ovalRx * 1.35,
+            ovalCx = cw / 2,
+            ovalCy = ch / 2;
+
+          ctx.fillStyle = "rgba(0,0,0,0.38)";
+          ctx.beginPath();
+          ctx.rect(0, 0, canvas.width, canvas.height);
+          ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+          ctx.fill("evenodd");
+
+          let ovalColor = "rgba(255,255,255,0.85)",
+            ovalDash = true,
+            ovalWidth = 2.5;
+          let msg = "Position your face in the oval",
+            cls = "bad",
+            gatePass = false;
+
+          if (!faceReady) {
+            msg = "Preparing…";
+            cls = null;
+          } else {
+            let det;
+            try {
+              det = await faceapi.detectSingleFace(
+                video,
+                new faceapi.TinyFaceDetectorOptions(),
+              );
+            } catch {}
+            if (det) {
+              const box = det.box;
+              const fw2 = box.width / video.videoWidth;
+              const fcx = (box.x + box.width / 2) / video.videoWidth;
+              const fcy = (box.y + box.height / 2) / video.videoHeight;
+              const off = Math.max(Math.abs(fcx - 0.5), Math.abs(fcy - 0.5));
+              dbg("dbgFaceD", "true");
+              if (fw2 < 0.25) {
+                msg = "Move closer";
+                cls = "warn";
+                ovalColor = "rgba(194,124,0,0.9)";
+              } else if (fw2 > 0.55) {
+                msg = "Move back";
+                cls = "warn";
+                ovalColor = "rgba(194,124,0,0.9)";
+              } else if (off > 0.1) {
+                msg = "Centre your face";
+                cls = "warn";
+                ovalColor = "rgba(194,124,0,0.9)";
+              } else {
+                selfieMissCount = 0;
+                gatePass = true;
+                const elapsed = selfieGatePassStartMs
+                  ? ts - selfieGatePassStartMs
+                  : 0;
+                const prog = Math.min(elapsed / SELFIE_BURST_TRIGGER_MS, 1.0);
+                msg = "Hold still…";
+                cls = "ok";
+                ovalColor =
+                  prog >= 1.0
+                    ? "rgba(74,222,128,0.95)"
+                    : prog > 0
+                      ? "rgba(251,191,36,0.9)"
+                      : "rgba(74,222,128,0.95)";
+                ovalDash = false;
+                ovalWidth = prog >= 1.0 ? 3 : 2.5;
+              }
+            } else {
+              dbg("dbgFaceD", "false");
+              selfieMissCount++;
+              if (selfieMissCount >= SELFIE_MISS_TOLERANCE) {
+                selfieMissCount = 0;
+                selfieGatePassStartMs = null;
+                selfieBurstTriggered = false;
+                updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
+              }
+            }
+          }
+
+          ctx.setLineDash(ovalDash ? [10, 7] : []);
+          ctx.strokeStyle = ovalColor;
+          ctx.lineWidth = ovalWidth;
+          ctx.beginPath();
+          ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          if (gatePass) {
+            ctx.fillStyle = "rgba(74,222,128,0.1)";
+            ctx.beginPath();
+            ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+
+          if (cls !== null) setFb("selfieFeedback", msg, cls);
+          else setFb("selfieFeedback", msg);
+
+          if (gatePass && !selfieBurstTriggered) {
+            if (!selfieGatePassStartMs) selfieGatePassStartMs = ts;
+            const elapsed = ts - selfieGatePassStartMs;
+            updateSelfieCaptureRing(elapsed, SELFIE_BURST_TRIGGER_MS);
+            if (elapsed >= SELFIE_BURST_TRIGGER_MS) {
+              selfieBurstTriggered = true;
+              selfieGatePassStartMs = null;
+              cancelRaf(selfieRafId);
+              selfieRafId = null;
+              captureSelfie();
+              return;
+            }
+          } else if (!selfieBurstTriggered && !gatePass) {
+            if (selfieMissCount >= SELFIE_MISS_TOLERANCE) {
+              selfieMissCount = 0;
+              if (selfieGatePassStartMs) selfieGatePassStartMs = null;
+              updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
+            }
+          }
+          selfieRafId = requestAnimationFrame(loop);
+        }
+        selfieRafId = requestAnimationFrame(loop);
+      }
+
+      function updateSelfieCaptureRing(elapsed, duration) {
+        const wrap = el("selfieCaptureRingWrap"),
+          fill = el("selfieCaptureRingFill");
+        if (!wrap || !fill) return;
+        const C = 138.2;
+        if (elapsed <= 0) {
+          wrap.classList.remove("visible");
+          fill.style.strokeDashoffset = C;
+          return;
+        }
+        wrap.classList.add("visible");
+        fill.style.strokeDashoffset = C * (1 - Math.min(elapsed / duration, 1));
+      }
+
+      async function captureSelfie() {
+        if (window.isSelfieCaptureInProgress) return;
+        window.isSelfieCaptureInProgress = true;
+        cancelRaf(selfieRafId);
+        selfieRafId = null;
+        updateSelfieCaptureRing(0, SELFIE_BURST_TRIGGER_MS);
+        const video = el("selfieVideo");
+        const scale = Math.min(
+          1,
+          960 / Math.max(video.videoWidth, video.videoHeight),
+        );
+        const c = document.createElement("canvas");
+        c.width = Math.round(video.videoWidth * scale);
+        c.height = Math.round(video.videoHeight * scale);
+        const captureCtx = c.getContext("2d");
+        captureCtx.translate(c.width, 0);
+        captureCtx.scale(-1, 1);
+        captureCtx.drawImage(video, 0, 0, c.width, c.height);
+        stopSelfieCam();
+        let q = 0.85,
+          blob;
+        while (q >= 0.4) {
+          blob = await new Promise((r) => c.toBlob(r, "image/jpeg", q));
+          if (blob.size <= 1.5 * 1024 * 1024) break;
+          q -= 0.05;
+        }
+        window.capturedSelfieBlob = blob;
+        const canvas = el("selfieCanvas"),
+          ctx = canvas.getContext("2d");
+        const cw = canvas.width,
+          ch = canvas.height;
+        const ovalRx = cw * 0.38,
+          ovalRy = ovalRx * 1.35,
+          ovalCx = cw / 2,
+          ovalCy = ch / 2;
+        ctx.clearRect(0, 0, cw, ch);
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.beginPath();
+        ctx.rect(0, 0, cw, ch);
+        ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+        ctx.fill("evenodd");
+        ctx.setLineDash([]);
+        ctx.strokeStyle = "rgba(74,222,128,1)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(74,222,128,0.18)";
+        ctx.beginPath();
+        ctx.ellipse(ovalCx, ovalCy, ovalRx, ovalRy, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        setFb("selfieFeedback", "Selfie captured ✓", "ok");
+        window.isSelfieCaptureInProgress = false;
+        setTimeout(() => goStep(5), 700);
+      }
+
+      /* ================================================================
+   STEP 5 — RESULTS
+================================================================ */
+      async function performVerification() {
+        el("resultsLoading").style.display = "flex";
+        el("resultsError").style.display = "none";
+        el("resultsCard").style.display = "none";
+        el("resultsActions").classList.remove("visible");
+
+        // OCR is already done by burstCapture — extractedIDData is already populated.
+        // performVerification now only transitions the UI to the input form.
+        // Submission happens in confirmResults when the user clicks Confirm & Submit.
+        el("resultsLoading").style.display = "none";
+        displayResults();
+      }
+
+      function buildPrefilledField(label, id, value, placeholder, inputmode) {
+        const im = inputmode ? ` inputmode="${inputmode}"` : "";
+        const safeV = value != null && value !== "" ? esc(String(value)) : "";
+        return `
+    <div class="field-row">
+      <div class="field-label">${esc(label)}</div>
+      <input class="field-input" type="text" value="${safeV}"
+        placeholder="${esc(placeholder)}" id="${esc(id)}"${im}
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="field-error" id="${esc(id)}__err"></div>
+      <div class="field-warn" id="${esc(id)}__warn"></div>
+    </div>`;
+      }
+
+      function buildReadonlyField(label, value) {
+        if (!value) return "";
+        return `
+    <div class="field-row">
+      <div class="field-label">${esc(label)}</div>
+      <div class="field-value">${esc(String(value))}</div>
+    </div>`;
+      }
+
+      /* ================================================================
+   DISPLAY RESULTS - EDITABLE FORM INJECTION
+================================================================ */
+      function displayResults() {
+        el("resultsLoading").style.display = "none";
+        el("resultsCard").style.display = "block";
+        el("resultsActions").classList.add("visible");
+
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+        const isBook = window.documentType === "book";
+
+        el("rowExpiredWarning").classList.toggle(
+          "visible",
+          isPassport && ocr.documentExpired,
+        );
+
+        let html = "";
+
+        if (isPassport) {
+          html += buildPrefilledField(
+            "Passport number",
+            "fPassportNumber",
+            ocr.passportNumber || "",
+            "e.g. A12345678",
+            "text",
+          );
+          html += buildPrefilledField(
+            "Given name(s)",
+            "fNames",
+            ocr.firstNames || ocr.names || "",
+            "As it appears on your passport",
+            "text",
+          );
+          html += buildPrefilledField(
+            "Surname",
+            "fSurname",
+            ocr.surname || "",
+            "As it appears on your passport",
+            "text",
+          );
+          html += buildReadonlyField("Date of birth", ocr.dobISO || "");
+          html += buildReadonlyField("Gender", ocr.gender || "");
+          html += buildReadonlyField("Nationality", ocr.nationality || "");
+          html += buildReadonlyField(
+            "Issuing country",
+            ocr.issuingCountry || "",
+          );
+          html += buildReadonlyField("Expiry date", ocr.expiryISO || "");
+        } else if (isBook) {
+          html += `<div class="book-review-notice">
+<strong>Please review:</strong> Verify your details below exactly as they appear in your ID book.
+</div>`;
+          html += buildPrefilledField(
+            "ID number",
+            "fIdNumber",
+            ocr.idNumber || "",
+            "13-digit ID number",
+            "numeric",
+          );
+          html += buildPrefilledField(
+            "Full names",
+            "fNames",
+            ocr.firstNames || ocr.names || "",
+            "As it appears on your document",
+            "text",
+          );
+          html += buildPrefilledField(
+            "Surname",
+            "fSurname",
+            ocr.surname || "",
+            "As it appears on your document",
+            "text",
+          );
+          html += buildReadonlyField("Date of birth", ocr.dobISO || "");
+          html += buildReadonlyField("Gender", ocr.gender || "");
+          // html += buildReadonlyField("Citizenship", ocr.citizenship || "");
+          html += buildReadonlyField(
+            "Citizenship",
+            ocr.citizenship_status || "",
+          );
+        } else {
+          html += buildPrefilledField(
+            "ID number",
+            "fIdNumber",
+            ocr.idNumber || "",
+            "13-digit ID number",
+            "numeric",
+          );
+          html += buildPrefilledField(
+            "Full names",
+            "fNames",
+            ocr.firstNames || ocr.names || "",
+            "As it appears on your document",
+            "text",
+          );
+          html += buildPrefilledField(
+            "Surname",
+            "fSurname",
+            ocr.surname || "",
+            "As it appears on your document",
+            "text",
+          );
+          html += buildReadonlyField("Date of birth", ocr.dobISO || "");
+          html += buildReadonlyField("Gender", ocr.gender || "");
+          html += buildReadonlyField(
+            "Citizenship",
+            ocr.citizenship_status || "",
+          );
+        }
+
+        el("extractedFields").innerHTML = html;
+
+        Object.keys(_fieldState).forEach((k) => delete _fieldState[k]);
+        bindFieldValidation();
+        checkResultsCompleteness();
+
+        el("mrzIntegritySection").style.display = "none";
+        el("failList").style.display = "none";
+      }
+
+      async function confirmResults() {
+        const ocr = window.extractedIDData || {};
+        const isPassport = ocr.isPassport || false;
+        const isBook = window.documentType === "book";
+
+        // ── User declared — clean reads, no dead fallbacks
+        const userIdentityNumber = isPassport
+          ? el("fPassportNumber")?.value.trim() || ""
+          : el("fIdNumber")?.value.trim() || "";
+
+        // ── Silent match signal
+        const ocrIdentityNumber = isPassport
+          ? (ocr.passportNumber || "").replace(/</g, "").trim()
+          : (ocr.idNumber || "").trim();
+
+        const identityMatch =
+          ocrIdentityNumber.length > 0 &&
+          userIdentityNumber.toUpperCase() === ocrIdentityNumber.toUpperCase();
+
+        // ── Build payload per schema
+        const payload = {
+          whatsApp_number: _knownWa, // from URL ?wa=
+          document_type: window.documentType,
+          user_declared: {
+            identity_number: userIdentityNumber,
+            first_names: el("fNames")?.value.trim() || "",
+            surname: el("fSurname")?.value.trim() || "",
+          },
+          ocr_extracted: {
+            identity_number: ocrIdentityNumber || null,
+            first_names: ocr.firstNames || ocr.names || null,
+            surname: ocr.surname || null,
+            dob: ocr.dobISO || null,
+            gender: ocr.gender || "unknown",
+            citizenship_status: ocr.citizenship_status ?? null,
+            passport_metadata: isPassport
+              ? {
+                  nationality: ocr.nationality || null,
+                  issuing_country: ocr.issuingCountry || null,
+                  expiry_date: ocr.expiryISO || null,
+                  raw_mrz_line1: ocr.mrzLine1 || null,
+                  raw_mrz_line2: ocr.mrzLine2 || null,
+                }
+              : null,
+          },
+          _meta: { identity_match: identityMatch },
+        };
+
+        // ── Images as base64
+        const toBase64 = (blob) =>
+          new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result);
+            r.onerror = () => rej(new Error("base64 conversion failed"));
+            r.readAsDataURL(blob);
+          });
+
+        try {
+          payload.images = {
+            id_image: window.capturedIDBlob
+              ? await toBase64(window.capturedIDBlob)
+              : null,
+            selfie_image: window.capturedSelfieBlob
+              ? await toBase64(window.capturedSelfieBlob)
+              : null,
+          };
+        } catch (err) {
+          console.error("[KYC] Image encoding failed:", err);
+          el("resultsError").textContent =
+            "Failed to encode images. Please try again.";
+          el("resultsError").style.display = "block";
+          return;
+        }
+
+        const btnConfirm = el("btnConfirm");
+        btnConfirm.disabled = true;
+        btnConfirm.classList.add("loading");
+
+        try {
+          const resp = await fetch(`/verify?wa=${_knownWa}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await resp.json();
+          console.log("[KYC] Response:", result);
+
+          if (result.success === true) {
+            if (result.redirectLink) {
+              window.location.href = result.redirectLink;
+            } else {
+              btnConfirm.disabled = true;
+              btnConfirm.classList.remove("loading");
+              btnConfirm.textContent = "Submitted ✓";
+              el("resultsError").style.cssText =
+                "background:#e6f4ea;border-color:#a8d5b5;color:#1a8a4a;display:block";
+              el("resultsError").textContent =
+                "Your identity has been submitted and is under review.";
+            }
+          } else {
+            btnConfirm.disabled = false;
+            btnConfirm.classList.remove("loading");
+            el("resultsError").textContent =
+              "Verification unsuccessful: " +
+              (result.reason || "please try again.");
+            el("resultsError").style.display = "block";
+          }
+        } catch (err) {
+          console.error("[KYC] Submission failed:", err);
+          btnConfirm.disabled = false;
+          btnConfirm.classList.remove("loading");
+          el("resultsError").textContent =
+            "Submission failed. Please check your connection and try again.";
+          el("resultsError").style.display = "block";
+        }
+      }
+
+      function restart() {
+        window.capturedIDBlob = null;
+        window.capturedSelfieBlob = null;
+        window.documentType = null;
+        window.extractedIDData = null;
+        stopIdCam();
+        stopSelfieCam();
+        cancelRaf(idRafId);
+        idRafId = null;
+        cancelRaf(selfieRafId);
+        selfieRafId = null;
+        isCaptureInProgress = false;
+        window.isSelfieCaptureInProgress = false;
+        fallbackCount = 0;
+        lastFaceZoneScore = 0;
+        faceZonePending = false;
+        lastFaceZoneTs = 0;
+        smoothedComposite = 0;
+        gateMissCount = 0;
+        _lastFbMsg = "";
+        _lastFbCls = "";
+        selfieGatePassStartMs = null;
+        selfieBurstTriggered = false;
+        document
+          .querySelectorAll(".doc-card")
+          .forEach((c) => c.classList.remove("selected"));
+        el("btnContinue").disabled = true;
+        el("retryNotice").classList.remove("visible");
+        el("captureRingWrap").classList.remove("visible");
+        el("step3").classList.remove("step3--error");
+        idStreamReady = null;
+        document
+          .querySelectorAll(".step")
+          .forEach((s) => s.classList.remove("active"));
+        el("step2").classList.add("active");
+        currentStep = 2;
+        updateStepBar(2);
+        el("stepBar").classList.add("visible");
+      }
+
+      /* ================================================================
+   UTILITIES
+================================================================ */
+      const el = (id) => document.getElementById(id);
+      const cancelRaf = (id) => {
+        if (id) cancelAnimationFrame(id);
+      };
+      function esc(t) {
+        const d = document.createElement("div");
+        d.textContent = t;
+        return d.innerHTML;
+      }
+      function showIdError(msg) {
+        el("idError").textContent = msg;
+        el("idError").style.display = "block";
+      }
+      function setFb(id, msg, cls) {
+        const e = el(id);
+        e.textContent = msg;
+        e.classList.remove("ok", "warn", "bad");
+        if (cls) e.classList.add(cls);
+      }
+      function dbg(id, v) {
+        const e = el(id);
+        if (e) e.textContent = v;
+      }
+
+      /* ================================================================
+   DEBUG PANEL TOGGLE (5 taps)
+================================================================ */
+      let tapCount = 0,
+        tapTimer = null;
+      const isTouchDevice = "ontouchstart" in window;
+      document.addEventListener(
+        isTouchDevice ? "touchstart" : "click",
+        () => {
+          tapCount++;
+          if (tapCount >= 5) {
+            el("debugPanel").classList.toggle("visible");
+            tapCount = 0;
+            if (tapTimer) clearTimeout(tapTimer);
+            return;
+          }
+          if (tapTimer) clearTimeout(tapTimer);
+          tapTimer = setTimeout(() => (tapCount = 0), 2000);
+        },
+        { passive: true },
+      );
+
+      /* ================================================================
+   HISTORY & RESIZE
+================================================================ */
+      history.replaceState({ step: 1 }, "");
+      window.addEventListener("popstate", (e) => {
+        const s = e.state?.step;
+        if (s === 1 || s === 2 || s === 3) {
+          isPopstate = true;
+          goStep(s);
+          isPopstate = false;
+        }
+      });
+      window.addEventListener("resize", () => {
+        if (currentStep === 3) resizeIdCanvas();
+        if (currentStep === 4) resizeSelfieCanvas();
+      });
+    </script>
+  </body>
+</html>
